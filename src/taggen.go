@@ -1,21 +1,35 @@
 package main
+
 import (
-	"crypto/elliptic"
 	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"fmt"
-	)
+	"net/url"
+)
 
-func main(){
-priv, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
-fmt.Printf("priv:%v\n err:%v\n",priv,err)
-hashed := []byte("testing")
+/*TAG
+ObjectHash(HEX),
+ObjectType,
+NameSegment(url escaped),
+Version,
+Signature,
+HKID
+*/
 
-r, s, err := ecdsa.Sign(rand.Reader, priv, hashed)
-fmt.Printf("r:%v\n s:%v\n err:%v\n",r,s,err)
+//string:=QueryEscape(s string)
+//string, error:=QueryUnescape(s string)
 
-valid := ecdsa.Verify(&priv.PublicKey, hashed, r, s)
-invalid := ecdsa.Verify(&priv.PublicKey, []byte("fail testing"), r, s)
+func main() {
+	priv, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+	fmt.Printf("priv:%v\n err:%v\n", priv, err)
+	hashed := []byte("testing")
 
-fmt.Printf("valid:%v in:%v\n",valid ,invalid)
+	r, s, err := ecdsa.Sign(rand.Reader, priv, hashed)
+	fmt.Printf("r:%v\n s:%v\n err:%v\n", r, s, err)
+
+	valid := ecdsa.Verify(&priv.PublicKey, hashed, r, s)
+	invalid := ecdsa.Verify(&priv.PublicKey, []byte("fail testing"), r, s)
+
+	fmt.Printf("valid:%v in:%v\n", valid, invalid)
 }
