@@ -29,8 +29,11 @@ func visit(path string, f os.FileInfo, err error) error {
 
 func hashfile(filepath string) []byte {
 	fi, err := os.Open(filepath)
+
 	if err != nil {
-		panic(err)
+		fmt.Printf("%v", err)
+		return nil
+		//panic(err)
 	}
 	defer fi.Close()
 
@@ -39,7 +42,9 @@ func hashfile(filepath string) []byte {
 	for {
 		n, err := fi.Read(buf)
 		if err != nil && err != io.EOF {
-			panic(err)
+			fmt.Printf("%v", err)
+			return nil
+			//panic(err)
 		}
 		if n == 0 {
 			break
