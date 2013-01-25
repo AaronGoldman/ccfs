@@ -12,7 +12,6 @@ func (h BlobServer) ServeHTTP(
 	r *http.Request) {
 	fmt.Fprint(w, "Hello %s")
 	fmt.Println(r)
-
 }
 
 func main() {

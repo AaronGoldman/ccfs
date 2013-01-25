@@ -4,8 +4,10 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"hash"
 	"net/url"
 	"strconv"
 )
@@ -22,18 +24,28 @@ HKID
 //string:=QueryEscape(s string)
 //string, error:=QueryUnescape(s string)
 
-func main() {
-	priv, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
-	fmt.Printf("priv:%v\n err:%v\n", priv, err)
+funqc main() {
+	priv, _ := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+	//test(priv)
+	fmt.Printf("%v\n", GenerateTag([]byte("testing"), "blob", "test", 1, priv))
+}
+
+func test(priv *ecdsa.PrivateKey) {
+	mar := elliptic.Marshal(
+		priv.PublicKey.Curve,
+		priv.PublicKey.X,
+		priv.PublicKey.Y)
+	x, y := elliptic.Unmarshal(elliptic.P521(), mar)
+	maredPublicKey := new(ecdsa.PublicKey)
+	maredPublicKey.Curve = elliptic.P521()
+	maredPublicKey.X = x
+	maredPublicKey.Y = y
+
 	hashed := []byte("testing")
-
-	r, s, err := ecdsa.Sign(rand.Reader, priv, hashed)
-	fmt.Printf("sig\nr:%v\ns:%v\n err:%v\n", r, s, err)
-
-	valid := ecdsa.Verify(&priv.PublicKey, hashed, r, s)
-	invalid := ecdsa.Verify(&priv.PublicKey, []byte("fail testing"), r, s)
-
-	fmt.Printf("valid:%v in:%v\n", valid, invalid)
+	r, s, _ := ecdsa.Sign(rand.Reader, priv, hashed)
+	valid := ecdsa.Verify(maredPublicKey, hashed, r, s)
+	invalid := ecdsa.Verify(maredPublicKey, []byte("fail testing"), r, s)
+	fmt.Printf("valid:%v in:%v marsize:%v bits\n\n\n", valid, invalid, len(mar)*8)
 }
 
 func GenerateTag(blob []byte, objectType string, nameSegment string,
@@ -46,13 +58,15 @@ func GenerateTag(blob []byte, objectType string, nameSegment string,
 	signature := GenerateSignature(key, objectHashBytes)
 	hkidstr := GenerateHKID(key)
 
-	tag = fmt.Sprintf("%s,%s,%s,%s,%s,%s", objectHashStr, objectType, nameSegment,
-		versionstr, signature, hkidstr)
+	tag = fmt.Sprintf("%s,\n%s,\n%s,\n%s,\n%s,\n%s", objectHashStr,
+		objectType, nameSegment, versionstr, signature, hkidstr)
 	return tag
 }
 
 func GenerateObjectHash(blob []byte) (objectHash []byte) {
-	return []byte("ToDo")
+	var h hash.Hash = sha256.New()
+	h.Write(blob)
+	return h.Sum(make([]byte, 0))
 }
 func GenerateObjectType(objectType string) (objectTypestr string) {
 	return objectType
@@ -64,8 +78,14 @@ func GenerateVersion(version int) (versionstr string) {
 	return strconv.Itoa(version)
 }
 func GenerateSignature(prikey *ecdsa.PrivateKey, ObjectHash []byte) (signature string) {
-	return "ToDo"
+	r, s, _ := ecdsa.Sign(rand.Reader, prikey, ObjectHash)
+	return fmt.Sprintf("%v %v", r, s)
 }
 func GenerateHKID(prikey *ecdsa.PrivateKey) (hkid string) {
-	return "ToDo"
+	var h hash.Hash = sha256.New()
+	h.Write(elliptic.Marshal(
+		prikey.PublicKey.Curve,
+		prikey.PublicKey.X,
+		prikey.PublicKey.Y))
+	return fmt.Sprintf("%v", hex.EncodeToString(h.Sum(make([]byte, 0))))
 }
