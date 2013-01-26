@@ -14,7 +14,7 @@ func (h BlobServer) ServeHTTP(
 	fmt.Println(r)
 }
 
-func main() {
+func BlobServerStart() {
 	http.Handle("/blob/", http.StripPrefix("/blob/",
 		http.FileServer(http.Dir("/home/aaron/ccfs/blobs"))))
 	http.Handle("/tag/", http.StripPrefix("/tag/",

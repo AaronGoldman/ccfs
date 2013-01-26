@@ -10,6 +10,7 @@ import (
 	"hash"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 /*TAG
@@ -24,10 +25,10 @@ HKID
 //string:=QueryEscape(s string)
 //string, error:=QueryUnescape(s string)
 
-funqc main() {
+func taggentest() {
 	priv, _ := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	//test(priv)
-	fmt.Printf("%v\n", GenerateTag([]byte("testing"), "blob", "test", 1, priv))
+	fmt.Printf("%v\n", GenerateTag([]byte("testing"), "blob", "test", priv))
 }
 
 func test(priv *ecdsa.PrivateKey) {
@@ -49,17 +50,17 @@ func test(priv *ecdsa.PrivateKey) {
 }
 
 func GenerateTag(blob []byte, objectType string, nameSegment string,
-	version int, key *ecdsa.PrivateKey) (tag string) {
+	key *ecdsa.PrivateKey) (tag string) {
 	objectHashBytes := GenerateObjectHash(blob)
 	objectHashStr := hex.EncodeToString(objectHashBytes)
 	objectType = GenerateObjectType(objectType)
 	nameSegment = GenerateNameSegment(nameSegment)
-	versionstr := GenerateVersion(version)
+	versionstr := GenerateVersion()
 	signature := GenerateSignature(key, objectHashBytes)
 	hkidstr := GenerateHKID(key)
 
 	tag = fmt.Sprintf("%s,\n%s,\n%s,\n%s,\n%s,\n%s", objectHashStr,
-		objectType, nameSegment, versionstr, signature, hkidstr)
+		objectType, nameSegment, versionstr, hkidstr, signature)
 	return tag
 }
 
@@ -74,8 +75,8 @@ func GenerateObjectType(objectType string) (objectTypestr string) {
 func GenerateNameSegment(nameSegment string) (nameSegmentstr string) {
 	return url.QueryEscape(nameSegment)
 }
-func GenerateVersion(version int) (versionstr string) {
-	return strconv.Itoa(version)
+func GenerateVersion() (versionstr string) {
+	return strconv.FormatInt(time.Now().UnixNano(), 10)
 }
 func GenerateSignature(prikey *ecdsa.PrivateKey, ObjectHash []byte) (signature string) {
 	r, s, _ := ecdsa.Sign(rand.Reader, prikey, ObjectHash)

@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-func main() {
+func hashfindwalk() {
 	err := filepath.Walk("./", visit)
 	if err != nil {
 		panic(err)
