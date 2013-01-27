@@ -10,6 +10,10 @@ import (
 
 func commitgentest() {
 	priv, _ := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+	SaveKey(priv)
+	fmt.Printf("%v\n%v\n",
+		GenerateHKID(LoadKey(GenerateHKID(priv))),
+		GenerateHKID(priv))
 	fmt.Printf("%v", GenerateCommit([]byte("testing"), priv))
 }
 func GenerateCommit(list []byte, key *ecdsa.PrivateKey) (Commit string) {
