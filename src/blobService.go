@@ -10,7 +10,7 @@ type BlobServer struct{}
 func (h BlobServer) ServeHTTP(
 	w http.ResponseWriter,
 	r *http.Request) {
-	fmt.Fprint(w, "Hello %s")
+	fmt.Fprint(w, "Hello")
 	fmt.Println(r)
 }
 
