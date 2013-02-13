@@ -24,12 +24,15 @@ type Pubkey struct {
 func SavePrivateKey(priv *ecdsa.PrivateKey) (err error) {
 	fmt.Print(GenerateHKID(priv))
 	filepath := fmt.Sprintf("../keys/%s", GenerateHKID(priv))
-	fo, err := os.Create(filepath)
-	if err != nil {
-		return
-	}
+	//fo, err := os.Create(filepath)
+	//if err != nil {
+	//	return
+	//}
 	Block := pem.Block{Type: "EC PRIVATE KEY", Bytes: priv.D.Bytes()}
-	err = pem.Encode(fo, &Block)
+	err = ioutil.WriteFile(filepath, pem.EncodeToMemory(&Block), 0440)
+	//err = pem.Encode(fo, &Block)
+
+//fo.Close()
 	return
 }
 
