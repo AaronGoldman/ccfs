@@ -18,7 +18,7 @@ func TestKeyGen(t *testing.T) {
 	//priv.PublicKey.X, priv.PublicKey.Y = c.ScalarBaseMult(priv.D.Bytes())
 	//fmt.Printf("X = %v\nY = %v\nD = %v\n", priv.PublicKey.X, priv.PublicKey.Y, priv.D)
 	test(priv, t)
-	SaveKey(priv)
+	//SaveKey(priv)
 	SavePrivateKey(priv)
 	priv, err = LoadPrivateKey("d032bd47a0d2a40561ff959244f9bcb0d73d9b101e51b1f86398cd96cc0213d6")
 	fmt.Printf("\nhkid:%v\n", GenerateHKID(priv))
