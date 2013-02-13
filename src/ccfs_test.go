@@ -20,7 +20,7 @@ func TestKeyGen(t *testing.T) {
 	test(priv, t)
 	//SaveKey(priv)
 	SavePrivateKey(priv)
-	//priv, err = LoadPrivateKey(GenerateHKID(priv))
+	priv, err = LoadPrivateKey(GenerateHKID(priv))
 	fmt.Printf("\nhkid:%v\n", GenerateHKID(priv))
 }
 
