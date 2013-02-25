@@ -14,7 +14,7 @@ func TestKeyGen(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error", err)
 	}
-	fmt.Printf("X = %v\nY = %v\nD = %v\n", priv.PublicKey.X, priv.PublicKey.Y, priv.D)
+	fmt.Printf("TestKeyGen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X, priv.PublicKey.Y, priv.D)
 	//priv.PublicKey.X, priv.PublicKey.Y = c.ScalarBaseMult(priv.D.Bytes())
 	//fmt.Printf("X = %v\nY = %v\nD = %v\n", priv.PublicKey.X, priv.PublicKey.Y, priv.D)
 	test(priv, t)
@@ -24,21 +24,24 @@ func TestKeyGen(t *testing.T) {
 	fmt.Printf("\nhkid:%v\n", GenerateHKID(priv))
 }
 
-//func Commitgen_test(t *testing.T) {
-//priv, _ := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
-//SaveKey(priv)
-//fmt.Print("X = %v\nY = %v\nD = %v\n",priv.PublicKey.X,priv.PublicKey.Y,priv.D)
-//hkid := GenerateHKID(priv)
-//reconstructedkey := LoadKey(hkid)
-//reconstructedhkid := GenerateHKID(reconstructedkey)
-//fmt.Printf("\n%v\n%v", hkid, reconstructedhkid)
-//fmt.Printf("%v", GenerateCommit([]byte("testing"), priv))
-//}
+func TestCommitgen(t *testing.T) {
+	priv, _ := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+	SavePrivateKey(priv)
+	//fmt.Printf("\nTestCommitgen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X, priv.PublicKey.Y, priv.D)
+	hkid := GenerateHKID(priv)
+	reconstructedkey, err := LoadPrivateKey(hkid)
+	if err != nil {
+		panic(err)
+	}
+	reconstructedhkid := GenerateHKID(reconstructedkey)
+	fmt.Printf("\n%v\n%v", hkid, reconstructedhkid)
+	fmt.Printf("\nTestCommitgen\n%v", GenerateCommit([]byte("testing"), priv))
+}
 
-func Taggen_test(t *testing.T) {
+func TestTaggen(t *testing.T) {
 	priv, _ := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	//test(priv)
-	fmt.Printf("%v\n", GenerateTag([]byte("testing"), "blob", "test", priv))
+	fmt.Printf("\nTestTaggen\n%v\n", GenerateTag([]byte("testing"), "blob", "test", priv))
 }
 
 func test(priv *ecdsa.PrivateKey, t *testing.T) {

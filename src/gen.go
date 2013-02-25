@@ -28,7 +28,10 @@ func GenerateVersion() (versionstr string) {
 	return strconv.FormatInt(time.Now().UnixNano(), 10)
 }
 func GenerateSignature(prikey *ecdsa.PrivateKey, ObjectHash []byte) (signature string) {
-	r, s, _ := ecdsa.Sign(rand.Reader, prikey, ObjectHash)
+	r, s, err := ecdsa.Sign(rand.Reader, prikey, ObjectHash)
+	if err != nil {
+		panic(err)
+	}
 	return fmt.Sprintf("%v %v", r, s)
 }
 
