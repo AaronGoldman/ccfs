@@ -1,4 +1,24 @@
-fileToBlob()
+blob
+	hash()
+list
+	lookup(nameSegment)
+	hash()
+	string()
+tag
+	lookup(nameSegment)
+	hash()
+	verify()
+	string()
+commit
+	hash()
+	verify()
+	string()
+ccfs
+	getBlob(hash
+	storeBlob(blob)
+	getTag(hkid, nameSegment)
+	storeTag(tag)
+	getCommit(hkid)
+	storeCommit(Commit)
 folderToList()
 folderToTags()
-
