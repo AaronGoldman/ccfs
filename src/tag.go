@@ -8,22 +8,22 @@ import (
 )
 
 type Tag struct {
-	HashBytes   []byte
+	HashBytes   [32]byte
 	TypeString  string
 	nameSegment string
 	versionstr  int64
 	signature   []byte //(r, s *big.Int)
-	hkid        []byte
+	hkid        [32]byte
 	//func Marshal(curve Curve, x, y *big.Int) []byte
 	//func Unmarshal(curve Curve, data []byte) (x, y *big.Int)
 	//elliptic.Marshal(prikey.PublicKey.Curve,prikey.PublicKey.X,prikey.PublicKey.Y)
 }
 
 func (t Tag) String() string {
-	objectHashStr := hex.EncodeToString(t.HashBytes)
+	objectHashStr := hex.EncodeToString(t.HashBytes[:])
 	nameSegment := GenerateNameSegment(t.nameSegment)
 	signature := string(t.signature)
-	hkidstr := string(t.hkid)
+	hkidstr := string(t.hkid[:])
 	tagstring := fmt.Sprintf("%s,\n%s,\n%s,\n%s,\n%s,\n%s", objectHashStr,
 		t.TypeString, nameSegment, t.versionstr, hkidstr, signature)
 	return tagstring
@@ -33,5 +33,5 @@ func (t Tag) Verifiy() bool {
 	PublicKey := getPiblicKeyForHkid(t.hkid)
 	r, s := elliptic.Unmarshal(elliptic.P521(), t.signature)
 	hashed := []byte("testing") //place holder
-	return ecdsa.Verify(&PublicKey, hashed, r, s)
+	return ecdsa.Verify(PublicKey, hashed, r, s)
 }
