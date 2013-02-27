@@ -1,24 +1,37 @@
-blob
-	hash()
-list
-	lookup(nameSegment)
-	hash()
-	string()
-tag
-	lookup(nameSegment)
-	hash()
-	verify()
-	string()
-commit
-	hash()
-	verify()
-	string()
-ccfs
-	getBlob(hash
-	storeBlob(blob)
-	getTag(hkid, nameSegment)
-	storeTag(tag)
-	getCommit(hkid)
-	storeCommit(Commit)
-folderToList()
-folderToTags()
+ _
+|_| blob
+	|_| hash()
+ _
+|_| list
+	|_| lookup(nameSegment)
+	|_| hash()
+	|_| string()
+ _
+|_| tag
+	|_| lookup(nameSegment)
+	|_| hash()
+	|_| verify()
+	|_| string()
+ _
+|_| commit
+	|_| hash()
+	|_| verify()
+	|_| string()
+ _
+|_| ccfs
+	|_| getBlob(hash
+	|_| storeBlob(blob)
+	|_| getTag(hkid, nameSegment)
+	|_| storeTag(tag)
+	|_| getCommit(hkid)
+	|_| storeCommit(Commit)
+ _
+|_| folderToList()
+|_| folderToTags()
+ _
+|_| blob_test.go
+|_| list_test.go
+|_| tag_test.go
+|_| commit_test.go
+|_| key_test.go
+|_| ccfs_test.go

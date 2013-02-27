@@ -18,7 +18,6 @@ func getPiblicKeyForHkid(hkid [32]byte) *ecdsa.PublicKey {
 }
 
 func getPrivateKeyForHkid(hkid [32]byte) (priv *ecdsa.PrivateKey, err error) {
-	//b := new([]byte)
 	b, err := getKey(hkid)
 	priv = new(ecdsa.PrivateKey)
 	priv.PublicKey.Curve = elliptic.P521()

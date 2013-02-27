@@ -15,7 +15,19 @@ func main() {
 
 }
 
-func getBlob(hkid [32]byte) (data []byte, err error) {
+func getBlob(hash [32]byte) (data []byte, err error) {
+	data = []byte("testing")
+	err = errors.New("Not yet implimented")
+	return
+}
+
+func getTag(hkid [32]byte) (data []byte, err error) {
+	data = []byte("testing")
+	err = errors.New("Not yet implimented")
+	return
+}
+
+func getCommit(hkid [32]byte) (data []byte, err error) {
 	data = []byte("testing")
 	err = errors.New("Not yet implimented")
 	return
