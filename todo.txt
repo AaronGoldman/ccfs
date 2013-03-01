@@ -19,7 +19,7 @@
 	|_| string()
  _
 |_| ccfs
-	|_| getBlob(hash
+	|_| getBlob(hash)
 	|_| storeBlob(blob)
 	|_| getTag(hkid, nameSegment)
 	|_| storeTag(tag)

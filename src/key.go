@@ -5,6 +5,7 @@ package main
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"fmt"
 	"math/big"
 )
 
@@ -14,6 +15,7 @@ func getPiblicKeyForHkid(hkid [32]byte) *ecdsa.PublicKey {
 	PublicKey.Curve = elliptic.P521()
 	x, y := elliptic.Unmarshal(elliptic.P521(), marshaledKey)
 	PublicKey.X, PublicKey.Y = x, y
+	fmt.Print(PublicKey)
 	return PublicKey
 }
 

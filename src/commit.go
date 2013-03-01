@@ -37,11 +37,17 @@ func commitSign(listHash [32]byte, versionstr string, hkid [32]byte) (signature 
 	return
 }
 
-func (c commit) Verifiy() bool {
+func (c commit) Verifiy() (ret bool) {
+	fmt.Print(1)
 	ObjectHash := commitRefHash(c.listHash, c.versionstr, c.hkid)
+	fmt.Print(2)
 	pubkey := getPiblicKeyForHkid(c.hkid)
+	fmt.Print(pubkey)
 	r, s := elliptic.Unmarshal(pubkey.Curve, c.signature)
-	return ecdsa.Verify(pubkey, ObjectHash, r, s)
+	fmt.Print(4)
+	ret = ecdsa.Verify(pubkey, ObjectHash, r, s)
+	fmt.Print(5)
+	return
 }
 
 func commitRefHash(listHash [32]byte, versionstr string, hkid [32]byte) (ObjectHash []byte) {
