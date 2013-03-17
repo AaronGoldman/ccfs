@@ -16,20 +16,23 @@ func main() {
 }
 
 func getBlob(hash [32]byte) (data []byte, err error) {
-	data = []byte("testing")
-	err = errors.New("Not yet implimented")
+	//Validate input
+	filepath := fmt.Sprintf("../blobs/%s", hash)
+	data, err := ioutil.ReadFile(filepath)
 	return
 }
 
-func getTag(hkid [32]byte) (data []byte, err error) {
-	data = []byte("testing")
-	err = errors.New("Not yet implimented")
+func getTag(hkid [32]byte , nameSegment string) (data []byte, err error) {
+	//Validate input
+	filepath := fmt.Sprintf("../tags/%s/%s/%s",hkid,nameSegment,version)
+	data, err := ioutil.ReadFile(filepath)
 	return
 }
 
 func getCommit(hkid [32]byte) (data []byte, err error) {
-	data = []byte("testing")
-	err = errors.New("Not yet implimented")
+	//Validate input
+	filepath := fmt.Sprintf("../commits/%s/%s",hkid,version)
+	data, err := ioutil.ReadFile(filepath)
 	return
 }
 
