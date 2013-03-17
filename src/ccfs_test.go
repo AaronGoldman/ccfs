@@ -8,6 +8,39 @@ import (
 	"testing"
 )
 
+/*
+func TestPath(t *testing.T) {
+	//key
+	postKey(keyT)//place key for tag
+	hkidT = keyT.Hash()//gen HKID for tag
+	postKey(keyC)//place key for commit
+	hkidC = keyC.Hash()//gen HKID for commit
+
+	//blob
+	testBlob := newBlob([]byte("testing"))//gen test blob
+	postBlob(testBlob)//store test blob
+
+	//tag
+	testTagPointingToTestBlob := newTag(testBlob.Hash(),
+		"blob",
+		"testBlob",
+		tagVersion,
+		hkidT)//gen test tag
+	postTag(testTagPointingToTestBlob)//post test tag
+
+	//list
+	testListPiontingToTestTag = NewList(testTagPointingToTestBlob.Hash(),
+		"tag",
+		"testTag")//gen test list
+	postBlob(testListPiontingToTestTag)//store test list
+
+	//commit
+	testCommitPointingToTestList =: NewCommit(testListPiontingToTestTag.Hash(),
+	 hkidC)//gen test commit
+	postCommit(testCommitPointingToTestList, version)//post test commit
+}
+*/
+
 /*func TestNewCommit(t *testing.T) {
 	listHash := [32]byte{0xfa,
 		0x84, 0xff, 0xaa, 0xe4, 0xd6, 0x5f, 0x49, 0x67, 0x67, 0x8c, 0x95, 0xb7, 0xf9, 0x6d, 0x61,
@@ -24,7 +57,7 @@ func TestKeyGen(t *testing.T) {
 	c := elliptic.P521()
 	priv, err := ecdsa.GenerateKey(c, rand.Reader)
 	if err != nil {
-		t.Errorf("Error", err)
+		t.Errorf("Error %v", err)
 	}
 	fmt.Printf("TestKeyGen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X, priv.PublicKey.Y, priv.D)
 	//priv.PublicKey.X, priv.PublicKey.Y = c.ScalarBaseMult(priv.D.Bytes())
