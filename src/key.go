@@ -9,8 +9,8 @@ import (
 	"math/big"
 )
 
-func getPiblicKeyForHkid(hkid [32]byte) *ecdsa.PublicKey {
-	marshaledKey, _ := getBlob(hkid)
+func getPiblicKeyForHkid(hkid []byte) *ecdsa.PublicKey {
+	marshaledKey, _ := GetBlob(hkid)
 	PublicKey := new(ecdsa.PublicKey)
 	PublicKey.Curve = elliptic.P521()
 	x, y := elliptic.Unmarshal(elliptic.P521(), marshaledKey)
@@ -19,8 +19,8 @@ func getPiblicKeyForHkid(hkid [32]byte) *ecdsa.PublicKey {
 	return PublicKey
 }
 
-func getPrivateKeyForHkid(hkid [32]byte) (priv *ecdsa.PrivateKey, err error) {
-	b, err := getKey(hkid)
+func getPrivateKeyForHkid(hkid []byte) (priv *ecdsa.PrivateKey, err error) {
+	b, err := GetKey(hkid)
 	priv = new(ecdsa.PrivateKey)
 	priv.PublicKey.Curve = elliptic.P521()
 	priv.PublicKey.X, priv.PublicKey.Y = elliptic.P521().ScalarBaseMult(b)

@@ -12,3 +12,9 @@ func (b blob) Hash() []byte {
 	h.Write(b)
 	return h.Sum(make([]byte, 0))
 }
+
+//func NewBlob(inbyte []byte)(blob){
+//	outblob := new(blob)
+//	outblob = blob(inbyte)
+//	return outblob
+//}

@@ -8,12 +8,12 @@ import (
 )
 
 type Tag struct {
-	HashBytes   [32]byte
+	HashBytes   []byte
 	TypeString  string
 	nameSegment string
 	versionstr  int64
 	signature   []byte //(r, s *big.Int)
-	hkid        [32]byte
+	hkid        []byte
 	//func Marshal(curve Curve, x, y *big.Int) []byte
 	//func Unmarshal(curve Curve, data []byte) (x, y *big.Int)
 	//elliptic.Marshal(prikey.PublicKey.Curve,prikey.PublicKey.X,prikey.PublicKey.Y)
@@ -34,4 +34,9 @@ func (t Tag) Verifiy() bool {
 	r, s := elliptic.Unmarshal(elliptic.P521(), t.signature)
 	hashed := []byte("testing") //place holder
 	return ecdsa.Verify(PublicKey, hashed, r, s)
+}
+
+func NewTag(HashBytes   []byte, TypeString  string, 
+	nameSegment string, hkid []byte){
+	
 }

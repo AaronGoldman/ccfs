@@ -11,13 +11,13 @@ import (
 )
 
 type commit struct {
-	listHash   [32]byte
+	listHash   []byte
 	versionstr string
-	hkid       [32]byte
+	hkid       []byte
 	signature  []byte //131 byte max
 }
 
-func NewCommit(listHash [32]byte, hkid [32]byte) (c commit) {
+func NewCommit(listHash []byte, hkid []byte) (c commit) {
 	c.listHash = listHash
 	c.versionstr = GenerateVersion()
 	c.hkid = hkid
@@ -25,7 +25,7 @@ func NewCommit(listHash [32]byte, hkid [32]byte) (c commit) {
 	return
 }
 
-func commitSign(listHash [32]byte, versionstr string, hkid [32]byte) (signature []byte) {
+func commitSign(listHash []byte, versionstr string, hkid []byte) (signature []byte) {
 	ObjectHash := commitRefHash(listHash, versionstr, hkid)
 	prikey, err := getPrivateKeyForHkid(hkid)
 	r, s, err := ecdsa.Sign(rand.Reader, prikey, ObjectHash)
@@ -50,7 +50,7 @@ func (c commit) Verifiy() (ret bool) {
 	return
 }
 
-func commitRefHash(listHash [32]byte, versionstr string, hkid [32]byte) (ObjectHash []byte) {
+func commitRefHash(listHash []byte, versionstr string, hkid []byte) (ObjectHash []byte) {
 	var h hash.Hash = sha256.New()
 	h.Write(listHash[:])
 	h.Write([]byte(versionstr))

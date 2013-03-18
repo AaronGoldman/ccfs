@@ -14,14 +14,14 @@ func main() {
 	return
 }
 
-func getBlob(hash [32]byte) (data []byte, err error) {
+func GetBlob(hash []byte) (data []byte, err error) {
 	//Validate input
 	filepath := fmt.Sprintf("../blobs/%s", hash)
 	data, err = ioutil.ReadFile(filepath)
 	return
 }
 
-func postBlob(data []byte) (err error) {
+func PostBlob(data []byte) (err error) {
 	return
 	//	data = []byte{0xfa,
 	//	0x84,0xff,0xaa,0xe4,0xd6,0x5f,0x49,0x67,0x67,0x8c,0x95,0xb7,0xf9,0x6d,0x61,
@@ -30,7 +30,7 @@ func postBlob(data []byte) (err error) {
 	//	return
 }
 
-func getTag(hkid [32]byte, nameSegment string) (data []byte, err error) {
+func GetTag(hkid []byte, nameSegment string) (data []byte, err error) {
 	//Validate input
 	//matches []string, err error
 	matches, err := filepath.Glob(fmt.Sprintf("../tags/%s/%s/*", hkid, nameSegment))
@@ -40,11 +40,11 @@ func getTag(hkid [32]byte, nameSegment string) (data []byte, err error) {
 	return
 }
 
-func postTag(data []byte, nameSegment string, version string) (err error) {
+func PostTag(data []byte, nameSegment string, version string) (err error) {
 	return
 }
 
-func getCommit(hkid [32]byte) (data []byte, err error) {
+func GetCommit(hkid []byte) (data []byte, err error) {
 	//Validate input
 	matches, err := filepath.Glob(fmt.Sprintf("../commits/%s/*", hkid))
 	version := latestVersion(matches)
@@ -53,10 +53,10 @@ func getCommit(hkid [32]byte) (data []byte, err error) {
 	return
 }
 
-func postCommit(data []byte, version string) (err error) {
+func PostCommit(data []byte, version string) (err error) {
 	return
 }
-func getKey(hkid [32]byte) (data []byte, err error) {
+func GetKey(hkid []byte) (data []byte, err error) {
 	filepath := fmt.Sprintf("../keys/%s", hkid)
 	filedata, err := ioutil.ReadFile(filepath)
 	if err == nil {
@@ -68,7 +68,7 @@ func getKey(hkid [32]byte) (data []byte, err error) {
 	return
 }
 
-func postKey(data []byte) (err error) {
+func PostKey(data []byte, hkid []byte) (err error) {
 	return
 }
 

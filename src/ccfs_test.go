@@ -6,46 +6,62 @@ import (
 	"crypto/rand"
 	"fmt"
 	"testing"
+	"math/big"
+	"encoding/hex"
 )
 
-/*
+
 func TestPath(t *testing.T) {
-	//key
-	postKey(keyT)//place key for tag
-	hkidT = keyT.Hash()//gen HKID for tag
-	postKey(keyC)//place key for commit
-	hkidC = keyC.Hash()//gen HKID for commit
+	//key for tag
+	D := new(big.Int)
+	D, _ = new(big.Int).SetString("3996811067068239799317867982525094232268699726722344370689730210711314983767775860556101498400185744208447673206609026128894016152514163591905578729891874833",10)
+	privT:=PrivteKeyFromD(*D)
+	keyT := elliptic.Marshal(privT.PublicKey.Curve,
+		privT.PublicKey.X, privT.PublicKey.Y)
+	hkidT, _ := hex.DecodeString(GenerateHKID(privT))//gen HKID for tag
+	PostKey(D.Bytes(), hkidT)//place key for tag	
+	PostBlob(keyT)//store public key
+
+	//key for commit
+//r, ok := new(big.Int).SetString(s, 16)
+	D,  _ = new(big.Int).SetString("4629814823893296480016411334808793836186124559723200979962176753724976464088706463001383556112424820911870650421151988906751710824965155500230480521264034469",10)
+	privC:=PrivteKeyFromD(*D)
+	keyC := elliptic.Marshal(privC.PublicKey.Curve,
+		privC.PublicKey.X, privC.PublicKey.Y)
+	hkidC, _ := hex.DecodeString(GenerateHKID(privC))//gen HKID for commit
+	PostKey(D.Bytes(), hkidC)//place key for commit
+	PostBlob(keyC)//store public key
 
 	//blob
-	testBlob := newBlob([]byte("testing"))//gen test blob
-	postBlob(testBlob)//store test blob
+	testBlob := []byte("testing")//gen test blob
+	PostBlob(testBlob)//store test blob
 
 	//tag
-	testTagPointingToTestBlob := newTag(testBlob.Hash(),
+	testTagPointingToTestBlob := NewTag(testBlob.Hash(),
 		"blob",
 		"testBlob",
 		tagVersion,
 		hkidT)//gen test tag
-	postTag(testTagPointingToTestBlob)//post test tag
+	PostTag(testTagPointingToTestBlob)//post test tag
 
 	//list
-	testListPiontingToTestTag = NewList(testTagPointingToTestBlob.Hash(),
+	testListPiontingToTestTag := NewList(testTagPointingToTestBlob.Hash(),
 		"tag",
 		"testTag")//gen test list
-	postBlob(testListPiontingToTestTag)//store test list
+	PostBlob(testListPiontingToTestTag)//store test list
 
 	//commit
-	testCommitPointingToTestList =: NewCommit(testListPiontingToTestTag.Hash(),
+	testCommitPointingToTestList := NewCommit(testListPiontingToTestTag.Hash(),
 	 hkidC)//gen test commit
-	postCommit(testCommitPointingToTestList, version)//post test commit
+	PostCommit(testCommitPointingToTestList, version)//post test commit
 }
-*/
+
 
 /*func TestNewCommit(t *testing.T) {
-	listHash := [32]byte{0xfa,
+	listHash := []byte{0xfa,
 		0x84, 0xff, 0xaa, 0xe4, 0xd6, 0x5f, 0x49, 0x67, 0x67, 0x8c, 0x95, 0xb7, 0xf9, 0x6d, 0x61,
 		0xe0, 0x67, 0x2b, 0x77, 0xe2, 0x67, 0x26, 0x78, 0x44, 0x44, 0x95, 0x24, 0x55, 0x07, 0x56, 0xb4}
-	hkid := [32]byte{0xfa,
+	hkid := []byte{0xfa,
 		0x84, 0xff, 0xaa, 0xe4, 0xd6, 0x5f, 0x49, 0x67, 0x67, 0x8c, 0x95, 0xb7, 0xf9, 0x6d, 0x61,
 		0xe0, 0x67, 0x2b, 0x77, 0xe2, 0x67, 0x26, 0x78, 0x44, 0x44, 0x95, 0x24, 0x55, 0x07, 0x56, 0xb4}
 	fmt.Print(listHash, hkid)
