@@ -36,7 +36,12 @@ func (t Tag) Verifiy() bool {
 	return ecdsa.Verify(PublicKey, hashed, r, s)
 }
 
-func NewTag(HashBytes   []byte, TypeString  string, 
-	nameSegment string, hkid []byte){
-	
+func NewTag(HashBytes []byte, TypeString string,
+	nameSegment string, hkid []byte) {
+	t = Tag{HashBytes,
+		TypeString,
+		nameSegment,
+		GenerateVersion(),
+		GenerateSignature(prikey, ObjectHash),
+		hkid}
 }
