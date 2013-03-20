@@ -5,9 +5,21 @@ package main
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/sha256"
 	"fmt"
+	"hash"
 	"math/big"
 )
+
+func KeyHash(p ecdsa.PrivateKey) []byte {
+	var h hash.Hash = sha256.New()
+	h.Write(KeyBytes(p))
+	return h.Sum(nil)
+}
+
+func KeyBytes(p ecdsa.PrivateKey) []byte {
+	return p.D.Bytes()
+}
 
 func getPiblicKeyForHkid(hkid []byte) *ecdsa.PublicKey {
 	marshaledKey, _ := GetBlob(hkid)

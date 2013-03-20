@@ -8,25 +8,54 @@ import (
 	"encoding/hex"
 	"fmt"
 	"hash"
+	"time"
 )
 
 type commit struct {
-	listHash   []byte
-	versionstr string
-	hkid       []byte
-	signature  []byte //131 byte max
+	listHash  []byte
+	version   int64
+	hkid      []byte
+	signature []byte //131 byte max
+}
+
+func (c commit) Hash() []byte {
+	var h hash.Hash = sha256.New()
+	h.Write(c.Bytes())
+	return h.Sum(nil)
+}
+
+func (c commit) Bytes() []byte {
+	return []byte(c.String())
+}
+
+func (c commit) String() string {
+	return fmt.Sprintf("%s,\n%d,\n%s,\n%s",
+		hex.EncodeToString(c.listHash),
+		c.version,
+		hex.EncodeToString(c.hkid),
+		hex.EncodeToString(c.signature))
+}
+
+func genCommitHash(listHash []byte, version int64, hkid []byte) (ObjectHash []byte) {
+	var h hash.Hash = sha256.New()
+	h.Write([]byte(fmt.Sprintf("%s,\n%d,\n%s",
+		hex.EncodeToString(listHash),
+		version,
+		hex.EncodeToString(hkid))))
+	ObjectHash = h.Sum(nil)
+	return
 }
 
 func NewCommit(listHash []byte, hkid []byte) (c commit) {
 	c.listHash = listHash
-	c.versionstr = GenerateVersion()
+	c.version = time.Now().UnixNano()
 	c.hkid = hkid
-	c.signature = commitSign(c.listHash, c.versionstr, c.hkid)
+	c.signature = commitSign(c.listHash, c.version, c.hkid)
 	return
 }
 
-func commitSign(listHash []byte, versionstr string, hkid []byte) (signature []byte) {
-	ObjectHash := commitRefHash(listHash, versionstr, hkid)
+func commitSign(listHash []byte, version int64, hkid []byte) (signature []byte) {
+	ObjectHash := genCommitHash(listHash, version, hkid)
 	prikey, err := getPrivateKeyForHkid(hkid)
 	r, s, err := ecdsa.Sign(rand.Reader, prikey, ObjectHash)
 	if err != nil {
@@ -39,7 +68,7 @@ func commitSign(listHash []byte, versionstr string, hkid []byte) (signature []by
 
 func (c commit) Verifiy() (ret bool) {
 	fmt.Print(1)
-	ObjectHash := commitRefHash(c.listHash, c.versionstr, c.hkid)
+	ObjectHash := genCommitHash(c.listHash, c.version, c.hkid)
 	fmt.Print(2)
 	pubkey := getPiblicKeyForHkid(c.hkid)
 	fmt.Print(pubkey)
@@ -47,15 +76,6 @@ func (c commit) Verifiy() (ret bool) {
 	fmt.Print(4)
 	ret = ecdsa.Verify(pubkey, ObjectHash, r, s)
 	fmt.Print(5)
-	return
-}
-
-func commitRefHash(listHash []byte, versionstr string, hkid []byte) (ObjectHash []byte) {
-	var h hash.Hash = sha256.New()
-	h.Write(listHash[:])
-	h.Write([]byte(versionstr))
-	h.Write(hkid[:])
-	ObjectHash = h.Sum(make([]byte, 0))
 	return
 }
 

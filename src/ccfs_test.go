@@ -1,9 +1,7 @@
 package main
 
 import (
-	"crypto/ecdsa"
 	"crypto/elliptic"
-	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -18,8 +16,14 @@ func TestPath(t *testing.T) {
 	keyT := elliptic.Marshal(privT.PublicKey.Curve,
 		privT.PublicKey.X, privT.PublicKey.Y)
 	hkidT, _ := hex.DecodeString(GenerateHKID(privT)) //gen HKID for tag
-	PostKey(D.Bytes(), hkidT)                         //place key for tag	
-	PostBlob(keyT)                                    //store public key
+	err := PostKey(privT)                             //place key for tag	
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = PostBlob(keyT) //store public key
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	//key for commit
 	//r, ok := new(big.Int).SetString(s, 16)
@@ -28,30 +32,55 @@ func TestPath(t *testing.T) {
 	keyC := elliptic.Marshal(privC.PublicKey.Curve,
 		privC.PublicKey.X, privC.PublicKey.Y)
 	hkidC, _ := hex.DecodeString(GenerateHKID(privC)) //gen HKID for commit
-	PostKey(D.Bytes(), hkidC)                         //place key for commit
-	PostBlob(keyC)                                    //store public key
+	err = PostKey(privC)                              //place key for commit
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = PostBlob(keyC) //store public key
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	//blob
-	testBlob := []byte("testing") //gen test blob
-	PostBlob(testBlob)            //store test blob
+	testBlob := blob([]byte("testing")) //gen test blob
+	err = PostBlob(testBlob)            //store test blob
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	//tag
 	testTagPointingToTestBlob := NewTag(testBlob.Hash(),
 		"blob",
 		"testBlob",
 		hkidT) //gen test tag
-	PostTag(testTagPointingToTestBlob) //post test tag
+	err = PostTag(testTagPointingToTestBlob) //post test tag
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	//list
 	testListPiontingToTestTag := NewList(testTagPointingToTestBlob.Hash(),
 		"tag",
 		"testTag") //gen test list
-	PostBlob(testListPiontingToTestTag) //store test list
+	err = PostBlob(testListPiontingToTestTag.Bytes()) //store test list
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	//commit
 	testCommitPointingToTestList := NewCommit(testListPiontingToTestTag.Hash(),
 		hkidC) //gen test commit
-	PostCommit(testCommitPointingToTestList, version) //post test commit
+	err = PostCommit(testCommitPointingToTestList) //post test commit
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	//print
+	fmt.Printf("%s\n%s\n%s\n%s\n",
+		hex.EncodeToString(testBlob.Hash()),
+		hex.EncodeToString(testTagPointingToTestBlob.Hash()),
+		hex.EncodeToString(testListPiontingToTestTag.Hash()),
+		hex.EncodeToString(testCommitPointingToTestList.Hash()))
 }
 
 /*func TestNewCommit(t *testing.T) {
@@ -66,6 +95,7 @@ func TestPath(t *testing.T) {
 	fmt.Print(c.Verifiy())
 }*/
 
+/*
 func TestKeyGen(t *testing.T) {
 	c := elliptic.P521()
 	priv, err := ecdsa.GenerateKey(c, rand.Reader)
@@ -81,7 +111,9 @@ func TestKeyGen(t *testing.T) {
 	priv, err = LoadPrivateKey(GenerateHKID(priv))
 	fmt.Printf("\nhkid:%v\n", GenerateHKID(priv))
 }
+*/
 
+/*
 func TestCommitgen(t *testing.T) {
 	priv, _ := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	SavePrivateKey(priv)
@@ -95,13 +127,15 @@ func TestCommitgen(t *testing.T) {
 	fmt.Printf("\n%v\n%v", hkid, reconstructedhkid)
 	fmt.Printf("\nTestCommitgen\n%v", GenerateCommit([]byte("testing"), priv))
 }
-
+*/
+/*
 func TestTaggen(t *testing.T) {
 	priv, _ := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	//test(priv)
 	fmt.Printf("\nTestTaggen\n%v\n", GenerateTag([]byte("testing"), "blob", "test", priv))
 }
-
+*/
+/*
 func test(priv *ecdsa.PrivateKey, t *testing.T) {
 	mar := elliptic.Marshal(
 		priv.PublicKey.Curve,
@@ -125,3 +159,4 @@ func test(priv *ecdsa.PrivateKey, t *testing.T) {
 	}
 	//fmt.Printf("valid:%v in:%v marsize:%v bits\n\n\n", valid, invalid, len(mar)*8)
 }
+*/

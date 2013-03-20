@@ -13,6 +13,10 @@ func (b blob) Hash() []byte {
 	return h.Sum(make([]byte, 0))
 }
 
+func (b blob) Bytes() []byte {
+	return []byte(b)
+}
+
 //func ([]byte b) Hash() []byte {
 //	var h hash.Hash = sha256.New()
 //	h.Write(b)

@@ -3,8 +3,8 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"hash"
 	"fmt"
+	"hash"
 )
 
 type entry struct {
@@ -18,7 +18,7 @@ type list []entry
 func (l list) Hash() []byte {
 	var h hash.Hash = sha256.New()
 	h.Write(l.Bytes())
-	return h.Sum(make([]byte, 0))
+	return h.Sum(nil)
 }
 
 func (l list) Bytes() []byte {
@@ -26,21 +26,21 @@ func (l list) Bytes() []byte {
 }
 
 func (l list) String() string {
-	for index, element := range l {
-		element.String()
+	s := ""
+	for _, element := range l {
+		s = fmt.Sprintf("%s,\n", element.String())
 	}
+	return s
 }
 
 func (e entry) String() string {
-	return fmt.Sprintf("%s,%s,%s", hex.EncodeToString(e.Hash), e.TypeString, e.nameSegment)
+	return fmt.Sprintf("%s,%s,%s", hex.EncodeToString(e.Hash),
+		e.TypeString, e.nameSegment)
 }
 
-func NewList() list {
-	return list{[]entry{
-			[{[]byte("test"),
-			"blob",
-			"place holder"}]}
-	}
+func NewList(hash []byte, typestring string, nameSegment string) list {
+	e := entry{hash, typestring, nameSegment}
+	return list{e} //
 }
 
 func GenerateList(blobs [][]byte, objectTypes []string,

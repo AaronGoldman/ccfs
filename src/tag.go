@@ -3,30 +3,44 @@ package main
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"hash"
+	"time"
 )
 
 type Tag struct {
 	HashBytes   []byte
 	TypeString  string
 	nameSegment string
-	versionstr  int64
-	signature   []byte //(r, s *big.Int)
+	version     int64
 	hkid        []byte
+	signature   []byte //Marshal(r, s *big.Int)
 	//func Marshal(curve Curve, x, y *big.Int) []byte
 	//func Unmarshal(curve Curve, data []byte) (x, y *big.Int)
 	//elliptic.Marshal(prikey.PublicKey.Curve,prikey.PublicKey.X,prikey.PublicKey.Y)
 }
 
+func (t Tag) Hash() []byte {
+	var h hash.Hash = sha256.New()
+	h.Write(t.Bytes())
+	return h.Sum(nil)
+}
+
+func (t Tag) Bytes() []byte {
+	return []byte(t.String())
+}
+
 func (t Tag) String() string {
-	objectHashStr := hex.EncodeToString(t.HashBytes[:])
-	nameSegment := GenerateNameSegment(t.nameSegment)
-	signature := string(t.signature)
-	hkidstr := string(t.hkid[:])
-	tagstring := fmt.Sprintf("%s,\n%s,\n%s,\n%s,\n%s,\n%s", objectHashStr,
-		t.TypeString, nameSegment, t.versionstr, hkidstr, signature)
-	return tagstring
+	return fmt.Sprintf("%s,\n%s,\n%s,\n%d,\n%s",
+		hex.EncodeToString(t.HashBytes),
+		t.TypeString,
+		t.nameSegment,
+		t.version,
+		hex.EncodeToString(t.hkid),
+		hex.EncodeToString(t.signature))
 }
 
 func (t Tag) Verifiy() bool {
@@ -36,12 +50,30 @@ func (t Tag) Verifiy() bool {
 	return ecdsa.Verify(PublicKey, hashed, r, s)
 }
 
-func NewTag(HashBytes []byte, TypeString string,
-	nameSegment string, hkid []byte) {
-	t = Tag{HashBytes,
+func genTagHash(HashBytes []byte, TypeString string, nameSegment string,
+	version int64, hkid []byte) []byte {
+	var h hash.Hash = sha256.New()
+	h.Write([]byte(fmt.Sprintf("%s,\n%s,\n%s,\n%d,\n%s",
+		hex.EncodeToString(HashBytes),
 		TypeString,
 		nameSegment,
-		GenerateVersion(),
-		GenerateSignature(prikey, ObjectHash),
-		hkid}
+		version,
+		hex.EncodeToString(hkid))))
+	return h.Sum(nil)
+}
+
+func NewTag(HashBytes []byte, TypeString string,
+	nameSegment string, hkid []byte) Tag {
+	prikey, _ := getPrivateKeyForHkid(hkid)
+	version := time.Now().UnixNano()
+	ObjectHash := genTagHash(HashBytes, TypeString, nameSegment, version, hkid)
+	r, s, _ := ecdsa.Sign(rand.Reader, prikey, ObjectHash)
+	signature := elliptic.Marshal(elliptic.P521(), r, s)
+	t := Tag{HashBytes,
+		TypeString,
+		nameSegment,
+		version,
+		hkid,
+		signature}
+	return t
 }
