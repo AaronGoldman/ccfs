@@ -34,13 +34,17 @@ func (t Tag) Bytes() []byte {
 }
 
 func (t Tag) String() string {
-	return fmt.Sprintf("%s,\n%s,\n%s,\n%d,\n%s",
+	return fmt.Sprintf("%s,\n%s,\n%s,\n%d,\n%s,\n%s",
 		hex.EncodeToString(t.HashBytes),
 		t.TypeString,
 		t.nameSegment,
 		t.version,
 		hex.EncodeToString(t.hkid),
 		hex.EncodeToString(t.signature))
+}
+
+func (t Tag) Hkid() []byte {
+	return t.hkid
 }
 
 func (t Tag) Verifiy() bool {

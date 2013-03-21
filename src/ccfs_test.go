@@ -5,13 +5,17 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"strconv"
+	"strings"
 	"testing"
 )
 
 func TestPath(t *testing.T) {
 	//key for tag
 	D := new(big.Int)
-	D, _ = new(big.Int).SetString("3996811067068239799317867982525094232268699726722344370689730210711314983767775860556101498400185744208447673206609026128894016152514163591905578729891874833", 10)
+	D, _ = new(big.Int).SetString("399681106706823979931786798252509423226869972"+
+		"6722344370689730210711314983767775860556101498400185744208447673206609026"+
+		"128894016152514163591905578729891874833", 10)
 	privT := PrivteKeyFromD(*D)
 	keyT := elliptic.Marshal(privT.PublicKey.Curve,
 		privT.PublicKey.X, privT.PublicKey.Y)
@@ -27,7 +31,9 @@ func TestPath(t *testing.T) {
 
 	//key for commit
 	//r, ok := new(big.Int).SetString(s, 16)
-	D, _ = new(big.Int).SetString("4629814823893296480016411334808793836186124559723200979962176753724976464088706463001383556112424820911870650421151988906751710824965155500230480521264034469", 10)
+	D, _ = new(big.Int).SetString("462981482389329648001641133480879383618612455"+
+		"9723200979962176753724976464088706463001383556112424820911870650421151988"+
+		"906751710824965155500230480521264034469", 10)
 	privC := PrivteKeyFromD(*D)
 	keyC := elliptic.Marshal(privC.PublicKey.Curve,
 		privC.PublicKey.X, privC.PublicKey.Y)
@@ -41,14 +47,14 @@ func TestPath(t *testing.T) {
 		fmt.Println(err)
 	}
 
-	//blob
+	//Post blob
 	testBlob := blob([]byte("testing")) //gen test blob
 	err = PostBlob(testBlob)            //store test blob
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	//tag
+	//post tag
 	testTagPointingToTestBlob := NewTag(testBlob.Hash(),
 		"blob",
 		"testBlob",
@@ -58,8 +64,8 @@ func TestPath(t *testing.T) {
 		fmt.Println(err)
 	}
 
-	//list
-	testListPiontingToTestTag := NewList(testTagPointingToTestBlob.Hash(),
+	//post list
+	testListPiontingToTestTag := NewList(testTagPointingToTestBlob.Hkid(),
 		"tag",
 		"testTag") //gen test list
 	err = PostBlob(testListPiontingToTestTag.Bytes()) //store test list
@@ -67,7 +73,7 @@ func TestPath(t *testing.T) {
 		fmt.Println(err)
 	}
 
-	//commit
+	// post commit
 	testCommitPointingToTestList := NewCommit(testListPiontingToTestTag.Hash(),
 		hkidC) //gen test commit
 	err = PostCommit(testCommitPointingToTestList) //post test commit
@@ -81,6 +87,26 @@ func TestPath(t *testing.T) {
 		hex.EncodeToString(testTagPointingToTestBlob.Hash()),
 		hex.EncodeToString(testListPiontingToTestTag.Hash()),
 		hex.EncodeToString(testCommitPointingToTestList.Hash()))
+
+	//get commit
+	hkid, _ := hex.DecodeString("1312ac161875b270da2ae4e1471ba94a" +
+		"9883419250caa4c2f1fd80a91b37907e")
+	commitbytes, err := GetCommit(hkid)
+	if err != nil {
+		panic(err)
+	}
+	commitStrings := strings.Split(string(commitbytes), ",\n")
+	listHash, _ := hex.DecodeString(commitStrings[0])
+	version, _ := strconv.ParseInt(commitStrings[1], 10, 64)
+	chkid, _ := hex.DecodeString(commitStrings[2])
+	signature, _ := hex.DecodeString(commitStrings[3])
+	testcommit := commit{listHash, version, chkid, signature}
+	//fmt.Println(testcommit)
+	fmt.Printf("authentic commit:%v\n",testcommit.Verifiy())
+	//get list
+
+	//get tag
+	//get blob
 }
 
 /*func TestNewCommit(t *testing.T) {

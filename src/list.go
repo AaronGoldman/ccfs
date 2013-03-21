@@ -40,7 +40,7 @@ func (e entry) String() string {
 
 func NewList(hash []byte, typestring string, nameSegment string) list {
 	e := entry{hash, typestring, nameSegment}
-	return list{e} //
+	return list{e}
 }
 
 func GenerateList(blobs [][]byte, objectTypes []string,

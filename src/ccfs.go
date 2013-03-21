@@ -2,10 +2,12 @@ package main
 
 import (
 	"crypto/ecdsa"
+	"crypto/elliptic"
 	"encoding/hex"
-	"encoding/pem"
+	//"encoding/pem"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 )
 
@@ -17,13 +19,17 @@ func main() {
 
 func GetBlob(hash []byte) (data []byte, err error) {
 	//Validate input
-	filepath := fmt.Sprintf("../blobs/%s", hash)
+	filepath := fmt.Sprintf("../blobs/%s", hex.EncodeToString(hash))
 	data, err = ioutil.ReadFile(filepath)
+	if err != nil {
+		fmt.Println(err)
+	}
 	return
 }
 
 func PostBlob(b blob) (err error) {
 	filepath := fmt.Sprintf("../blobs/%s", hex.EncodeToString(b.Hash()))
+	//err = os.MkdirAll(filepath, 0664)
 	err = ioutil.WriteFile(filepath, b.Bytes(), 0664)
 	return
 	//	data = []byte{0xfa,
@@ -38,8 +44,8 @@ func GetTag(hkid []byte, nameSegment string) (data []byte, err error) {
 	//matches []string, err error
 	matches, err := filepath.Glob(fmt.Sprintf("../tags/%s/%s/*", hkid,
 		nameSegment))
-	version := latestVersion(matches)
-	filepath := fmt.Sprintf("../tags/%s/%s/%s", hkid, nameSegment, version)
+	filepath := latestVersion(matches)
+	//filepath := fmt.Sprintf("../tags/%s/%s/%s", hkid, nameSegment, version)
 	data, err = ioutil.ReadFile(filepath)
 	return
 }
@@ -47,48 +53,56 @@ func GetTag(hkid []byte, nameSegment string) (data []byte, err error) {
 func PostTag(t Tag) (err error) {
 	filepath := fmt.Sprintf("../tags/%s/%s/%d", hex.EncodeToString(t.hkid),
 		t.nameSegment, t.version)
+	dirpath := fmt.Sprintf("../tags/%s/%s", hex.EncodeToString(t.hkid),
+		t.nameSegment)
+	err = os.MkdirAll(dirpath, 0764)
 	err = ioutil.WriteFile(filepath, t.Bytes(), 0664)
 	return
 }
 
 func GetCommit(hkid []byte) (data []byte, err error) {
 	//Validate input
-	matches, err := filepath.Glob(fmt.Sprintf("../commits/%s/*", hkid))
-	version := latestVersion(matches)
-	filepath := fmt.Sprintf("../commits/%s/%s", hkid, version)
+	matches, err := filepath.Glob(fmt.Sprintf("../commits/%s/*",
+		hex.EncodeToString(hkid)))
+	filepath := latestVersion(matches)
 	data, err = ioutil.ReadFile(filepath)
 	return
 }
 
 func PostCommit(c commit) (err error) {
-	filepath := fmt.Sprintf("../commits/%s/%d", hex.EncodeToString(c.hkid), c.version)
+	filepath := fmt.Sprintf("../commits/%s/%d", hex.EncodeToString(c.hkid),
+		c.version)
+	dirpath := fmt.Sprintf("../commits/%s", hex.EncodeToString(c.hkid))
+	err = os.MkdirAll(dirpath, 0764)
 	err = ioutil.WriteFile(filepath, c.Bytes(), 0664)
 	return
 }
 func GetKey(hkid []byte) (data []byte, err error) {
-	filepath := fmt.Sprintf("../keys/%s", hkid)
+	filepath := fmt.Sprintf("../keys/%s", hex.EncodeToString(hkid))
 	filedata, err := ioutil.ReadFile(filepath)
-	if err == nil {
-		dataBlock, _ := pem.Decode(filedata)
-		data = dataBlock.Bytes
-	} else {
-		data = []byte("")
+	if err != nil {
+		panic(err)
 	}
-	return
+	//dataBlock, _ := pem.Decode(filedata)
+	//	data = dataBlock.Bytes
+	return filedata, err
 }
 
 func PostKey(p *ecdsa.PrivateKey) (err error) {
-	filepath := fmt.Sprintf("../keys/%s", hex.EncodeToString(KeyHash(*p)))
+	hkid := blob(elliptic.Marshal(p.PublicKey.Curve,
+		p.PublicKey.X, p.PublicKey.Y)).Hash()
+	filepath := fmt.Sprintf("../keys/%s", hex.EncodeToString(hkid))
+	//err = os.MkdirAll(filepath, 0600)
 	err = ioutil.WriteFile(filepath, KeyBytes(*p), 0600)
 	return
 }
 
-func latestVersion(matches []string) (match string) {
-	match = ""
+func latestVersion(matches []string) string {
+	match := ""
 	for _, element := range matches {
 		if match < element {
 			match = element
 		}
 	}
-	return
+	return match
 }

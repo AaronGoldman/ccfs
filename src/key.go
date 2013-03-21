@@ -6,7 +6,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/sha256"
-	"fmt"
+	//"fmt"
 	"hash"
 	"math/big"
 )
@@ -23,12 +23,14 @@ func KeyBytes(p ecdsa.PrivateKey) []byte {
 
 func getPiblicKeyForHkid(hkid []byte) *ecdsa.PublicKey {
 	marshaledKey, _ := GetBlob(hkid)
-	PublicKey := new(ecdsa.PublicKey)
-	PublicKey.Curve = elliptic.P521()
+	//PublicKey := new(ecdsa.PublicKey)
+	curve := elliptic.P521()
 	x, y := elliptic.Unmarshal(elliptic.P521(), marshaledKey)
-	PublicKey.X, PublicKey.Y = x, y
-	fmt.Print(PublicKey)
-	return PublicKey
+	//PublicKey.X, PublicKey.Y = x, y
+	publicKey := ecdsa.PublicKey{curve, x, y}
+	//fmt.Print(marshaledKey, curve, x, y, publicKey) elliptic.Curve *big.Int
+	//fmt.Print(x, y)
+	return &publicKey
 }
 
 func getPrivateKeyForHkid(hkid []byte) (priv *ecdsa.PrivateKey, err error) {
