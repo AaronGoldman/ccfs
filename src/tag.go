@@ -50,8 +50,9 @@ func (t Tag) Hkid() []byte {
 func (t Tag) Verifiy() bool {
 	PublicKey := getPiblicKeyForHkid(t.hkid)
 	r, s := elliptic.Unmarshal(elliptic.P521(), t.signature)
-	hashed := []byte("testing") //place holder
-	return ecdsa.Verify(PublicKey, hashed, r, s)
+	ObjectHash := genTagHash(t.HashBytes, t.TypeString, t.nameSegment,
+		t.version, t.hkid)
+	return ecdsa.Verify(PublicKey, ObjectHash, r, s)
 }
 
 func genTagHash(HashBytes []byte, TypeString string, nameSegment string,

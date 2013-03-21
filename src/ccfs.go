@@ -42,8 +42,8 @@ func PostBlob(b blob) (err error) {
 func GetTag(hkid []byte, nameSegment string) (data []byte, err error) {
 	//Validate input
 	//matches []string, err error
-	matches, err := filepath.Glob(fmt.Sprintf("../tags/%s/%s/*", hkid,
-		nameSegment))
+	matches, err := filepath.Glob(fmt.Sprintf("../tags/%s/%s/*",
+		hex.EncodeToString(hkid), nameSegment))
 	filepath := latestVersion(matches)
 	//filepath := fmt.Sprintf("../tags/%s/%s/%s", hkid, nameSegment, version)
 	data, err = ioutil.ReadFile(filepath)

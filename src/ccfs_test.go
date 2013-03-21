@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/elliptic"
 	"encoding/hex"
 	"fmt"
@@ -8,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"bytes"
 )
 
 func TestPath(t *testing.T) {
@@ -104,6 +104,7 @@ func TestPath(t *testing.T) {
 	testcommit := commit{listHash, version, chkid, signature}
 	//fmt.Println(testcommit)
 	fmt.Printf("authentic commit:%v\n", testcommit.Verifiy())
+
 	//get list
 	listbytes, err := GetBlob(listHash)
 	if err != nil {
@@ -120,11 +121,23 @@ func TestPath(t *testing.T) {
 		entries = append(entries, entry{entryHash, entryTypeString, entryNameSegment})
 	}
 	testlist := list(entries)
-	fmt.Printf("authentic list:%v\n", bytes.Equal(listHash,testlist.Hash()))
+	fmt.Printf("authentic list:%v\n", bytes.Equal(listHash, testlist.Hash()))
 	//get tag
-	//tagBytes := GetTag(entryHash,"testBlob")
-	
+	tagBytes, err := GetTag(testlist[0].Hash, "testBlob")
+	tagStrings := strings.Split(string(tagBytes), ",\n")
+	tagHashBytes, _ := hex.DecodeString(tagStrings[0])
+	tagTypeString := tagStrings[1]
+	tagNameSegment := tagStrings[2]
+	tagVersion, _ := strconv.ParseInt(tagStrings[3], 10, 64)
+	tagHkid, _ := hex.DecodeString(tagStrings[4])
+	tagSignature, _ := hex.DecodeString(tagStrings[5])
+	testTag := Tag{tagHashBytes, tagTypeString, tagNameSegment, tagVersion, tagHkid,
+		tagSignature}
+	fmt.Printf("authentic tag:%v\n", testTag.Verifiy())
 	//get blob
+	blobBytes, _ := GetBlob(tagHashBytes)
+	testBlob = blob(blobBytes)
+	fmt.Printf("authentic blob:%v\n", bytes.Equal(tagHashBytes, testBlob.Hash()))
 }
 
 /*func TestNewCommit(t *testing.T) {
