@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -140,19 +142,6 @@ func TestPath(t *testing.T) {
 	fmt.Printf("authentic blob:%v\n", bytes.Equal(tagHashBytes, testBlob.Hash()))
 }
 
-/*func TestNewCommit(t *testing.T) {
-	listHash := []byte{0xfa,
-		0x84, 0xff, 0xaa, 0xe4, 0xd6, 0x5f, 0x49, 0x67, 0x67, 0x8c, 0x95, 0xb7, 0xf9, 0x6d, 0x61,
-		0xe0, 0x67, 0x2b, 0x77, 0xe2, 0x67, 0x26, 0x78, 0x44, 0x44, 0x95, 0x24, 0x55, 0x07, 0x56, 0xb4}
-	hkid := []byte{0xfa,
-		0x84, 0xff, 0xaa, 0xe4, 0xd6, 0x5f, 0x49, 0x67, 0x67, 0x8c, 0x95, 0xb7, 0xf9, 0x6d, 0x61,
-		0xe0, 0x67, 0x2b, 0x77, 0xe2, 0x67, 0x26, 0x78, 0x44, 0x44, 0x95, 0x24, 0x55, 0x07, 0x56, 0xb4}
-	fmt.Print(listHash, hkid)
-	c := NewCommit(listHash, hkid)
-	fmt.Print(c.Verifiy())
-}*/
-
-/*
 func TestKeyGen(t *testing.T) {
 	c := elliptic.P521()
 	priv, err := ecdsa.GenerateKey(c, rand.Reader)
@@ -160,15 +149,13 @@ func TestKeyGen(t *testing.T) {
 		t.Errorf("Error %v", err)
 	}
 	fmt.Printf("TestKeyGen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X, priv.PublicKey.Y, priv.D)
-	//priv.PublicKey.X, priv.PublicKey.Y = c.ScalarBaseMult(priv.D.Bytes())
-	//fmt.Printf("X = %v\nY = %v\nD = %v\n", priv.PublicKey.X, priv.PublicKey.Y, priv.D)
-	test(priv, t)
-	//SaveKey(priv)
-	SavePrivateKey(priv)
-	priv, err = LoadPrivateKey(GenerateHKID(priv))
-	fmt.Printf("\nhkid:%v\n", GenerateHKID(priv))
+	err = PostKey(priv)
+	if err != nil {
+		t.Errorf("Error %v", err)
+	}
+	PostBlob(elliptic.Marshal(priv.PublicKey.Curve,
+		priv.PublicKey.X, priv.PublicKey.Y))
 }
-*/
 
 /*
 func TestCommitgen(t *testing.T) {
