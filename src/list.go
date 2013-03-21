@@ -28,9 +28,9 @@ func (l list) Bytes() []byte {
 func (l list) String() string {
 	s := ""
 	for _, element := range l {
-		s = fmt.Sprintf("%s,\n", element.String())
+		s = fmt.Sprintf("%s\n", element.String())
 	}
-	return s
+	return s[:len(s)-1]
 }
 
 func (e entry) String() string {

@@ -61,7 +61,7 @@ func commitSign(listHash []byte, version int64, hkid []byte) (signature []byte) 
 	return
 }
 
-func (c commit) Verifiy() (bool) {
+func (c commit) Verifiy() bool {
 	ObjectHash := genCommitHash(c.listHash, c.version, c.hkid)
 	pubkey := getPiblicKeyForHkid(c.hkid)
 	r, s := elliptic.Unmarshal(pubkey.Curve, c.signature)

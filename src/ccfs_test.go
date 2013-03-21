@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"bytes"
 )
 
 func TestPath(t *testing.T) {
@@ -102,10 +103,27 @@ func TestPath(t *testing.T) {
 	signature, _ := hex.DecodeString(commitStrings[3])
 	testcommit := commit{listHash, version, chkid, signature}
 	//fmt.Println(testcommit)
-	fmt.Printf("authentic commit:%v\n",testcommit.Verifiy())
+	fmt.Printf("authentic commit:%v\n", testcommit.Verifiy())
 	//get list
-
+	listbytes, err := GetBlob(listHash)
+	if err != nil {
+		panic(err)
+	}
+	listEntries := strings.Split(string(listbytes), "\n")
+	entries := []entry{}
+	cols := []string{}
+	for _, element := range listEntries {
+		cols = strings.Split(element, ",")
+		entryHash, _ := hex.DecodeString(cols[0])
+		entryTypeString := cols[1]
+		entryNameSegment := cols[2]
+		entries = append(entries, entry{entryHash, entryTypeString, entryNameSegment})
+	}
+	testlist := list(entries)
+	fmt.Printf("authentic list:%v\n", bytes.Equal(listHash,testlist.Hash()))
 	//get tag
+	//tagBytes := GetTag(entryHash,"testBlob")
+	
 	//get blob
 }
 
