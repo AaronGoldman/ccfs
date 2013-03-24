@@ -8,17 +8,17 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
-	"strconv"
 	"strings"
 	"testing"
 )
 
-func TestPath(t *testing.T) {
+func BenchmarkPath(b *testing.B) {
+
 	//key for tag
 	D := new(big.Int)
 	D, _ = new(big.Int).SetString("399681106706823979931786798252509423226869972"+
 		"6722344370689730210711314983767775860556101498400185744208447673206609026"+
-		"128894016152514163591905578729891874833", 10)
+		"128894016152514163591905578729891874833", 10) //this number is the key
 	privT := PrivteKeyFromD(*D)
 	keyT := elliptic.Marshal(privT.PublicKey.Curve,
 		privT.PublicKey.X, privT.PublicKey.Y)
@@ -33,7 +33,6 @@ func TestPath(t *testing.T) {
 	}
 
 	//key for commit
-	//r, ok := new(big.Int).SetString(s, 16)
 	D, _ = new(big.Int).SetString("462981482389329648001641133480879383618612455"+
 		"9723200979962176753724976464088706463001383556112424820911870650421151988"+
 		"906751710824965155500230480521264034469", 10)
@@ -50,157 +49,95 @@ func TestPath(t *testing.T) {
 		fmt.Println(err)
 	}
 
-	//Post blob
-	testBlob := blob([]byte("testing")) //gen test blob
-	err = PostBlob(testBlob)            //store test blob
-	if err != nil {
-		fmt.Println(err)
-	}
+	for i := 0; i < b.N; i++ {
+		//Post blob
+		testBlob := blob([]byte("testing")) //gen test blob
+		err = PostBlob(testBlob)            //store test blob
+		if err != nil {
+			fmt.Println(err)
+		}
 
-	//post tag
-	testTagPointingToTestBlob := NewTag(testBlob.Hash(),
-		"blob",
-		"testBlob",
-		hkidT) //gen test tag
-	err = PostTag(testTagPointingToTestBlob) //post test tag
-	if err != nil {
-		fmt.Println(err)
-	}
+		//post tag
+		testTagPointingToTestBlob := NewTag(testBlob.Hash(),
+			"blob",
+			"testBlob",
+			hkidT) //gen test tag
+		err = PostTag(testTagPointingToTestBlob) //post test tag
+		if err != nil {
+			fmt.Println(err)
+		}
 
-	//post list
-	testListPiontingToTestTag := NewList(testTagPointingToTestBlob.Hkid(),
-		"tag",
-		"testTag") //gen test list
-	err = PostBlob(testListPiontingToTestTag.Bytes()) //store test list
-	if err != nil {
-		fmt.Println(err)
-	}
+		//post list
+		testListPiontingToTestTag := NewList(testTagPointingToTestBlob.Hkid(),
+			"tag",
+			"testTag") //gen test list
+		err = PostBlob(testListPiontingToTestTag.Bytes()) //store test list
+		if err != nil {
+			fmt.Println(err)
+		}
 
-	// post commit
-	testCommitPointingToTestList := NewCommit(testListPiontingToTestTag.Hash(),
-		hkidC) //gen test commit
-	err = PostCommit(testCommitPointingToTestList) //post test commit
-	if err != nil {
-		fmt.Println(err)
-	}
+		// post commit
+		testCommitPointingToTestList := NewCommit(testListPiontingToTestTag.Hash(),
+			hkidC) //gen test commit
+		err = PostCommit(testCommitPointingToTestList) //post test commit
+		if err != nil {
+			fmt.Println(err)
+		}
 
-	//print
-	fmt.Printf("%s\n%s\n%s\n%s\n",
-		hex.EncodeToString(testBlob.Hash()),
-		hex.EncodeToString(testTagPointingToTestBlob.Hash()),
-		hex.EncodeToString(testListPiontingToTestTag.Hash()),
-		hex.EncodeToString(testCommitPointingToTestList.Hash()))
+		//print
+		fmt.Printf("%s\n%s\n%s\n%s\n",
+			hex.EncodeToString(testBlob.Hash()),
+			hex.EncodeToString(testTagPointingToTestBlob.Hash()),
+			hex.EncodeToString(testListPiontingToTestTag.Hash()),
+			hex.EncodeToString(testCommitPointingToTestList.Hash()))
 
-	//get commit
-	hkid, _ := hex.DecodeString("1312ac161875b270da2ae4e1471ba94a" +
-		"9883419250caa4c2f1fd80a91b37907e")
-	commitbytes, err := GetCommit(hkid)
-	if err != nil {
-		panic(err)
-	}
-	commitStrings := strings.Split(string(commitbytes), ",\n")
-	listHash, _ := hex.DecodeString(commitStrings[0])
-	version, _ := strconv.ParseInt(commitStrings[1], 10, 64)
-	chkid, _ := hex.DecodeString(commitStrings[2])
-	signature, _ := hex.DecodeString(commitStrings[3])
-	testcommit := commit{listHash, version, chkid, signature}
-	//fmt.Println(testcommit)
-	fmt.Printf("authentic commit:%v\n", testcommit.Verifiy())
+		//get commit
+		hkid, _ := hex.DecodeString("1312ac161875b270da2ae4e1471ba94a" +
+			"9883419250caa4c2f1fd80a91b37907e")
+		testcommit, err := GetCommit(hkid)
+		if err != nil {
+			panic(err)
+		}
 
-	//get list
-	listbytes, err := GetBlob(listHash)
-	if err != nil {
-		panic(err)
+		fmt.Printf("authentic commit:%v\n", testcommit.Verifiy())
+
+		//get list
+		listbytes, err := GetBlob(testcommit.listHash)
+		if err != nil {
+			panic(err)
+		}
+		listEntries := strings.Split(string(listbytes), "\n")
+		entries := []entry{}
+		cols := []string{}
+		for _, element := range listEntries {
+			cols = strings.Split(element, ",")
+			entryHash, _ := hex.DecodeString(cols[0])
+			entryTypeString := cols[1]
+			entryNameSegment := cols[2]
+			entries = append(entries, entry{entryHash, entryTypeString, entryNameSegment})
+		}
+		testlist := list(entries)
+		fmt.Printf("authentic list:%v\n", bytes.Equal(testcommit.listHash, testlist.Hash()))
+		//get tag
+		testTag, err := GetTag(testlist[0].Hash, "testBlob")
+		fmt.Printf("authentic tag:%v\n", testTag.Verifiy())
+		//get blob
+		testBlob, _ = GetBlob(testTag.HashBytes)
+		fmt.Printf("authentic blob:%v\n", bytes.Equal(testTag.HashBytes, testBlob.Hash()))
 	}
-	listEntries := strings.Split(string(listbytes), "\n")
-	entries := []entry{}
-	cols := []string{}
-	for _, element := range listEntries {
-		cols = strings.Split(element, ",")
-		entryHash, _ := hex.DecodeString(cols[0])
-		entryTypeString := cols[1]
-		entryNameSegment := cols[2]
-		entries = append(entries, entry{entryHash, entryTypeString, entryNameSegment})
-	}
-	testlist := list(entries)
-	fmt.Printf("authentic list:%v\n", bytes.Equal(listHash, testlist.Hash()))
-	//get tag
-	tagBytes, err := GetTag(testlist[0].Hash, "testBlob")
-	tagStrings := strings.Split(string(tagBytes), ",\n")
-	tagHashBytes, _ := hex.DecodeString(tagStrings[0])
-	tagTypeString := tagStrings[1]
-	tagNameSegment := tagStrings[2]
-	tagVersion, _ := strconv.ParseInt(tagStrings[3], 10, 64)
-	tagHkid, _ := hex.DecodeString(tagStrings[4])
-	tagSignature, _ := hex.DecodeString(tagStrings[5])
-	testTag := Tag{tagHashBytes, tagTypeString, tagNameSegment, tagVersion, tagHkid,
-		tagSignature}
-	fmt.Printf("authentic tag:%v\n", testTag.Verifiy())
-	//get blob
-	blobBytes, _ := GetBlob(tagHashBytes)
-	testBlob = blob(blobBytes)
-	fmt.Printf("authentic blob:%v\n", bytes.Equal(tagHashBytes, testBlob.Hash()))
 }
 
-func TestKeyGen(t *testing.T) {
+func TestKeyGen(b *testing.T) {
 	c := elliptic.P521()
 	priv, err := ecdsa.GenerateKey(c, rand.Reader)
 	if err != nil {
-		t.Errorf("Error %v", err)
+		b.Errorf("Error %v", err)
 	}
 	fmt.Printf("TestKeyGen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X, priv.PublicKey.Y, priv.D)
 	err = PostKey(priv)
 	if err != nil {
-		t.Errorf("Error %v", err)
+		b.Errorf("Error %v", err)
 	}
 	PostBlob(elliptic.Marshal(priv.PublicKey.Curve,
 		priv.PublicKey.X, priv.PublicKey.Y))
 }
-
-/*
-func TestCommitgen(t *testing.T) {
-	priv, _ := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
-	SavePrivateKey(priv)
-	//fmt.Printf("\nTestCommitgen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X, priv.PublicKey.Y, priv.D)
-	hkid := GenerateHKID(priv)
-	reconstructedkey, err := LoadPrivateKey(hkid)
-	if err != nil {
-		panic(err)
-	}
-	reconstructedhkid := GenerateHKID(reconstructedkey)
-	fmt.Printf("\n%v\n%v", hkid, reconstructedhkid)
-	fmt.Printf("\nTestCommitgen\n%v", GenerateCommit([]byte("testing"), priv))
-}
-*/
-/*
-func TestTaggen(t *testing.T) {
-	priv, _ := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
-	//test(priv)
-	fmt.Printf("\nTestTaggen\n%v\n", GenerateTag([]byte("testing"), "blob", "test", priv))
-}
-*/
-/*
-func test(priv *ecdsa.PrivateKey, t *testing.T) {
-	mar := elliptic.Marshal(
-		priv.PublicKey.Curve,
-		priv.PublicKey.X,
-		priv.PublicKey.Y)
-	x, y := elliptic.Unmarshal(elliptic.P521(), mar)
-	maredPublicKey := new(ecdsa.PublicKey)
-	maredPublicKey.Curve = elliptic.P521()
-	maredPublicKey.X = x
-	maredPublicKey.Y = y
-
-	hashed := []byte("testing")
-	r, s, _ := ecdsa.Sign(rand.Reader, priv, hashed)
-	valid := ecdsa.Verify(maredPublicKey, hashed, r, s)
-	if valid != true {
-		t.Errorf("failed Verify\n")
-	}
-	invalid := ecdsa.Verify(maredPublicKey, []byte("fail testing"), r, s)
-	if invalid != false {
-		t.Errorf("failed falsify\n")
-	}
-	//fmt.Printf("valid:%v in:%v marsize:%v bits\n\n\n", valid, invalid, len(mar)*8)
-}
-*/
