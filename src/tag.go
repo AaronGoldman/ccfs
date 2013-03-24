@@ -17,10 +17,7 @@ type Tag struct {
 	nameSegment string
 	version     int64
 	hkid        []byte
-	signature   []byte //Marshal(r, s *big.Int)
-	//func Marshal(curve Curve, x, y *big.Int) []byte
-	//func Unmarshal(curve Curve, data []byte) (x, y *big.Int)
-	//elliptic.Marshal(prikey.PublicKey.Curve,prikey.PublicKey.X,prikey.PublicKey.Y)
+	signature   []byte
 }
 
 func (t Tag) Hash() []byte {
@@ -55,18 +52,6 @@ func (t Tag) Verifiy() bool {
 	return ecdsa.Verify(PublicKey, ObjectHash, r, s)
 }
 
-func genTagHash(HashBytes []byte, TypeString string, nameSegment string,
-	version int64, hkid []byte) []byte {
-	var h hash.Hash = sha256.New()
-	h.Write([]byte(fmt.Sprintf("%s,\n%s,\n%s,\n%d,\n%s",
-		hex.EncodeToString(HashBytes),
-		TypeString,
-		nameSegment,
-		version,
-		hex.EncodeToString(hkid))))
-	return h.Sum(nil)
-}
-
 func NewTag(HashBytes []byte, TypeString string,
 	nameSegment string, hkid []byte) Tag {
 	prikey, _ := getPrivateKeyForHkid(hkid)
@@ -81,4 +66,16 @@ func NewTag(HashBytes []byte, TypeString string,
 		hkid,
 		signature}
 	return t
+}
+
+func genTagHash(HashBytes []byte, TypeString string, nameSegment string,
+	version int64, hkid []byte) []byte {
+	var h hash.Hash = sha256.New()
+	h.Write([]byte(fmt.Sprintf("%s,\n%s,\n%s,\n%d,\n%s",
+		hex.EncodeToString(HashBytes),
+		TypeString,
+		nameSegment,
+		version,
+		hex.EncodeToString(hkid))))
+	return h.Sum(nil)
 }

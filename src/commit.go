@@ -40,14 +40,11 @@ func (c commit) Hkid() []byte {
 	return c.hkid
 }
 
-func genCommitHash(listHash []byte, version int64, hkid []byte) (ObjectHash []byte) {
-	var h hash.Hash = sha256.New()
-	h.Write([]byte(fmt.Sprintf("%s,\n%d,\n%s",
-		hex.EncodeToString(listHash),
-		version,
-		hex.EncodeToString(hkid))))
-	ObjectHash = h.Sum(nil)
-	return
+func (c commit) Verifiy() bool {
+	ObjectHash := genCommitHash(c.listHash, c.version, c.hkid)
+	pubkey := getPiblicKeyForHkid(c.hkid)
+	r, s := elliptic.Unmarshal(pubkey.Curve, c.signature)
+	return ecdsa.Verify(pubkey, ObjectHash, r, s)
 }
 
 func commitSign(listHash []byte, version int64, hkid []byte) (signature []byte) {
@@ -61,12 +58,16 @@ func commitSign(listHash []byte, version int64, hkid []byte) (signature []byte) 
 	return
 }
 
-func (c commit) Verifiy() bool {
-	ObjectHash := genCommitHash(c.listHash, c.version, c.hkid)
-	pubkey := getPiblicKeyForHkid(c.hkid)
-	r, s := elliptic.Unmarshal(pubkey.Curve, c.signature)
-	return ecdsa.Verify(pubkey, ObjectHash, r, s)
+func genCommitHash(listHash []byte, version int64, hkid []byte) (ObjectHash []byte) {
+	var h hash.Hash = sha256.New()
+	h.Write([]byte(fmt.Sprintf("%s,\n%d,\n%s",
+		hex.EncodeToString(listHash),
+		version,
+		hex.EncodeToString(hkid))))
+	ObjectHash = h.Sum(nil)
+	return
 }
+
 func NewCommit(listHash []byte, hkid []byte) (c commit) {
 	c.listHash = listHash
 	c.version = time.Now().UnixNano()
@@ -75,17 +76,7 @@ func NewCommit(listHash []byte, hkid []byte) (c commit) {
 	return
 }
 
-func GenerateCommit(list []byte, key *ecdsa.PrivateKey) (Commit string) {
-	listHashBytes := GenerateObjectHash(list)
-	listHashStr := hex.EncodeToString(listHashBytes)
-	versionstr := GenerateVersion()
-	signature := GenerateSignature(key, listHashBytes)
-	hkidstr := GenerateHKID(key)
-	return fmt.Sprintf("%s,%s,%s,%s", listHashStr,
-		versionstr, hkidstr, signature)
-}
-
-// func GenerateCommit(list []byte, key *ecdsa.PrivateKey) (Commit string) {
+//func GenerateCommit(list []byte, key *ecdsa.PrivateKey) (Commit string) {
 //	listHashBytes := GenerateObjectHash(list)
 //	listHashStr := hex.EncodeToString(listHashBytes)
 //	versionstr := GenerateVersion()

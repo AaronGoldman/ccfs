@@ -85,11 +85,11 @@ func BenchmarkPath(b *testing.B) {
 		}
 
 		//print
-		fmt.Printf("%s\n%s\n%s\n%s\n",
-			hex.EncodeToString(testBlob.Hash()),
-			hex.EncodeToString(testTagPointingToTestBlob.Hash()),
-			hex.EncodeToString(testListPiontingToTestTag.Hash()),
-			hex.EncodeToString(testCommitPointingToTestList.Hash()))
+		//fmt.Printf("%s\n%s\n%s\n%s\n",
+		//	hex.EncodeToString(testBlob.Hash()),
+		//	hex.EncodeToString(testTagPointingToTestBlob.Hash()),
+		//	hex.EncodeToString(testListPiontingToTestTag.Hash()),
+		//	hex.EncodeToString(testCommitPointingToTestList.Hash()))
 
 		//get commit
 		hkid, _ := hex.DecodeString("1312ac161875b270da2ae4e1471ba94a" +

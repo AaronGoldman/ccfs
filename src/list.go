@@ -43,7 +43,7 @@ func NewList(hash []byte, typestring string, nameSegment string) list {
 	return list{e}
 }
 
-func GenerateList(blobs [][]byte, objectTypes []string,
-	nameSegment []string) (list string) {
-	return list
-}
+//func GenerateList(blobs [][]byte, objectTypes []string,
+//	nameSegment []string) (list string) {
+//	return list
+//}

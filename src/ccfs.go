@@ -19,7 +19,7 @@ func main() {
 }
 
 func GetBlob(hash []byte) (b blob, err error) {
-	//Validate input
+	//ToDo Validate input
 	filepath := fmt.Sprintf("../blobs/%s", hex.EncodeToString(hash))
 	data, err := ioutil.ReadFile(filepath)
 	if err != nil {
@@ -37,7 +37,7 @@ func PostBlob(b blob) (err error) {
 }
 
 func GetTag(hkid []byte, nameSegment string) (t Tag, err error) {
-	//Validate input
+	//ToDo Validate input
 	matches, err := filepath.Glob(fmt.Sprintf("../tags/%s/%s/*",
 		hex.EncodeToString(hkid), nameSegment))
 	filepath := latestVersion(matches)
