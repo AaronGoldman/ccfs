@@ -7,10 +7,25 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"io/ioutil"
 	"math/big"
 	"strings"
 	"testing"
 )
+
+func BenchmarkStoreOne(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		err := ioutil.WriteFile("../storeone", []byte("storeone"), 0664)
+		if err != nil {
+			panic(err)
+		}
+		data, err := ioutil.ReadFile("../storeone")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Print(data)
+	}
+}
 
 func BenchmarkPath(b *testing.B) {
 
