@@ -19,11 +19,11 @@ func BenchmarkStoreOne(b *testing.B) {
 		if err != nil {
 			panic(err)
 		}
-		data, err := ioutil.ReadFile("../storeone")
+		_, err = ioutil.ReadFile("../storeone")
 		if err != nil {
 			panic(err)
 		}
-		fmt.Print(data)
+		//fmt.Print(data)
 	}
 }
 

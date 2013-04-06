@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	go BlobServerStart()
+	//go BlobServerStart()
 	//hashfindwalk()
 	return
 }
