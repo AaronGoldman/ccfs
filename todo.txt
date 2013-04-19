@@ -25,6 +25,8 @@
 	|_| storeTag(tag)
 	|_| getCommit(hkid)
 	|_| storeCommit(Commit)
+	|_| getKey(hkid)
+	|_| storeKey(key)
  _
 |_| folderToList()
 |_| folderToTags()
@@ -35,3 +37,12 @@
 |_| commit_test.go
 |_| key_test.go
 |_| ccfs_test.go
+
+ _
+| |things to wrap
+	|_| local fs
+	|_| mdns
+	|_| apt-script
+	
+ _
+|_|	surve as web

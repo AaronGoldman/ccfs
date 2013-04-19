@@ -1,0 +1,5 @@
+go tool pprof --text ../bin/ccfs.exe ../bin/prof.out |less
+
+go test -bench=".*" -cpuprofile=../bin/prof.out
+
+go build -o ../bin/ccfs.exe

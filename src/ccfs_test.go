@@ -15,11 +15,11 @@ import (
 
 func BenchmarkStoreOne(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		err := ioutil.WriteFile("../storeone", []byte("storeone"), 0664)
+		err := ioutil.WriteFile("../bin/storeone", []byte("storeone"), 0664)
 		if err != nil {
 			panic(err)
 		}
-		_, err = ioutil.ReadFile("../storeone")
+		_, err = ioutil.ReadFile("../bin/storeone")
 		if err != nil {
 			panic(err)
 		}
@@ -129,16 +129,19 @@ func BenchmarkPath(b *testing.B) {
 			entryHash, _ := hex.DecodeString(cols[0])
 			entryTypeString := cols[1]
 			entryNameSegment := cols[2]
-			entries = append(entries, entry{entryHash, entryTypeString, entryNameSegment})
+			entries = append(entries, entry{entryHash, entryTypeString,
+				entryNameSegment})
 		}
 		testlist := list(entries)
-		fmt.Printf("authentic list:%v\n", bytes.Equal(testcommit.listHash, testlist.Hash()))
+		fmt.Printf("authentic list:%v\n", bytes.Equal(testcommit.listHash,
+			testlist.Hash()))
 		//get tag
 		testTag, err := GetTag(testlist[0].Hash, "testBlob")
 		fmt.Printf("authentic tag:%v\n", testTag.Verifiy())
 		//get blob
 		testBlob, _ = GetBlob(testTag.HashBytes)
-		fmt.Printf("authentic blob:%v\n", bytes.Equal(testTag.HashBytes, testBlob.Hash()))
+		fmt.Printf("authentic blob:%v\n", bytes.Equal(testTag.HashBytes,
+			testBlob.Hash()))
 	}
 }
 
@@ -148,7 +151,8 @@ func TestKeyGen(b *testing.T) {
 	if err != nil {
 		b.Errorf("Error %v", err)
 	}
-	fmt.Printf("TestKeyGen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X, priv.PublicKey.Y, priv.D)
+	fmt.Printf("TestKeyGen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X,
+		priv.PublicKey.Y, priv.D)
 	err = PostKey(priv)
 	if err != nil {
 		b.Errorf("Error %v", err)

@@ -8,6 +8,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"hash"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -58,7 +60,8 @@ func commitSign(listHash []byte, version int64, hkid []byte) (signature []byte) 
 	return
 }
 
-func genCommitHash(listHash []byte, version int64, hkid []byte) (ObjectHash []byte) {
+func genCommitHash(listHash []byte, version int64, hkid []byte) (
+	ObjectHash []byte) {
 	var h hash.Hash = sha256.New()
 	h.Write([]byte(fmt.Sprintf("%s,\n%d,\n%s",
 		hex.EncodeToString(listHash),
@@ -76,12 +79,13 @@ func NewCommit(listHash []byte, hkid []byte) (c commit) {
 	return
 }
 
-//func GenerateCommit(list []byte, key *ecdsa.PrivateKey) (Commit string) {
-//	listHashBytes := GenerateObjectHash(list)
-//	listHashStr := hex.EncodeToString(listHashBytes)
-//	versionstr := GenerateVersion()
-//	signature := GenerateSignature(key, listHashBytes)
-//	hkidstr := GenerateHKID(key)
-//	return fmt.Sprintf("%s,%s,%s,%s", listHashStr,
-//		versionstr, hkidstr, signature)
-//}
+func CommitFromBytes(bytes []byte) (c commit, err error) {
+	//build object
+	commitStrings := strings.Split(string(bytes), ",\n")
+	listHash, _ := hex.DecodeString(commitStrings[0])
+	version, _ := strconv.ParseInt(commitStrings[1], 10, 64)
+	chkid, _ := hex.DecodeString(commitStrings[2])
+	signature, _ := hex.DecodeString(commitStrings[3])
+	c = commit{listHash, version, chkid, signature}
+	return
+}

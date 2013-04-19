@@ -8,13 +8,14 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
 )
 
 func main() {
-	//go BlobServerStart()
+	go BlobServerStart()
 	//hashfindwalk()
+	in := bufio.NewReader(os.Stdin)
+	input, err := in.ReadString('\n')
+	fmt.Println(input)
 	return
 }
 
@@ -26,7 +27,7 @@ func GetBlob(hash []byte) (b blob, err error) {
 		fmt.Println(err)
 	}
 	//build object
-	b = blob(data)
+	b, _ = BlobFromBytes(data)
 	return
 }
 
@@ -42,16 +43,7 @@ func GetTag(hkid []byte, nameSegment string) (t Tag, err error) {
 		hex.EncodeToString(hkid), nameSegment))
 	filepath := latestVersion(matches)
 	data, err := ioutil.ReadFile(filepath)
-	//build object
-	tagStrings := strings.Split(string(data), ",\n")
-	tagHashBytes, _ := hex.DecodeString(tagStrings[0])
-	tagTypeString := tagStrings[1]
-	tagNameSegment := tagStrings[2]
-	tagVersion, _ := strconv.ParseInt(tagStrings[3], 10, 64)
-	tagHkid, _ := hex.DecodeString(tagStrings[4])
-	tagSignature, _ := hex.DecodeString(tagStrings[5])
-	t = Tag{tagHashBytes, tagTypeString, tagNameSegment, tagVersion, tagHkid,
-		tagSignature}
+	t, _ = TagFromBytes(data)
 	return
 }
 
@@ -71,13 +63,7 @@ func GetCommit(hkid []byte) (c commit, err error) {
 		hex.EncodeToString(hkid)))
 	filepath := latestVersion(matches)
 	data, err := ioutil.ReadFile(filepath)
-	//build object
-	commitStrings := strings.Split(string(data), ",\n")
-	listHash, _ := hex.DecodeString(commitStrings[0])
-	version, _ := strconv.ParseInt(commitStrings[1], 10, 64)
-	chkid, _ := hex.DecodeString(commitStrings[2])
-	signature, _ := hex.DecodeString(commitStrings[3])
-	c = commit{listHash, version, chkid, signature}
+	c, _ = CommitFromBytes(data)
 	return
 }
 
