@@ -19,6 +19,15 @@ func main() {
 	return
 }
 
+func get(hkid []byte, path string)(b blob, err){
+	key := getPiblicKeyForHkid(hkid []byte)
+	commit, err := GetCommit(hkid []byte)
+}
+
+func post(hkid []byte, path string, b blob)(err){
+
+}
+
 func GetBlob(hash []byte) (b blob, err error) {
 	//ToDo Validate input
 	filepath := fmt.Sprintf("../blobs/%s", hex.EncodeToString(hash))
