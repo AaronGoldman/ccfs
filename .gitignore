@@ -28,3 +28,4 @@ blobs/*
 commits/*
 tags/*
 keys/*
+bin/*
