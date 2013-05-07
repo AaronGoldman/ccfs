@@ -5,12 +5,18 @@ import (
 	"encoding/hex"
 	"fmt"
 	"hash"
+	"strings"
 )
 
 type entry struct {
 	Hash        []byte
 	TypeString  string
 	nameSegment string
+}
+
+func (e entry) String() string {
+	return fmt.Sprintf("%s,%s,%s", hex.EncodeToString(e.Hash),
+		e.TypeString, e.nameSegment)
 }
 
 type list []entry
@@ -33,9 +39,13 @@ func (l list) String() string {
 	return s[:len(s)-1]
 }
 
-func (e entry) String() string {
-	return fmt.Sprintf("%s,%s,%s", hex.EncodeToString(e.Hash),
-		e.TypeString, e.nameSegment)
+func (l list) hash_for_namesegment(namesegment string) (string, []byte) {
+	for _, element := range l {
+		if strings.EqualFold(element.nameSegment, namesegment) {
+			return element.TypeString, element.Hash
+		}
+	}
+	return "null", nil
 }
 
 func NewList(hash []byte, typestring string, nameSegment string) list {
@@ -43,7 +53,24 @@ func NewList(hash []byte, typestring string, nameSegment string) list {
 	return list{e}
 }
 
-//func GenerateList(blobs [][]byte, objectTypes []string,
-//	nameSegment []string) (list string) {
-//	return list
-//}
+func NewListFromBytes(listbytes []byte) (newlist list) {
+	listEntries := strings.Split(string(listbytes), "\n")
+	entries := []entry{}
+	cols := []string{}
+	for _, element := range listEntries {
+		cols = strings.Split(element, ",")
+		entryHash, _ := hex.DecodeString(cols[0])
+		entryTypeString := cols[1]
+		entryNameSegment := cols[2]
+		entries = append(entries, entry{entryHash, entryTypeString,
+			entryNameSegment})
+	}
+	newlist = list(entries)
+	return
+}
+
+func GetList(hash []byte) (l list, err error) {
+	listbytes, err := GetBlob(hash)
+	l = NewListFromBytes(listbytes)
+	return
+}

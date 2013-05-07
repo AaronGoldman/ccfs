@@ -9,9 +9,21 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/big"
-	"strings"
 	"testing"
 )
+
+func TestGet(t *testing.T) {
+	hkid, err := hex.DecodeString("1312ac161875b270da2ae4e1471ba94a" +
+		"9883419250caa4c2f1fd80a91b37907e")
+	path := "testTag/testBlob"
+	b := []byte(":(")
+	if err == nil {
+		b, err = get(hkid, path)
+	}
+	if !bytes.Equal([]byte("testing"), b) || err != nil {
+		t.Fail()
+	}
+}
 
 func BenchmarkStoreOne(b *testing.B) {
 	for i := 0; i < b.N; i++ {
@@ -105,6 +117,7 @@ func BenchmarkPath(b *testing.B) {
 		//	hex.EncodeToString(testTagPointingToTestBlob.Hash()),
 		//	hex.EncodeToString(testListPiontingToTestTag.Hash()),
 		//	hex.EncodeToString(testCommitPointingToTestList.Hash()))
+		//commit -> list -> tag -> blob
 
 		//get commit
 		hkid, _ := hex.DecodeString("1312ac161875b270da2ae4e1471ba94a" +
@@ -114,38 +127,39 @@ func BenchmarkPath(b *testing.B) {
 			panic(err)
 		}
 
-		fmt.Printf("authentic commit:%v\n", testcommit.Verifiy())
-
+		//fmt.Printf("authentic commit:%v\n", testcommit.Verifiy())
+		if !testcommit.Verifiy() {
+			b.FailNow()
+		}
 		//get list
 		listbytes, err := GetBlob(testcommit.listHash)
 		if err != nil {
 			panic(err)
 		}
-		listEntries := strings.Split(string(listbytes), "\n")
-		entries := []entry{}
-		cols := []string{}
-		for _, element := range listEntries {
-			cols = strings.Split(element, ",")
-			entryHash, _ := hex.DecodeString(cols[0])
-			entryTypeString := cols[1]
-			entryNameSegment := cols[2]
-			entries = append(entries, entry{entryHash, entryTypeString,
-				entryNameSegment})
+
+		testlist := NewListFromBytes(listbytes)
+
+		//fmt.Printf("authentic list:%v\n", )
+		if !bytes.Equal(testcommit.listHash, testlist.Hash()) {
+			b.FailNow()
 		}
-		testlist := list(entries)
-		fmt.Printf("authentic list:%v\n", bytes.Equal(testcommit.listHash,
-			testlist.Hash()))
 		//get tag
 		testTag, err := GetTag(testlist[0].Hash, "testBlob")
-		fmt.Printf("authentic tag:%v\n", testTag.Verifiy())
+		//fmt.Printf("authentic tag:%v\n", testTag.Verifiy())
+		if !testTag.Verifiy() {
+			b.FailNow()
+		}
 		//get blob
 		testBlob, _ = GetBlob(testTag.HashBytes)
-		fmt.Printf("authentic blob:%v\n", bytes.Equal(testTag.HashBytes,
-			testBlob.Hash()))
+		//fmt.Printf("authentic blob:%v\n", bytes.Equal(testTag.HashBytes,
+		//	testBlob.Hash()))
+		if !bytes.Equal(testTag.HashBytes, testBlob.Hash()) {
+			b.FailNow()
+		}
 	}
 }
 
-func TestKeyGen(b *testing.T) {
+func dontTestKeyGen(b *testing.T) {
 	c := elliptic.P521()
 	priv, err := ecdsa.GenerateKey(c, rand.Reader)
 	if err != nil {

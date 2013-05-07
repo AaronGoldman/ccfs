@@ -1,13 +1,11 @@
 package main
 
 import (
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	"encoding/hex"
+	"bufio"
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path/filepath"
+	"strings"
 )
 
 func main() {
@@ -15,99 +13,64 @@ func main() {
 	//hashfindwalk()
 	in := bufio.NewReader(os.Stdin)
 	input, err := in.ReadString('\n')
+	if err != nil {
+		panic(err)
+	}
 	fmt.Println(input)
 	return
 }
 
-func get(hkid []byte, path string)(b blob, err){
-	key := getPiblicKeyForHkid(hkid []byte)
-	commit, err := GetCommit(hkid []byte)
-}
-
-func post(hkid []byte, path string, b blob)(err){
-
-}
-
-func GetBlob(hash []byte) (b blob, err error) {
-	//ToDo Validate input
-	filepath := fmt.Sprintf("../blobs/%s", hex.EncodeToString(hash))
-	data, err := ioutil.ReadFile(filepath)
-	if err != nil {
-		fmt.Println(err)
-	}
-	//build object
-	b, _ = BlobFromBytes(data)
-	return
-}
-
-func PostBlob(b blob) (err error) {
-	filepath := fmt.Sprintf("../blobs/%s", hex.EncodeToString(b.Hash()))
-	err = ioutil.WriteFile(filepath, b.Bytes(), 0664)
-	return
-}
-
-func GetTag(hkid []byte, nameSegment string) (t Tag, err error) {
-	//ToDo Validate input
-	matches, err := filepath.Glob(fmt.Sprintf("../tags/%s/%s/*",
-		hex.EncodeToString(hkid), nameSegment))
-	filepath := latestVersion(matches)
-	data, err := ioutil.ReadFile(filepath)
-	t, _ = TagFromBytes(data)
-	return
-}
-
-func PostTag(t Tag) (err error) {
-	filepath := fmt.Sprintf("../tags/%s/%s/%d", hex.EncodeToString(t.hkid),
-		t.nameSegment, t.version)
-	dirpath := fmt.Sprintf("../tags/%s/%s", hex.EncodeToString(t.hkid),
-		t.nameSegment)
-	err = os.MkdirAll(dirpath, 0764)
-	err = ioutil.WriteFile(filepath, t.Bytes(), 0664)
-	return
-}
-
-func GetCommit(hkid []byte) (c commit, err error) {
-	//Validate input
-	matches, err := filepath.Glob(fmt.Sprintf("../commits/%s/*",
-		hex.EncodeToString(hkid)))
-	filepath := latestVersion(matches)
-	data, err := ioutil.ReadFile(filepath)
-	c, _ = CommitFromBytes(data)
-	return
-}
-
-func PostCommit(c commit) (err error) {
-	filepath := fmt.Sprintf("../commits/%s/%d", hex.EncodeToString(c.hkid),
-		c.version)
-	dirpath := fmt.Sprintf("../commits/%s", hex.EncodeToString(c.hkid))
-	err = os.MkdirAll(dirpath, 0764)
-	err = ioutil.WriteFile(filepath, c.Bytes(), 0664)
-	return
-}
-
-func GetKey(hkid []byte) (data []byte, err error) {
-	filepath := fmt.Sprintf("../keys/%s", hex.EncodeToString(hkid))
-	filedata, err := ioutil.ReadFile(filepath)
-	if err != nil {
-		panic(err)
-	}
-	return filedata, err
-}
-
-func PostKey(p *ecdsa.PrivateKey) (err error) {
-	hkid := blob(elliptic.Marshal(p.PublicKey.Curve,
-		p.PublicKey.X, p.PublicKey.Y)).Hash()
-	filepath := fmt.Sprintf("../keys/%s", hex.EncodeToString(hkid))
-	err = ioutil.WriteFile(filepath, KeyBytes(*p), 0600)
-	return
-}
-
-func latestVersion(matches []string) string {
-	match := ""
-	for _, element := range matches {
-		if match < element {
-			match = element
+func get(hkid []byte, path string) (b blob, err error) {
+	typeString := "commit"
+	objecthash := hkid
+	err = nil
+	nameSegments := []string{"", path}
+	for {
+		if typeString == "blob" {
+			b, err = GetBlob(objecthash)
+			return
+		}
+		if typeString == "list" {
+			nameSegments = strings.SplitN(nameSegments[1], "/", 2)
+			l, _ := GetList(objecthash)
+			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
+		}
+		if typeString == "tag" {
+			nameSegments = strings.SplitN(nameSegments[1], "/", 2)
+			t, err := GetTag(objecthash, nameSegments[0])
+			if !t.Verifiy() {
+				b = nil
+				err = errors.New("Tag Verifiy Failed")
+				return b, err
+			}
+			typeString = t.TypeString
+			objecthash = t.HashBytes
+		}
+		if typeString == "commit" {
+			nameSegments = strings.SplitN(nameSegments[1], "/", 2)
+			c, err := GetCommit(objecthash)
+			if !c.Verifiy() {
+				b = nil
+				err = errors.New("Commit Verifiy Failed")
+				return b, err
+			}
+			l, err := GetList(c.listHash)
+			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
 		}
 	}
-	return match
+	b = nil
+	return
+}
+
+func post(hkid []byte, path string, b blob) (err error) {
+	err = errors.New("not yet implimented")
+	return
+}
+
+func initRepo(hkid []byte, path string) (repoHkid []byte) {
+	return nil
+}
+
+func initDomain(hkid []byte, path string) (domainHkid []byte) {
+	return nil
 }
