@@ -34,7 +34,7 @@ func (l list) Bytes() []byte {
 func (l list) String() string {
 	s := ""
 	for _, element := range l {
-		s = fmt.Sprintf("%s\n", element.String())
+		s = s + fmt.Sprintf("%s\n", element.String())
 	}
 	return s[:len(s)-1]
 }
