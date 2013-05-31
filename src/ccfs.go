@@ -20,23 +20,25 @@ func main() {
 	return
 }
 
-func get(hkid []byte, path string) (b blob, err error) {
-	typeString := "commit"
-	objecthash := hkid
-	err = nil
-	nameSegments := []string{"", path}
+type hkid []byte
 
+func get(objecthash hkid, path string) (b blob, err error) {
+	typeString := "commit"
+	//objecthash := hkid
+	err = nil
+	nameSegments := strings.SplitN(path, "/", 2)
 	for {
-		if typeString == "blob" || nameSegments[1] == "" {
-			b, err = GetBlob(objecthash)
-			return
-		}
-		if typeString == "list" {
+		switch typeString {
+		case "blob":
+			if len(nameSegments) < 2 {
+				b, err = GetBlob(objecthash)
+				return
+			}
+		case "list":
 			nameSegments = strings.SplitN(nameSegments[1], "/", 2)
 			l, _ := GetList(objecthash)
 			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
-		}
-		if typeString == "tag" {
+		case "tag":
 			nameSegments = strings.SplitN(nameSegments[1], "/", 2)
 			t, err := GetTag(objecthash, nameSegments[0])
 			if !t.Verifiy() {
@@ -46,9 +48,7 @@ func get(hkid []byte, path string) (b blob, err error) {
 			}
 			typeString = t.TypeString
 			objecthash = t.HashBytes
-		}
-		if typeString == "commit" {
-			nameSegments = strings.SplitN(nameSegments[1], "/", 2)
+		case "commit":
 			c, err := GetCommit(objecthash)
 			if !c.Verifiy() {
 				b = nil
@@ -58,78 +58,75 @@ func get(hkid []byte, path string) (b blob, err error) {
 			l, err := GetList(c.listHash)
 			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
 		}
+		if err != nil{
+			return nil, err
+		}
 	}
 	b = nil
 	return
 }
 
-func post(hkid []byte, path string, b blob) (err error) {
-	//follow get prosedres, push object as there pased, drop at tag/commit
-	//isue the blob regen list isue list regen tag/commit isue tag/commit
+func post(objecthash hkid, path string, b blob) (err error) {
 	typeString := "commit"
-	objecthash := hkid
-	regenlist := [][]byte{}
-	regenpath := []string{}
+	//objecthash := hkid
 	err = nil
-	nameSegments := []string{"", path}
+	nameSegments := strings.SplitN(path, "/", 2)
+	regenlist := []blob{}
+	regenpath := []string{}
 	for {
-		if typeString == "blob" || nameSegments[1] == "" {
-			b, err = GetBlob(objecthash)
-			if err == nil {
-
+		switch typeString {
+		case "blob":
+			if len(nameSegments) < 2 {
+				b, err = GetBlob(objecthash)
+				return
 			}
-			//if pulled blob maches no update nesisary
-		}
-		if typeString == "list" {
+		case "list":
 			nameSegments = strings.SplitN(nameSegments[1], "/", 2)
-			l, err := GetList(objecthash)
+			l, _ := GetList(objecthash)
+			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
 			if err == nil {
 				regenlist = append(regenlist, l.Bytes())
 				regenpath = append(regenpath, nameSegments[0])
 			} else {
-				regen(regenlist, hkid, b)
+				regen(regenlist, objecthash, b)
 			}
-			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
-		}
-		if typeString == "tag" {
+		case "tag":
 			nameSegments = strings.SplitN(nameSegments[1], "/", 2)
-			regenlist = nil
-			regenpath = []string{}
-			t, err := GetTag(objecthash, nameSegments[0])
+			t, _ := GetTag(objecthash, nameSegments[0])
 			if !t.Verifiy() {
-				b = nil
-				err = errors.New("Tag Verifiy Failed")
-				return err
+				return errors.New("Tag Verifiy Failed")
 			}
 			typeString = t.TypeString
 			objecthash = t.HashBytes
+		case "commit":
+			c, _ := GetCommit(objecthash)
+			if !c.Verifiy() {
+				return errors.New("Commit Verifiy Failed")
+			}
+			l, _ := GetList(c.listHash)
+			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
 		}
-		if typeString == "commit" {
-			nameSegments = strings.SplitN(nameSegments[1], "/", 2)
+		if err != nil{
+			return err
+		}
+		if typeString != "list"{
 			regenlist = nil
 			regenpath = []string{}
-			c, err := GetCommit(objecthash)
-			if !c.Verifiy() {
-				b = nil
-				err = errors.New("Commit Verifiy Failed")
-				return err
-			}
-			l, err := GetList(c.listHash)
-			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
 		}
 	}
 	b = nil
 	return
 }
 
-func regen(objectsToRegen [][]byte, hkid []byte, b blob)(error) {
+
+func regen(objectsToRegen [][]byte, objecthash hkid, b blob) error {
 	return nil
 }
 
-func initRepo(hkid []byte, path string) (repoHkid []byte) {
+func initRepo(objecthash hkid, path string) (repoHkid []byte) {
 	return nil
 }
 
-func initDomain(hkid []byte, path string) (domainHkid []byte) {
+func initDomain(objecthash hkid, path string) (domainHkid []byte) {
 	return nil
 }
