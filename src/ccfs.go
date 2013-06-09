@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	golist "container/list"
 	"errors"
 	"fmt"
 	"os"
@@ -58,7 +59,7 @@ func get(objecthash hkid, path string) (b blob, err error) {
 			l, err := GetList(c.listHash)
 			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
 		}
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -71,7 +72,7 @@ func post(objecthash hkid, path string, b blob) (err error) {
 	//objecthash := hkid
 	err = nil
 	nameSegments := strings.SplitN(path, "/", 2)
-	regenlist := []blob{}
+	regenlist := golist.New()
 	regenpath := []string{}
 	for {
 		switch typeString {
@@ -85,7 +86,7 @@ func post(objecthash hkid, path string, b blob) (err error) {
 			l, _ := GetList(objecthash)
 			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
 			if err == nil {
-				regenlist = append(regenlist, l.Bytes())
+				regenlist.PushBack(l)
 				regenpath = append(regenpath, nameSegments[0])
 			} else {
 				regen(regenlist, objecthash, b)
@@ -98,19 +99,23 @@ func post(objecthash hkid, path string, b blob) (err error) {
 			}
 			typeString = t.TypeString
 			objecthash = t.HashBytes
+			regenlist.Init()
+			regenlist.PushBack(t)
 		case "commit":
 			c, _ := GetCommit(objecthash)
 			if !c.Verifiy() {
 				return errors.New("Commit Verifiy Failed")
 			}
+			regenlist.Init()
+			regenlist.PushBack(c)
 			l, _ := GetList(c.listHash)
 			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
 		}
-		if err != nil{
+		if err != nil {
 			return err
 		}
-		if typeString != "list"{
-			regenlist = nil
+		if typeString != "list" {
+
 			regenpath = []string{}
 		}
 	}
@@ -118,8 +123,7 @@ func post(objecthash hkid, path string, b blob) (err error) {
 	return
 }
 
-
-func regen(objectsToRegen [][]byte, objecthash hkid, b blob) error {
+func regen(objectsToRegen *golist.List, objecthash hkid, b blob) error {
 	return nil
 }
 
