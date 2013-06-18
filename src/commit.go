@@ -75,13 +75,19 @@ func genCommitHash(listHash []byte, version int64, hkid []byte) (
 	return
 }
 
-func NewCommit(listHash []byte, hkid []byte) (c commit) {
+func NewCommit(listHash []byte, hkid HKID) (c commit) {
 	c.listHash = listHash
 	c.version = time.Now().UnixNano()
 	c.hkid = hkid
 	c.parent = sha256.New().Sum(nil)
 	c.signature = commitSign(c.listHash, c.version, c.hkid)
 	return
+}
+
+func InitCommit()(commit,*ecdsa.PrivateKey){
+	privkey := KeyGen()
+	hkid := GenerateHKID(privkey)
+	return NewCommit(sha256.New().Sum(nil), hkid), privkey
 }
 
 func CommitFromBytes(bytes []byte) (c commit, err error) {

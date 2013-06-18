@@ -7,6 +7,7 @@ import (
 	"crypto/elliptic"
 	"crypto/sha256"
 	//"fmt"
+	"crypto/rand"
 	"hash"
 	"math/big"
 )
@@ -51,3 +52,11 @@ func PrivteKeyFromD(D big.Int) *ecdsa.PrivateKey {
 	priv.D = &D
 	return priv
 }
+
+func KeyGen() *ecdsa.PrivateKey{
+	priv, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+	if err != nil {
+		panic(err)
+}
+return priv
+	}

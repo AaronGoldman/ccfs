@@ -36,8 +36,13 @@ func regen(objectsToRegen *golist.List, objecthash HKID, b blob) error {
 	return nil
 }
 
-func initRepo(objecthash HKID, path string) (repoHkid []byte) {
-	return nil
+func initRepo(objecthash HKID, path string) (repoHkid HKID) {
+	c, privkey := InitCommit()
+	err := PostKey(privkey)
+	if err != nil {
+		panic(err)
+	}
+	return c.hkid
 }
 
 func initDomain(objecthash HCID, path string) (domainHkid []byte) {
