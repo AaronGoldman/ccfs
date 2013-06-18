@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func post(objecthash hkid, path string, b blob) (err error) {
+func post(objecthash HKID, path string, b blob) (err error) {
 	typeString := "commit"
 	//objecthash := hkid
 	err = nil

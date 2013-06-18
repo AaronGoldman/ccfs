@@ -48,7 +48,7 @@ func PostTag(t Tag) (err error) {
 	return
 }
 
-func GetCommit(hkid []byte) (c commit, err error) {
+func GetCommit(hkid HKID) (c commit, err error) {
 	//Validate input
 	matches, err := filepath.Glob(fmt.Sprintf("../commits/%s/*",
 		hex.EncodeToString(hkid)))

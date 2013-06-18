@@ -13,11 +13,13 @@ import (
 )
 
 func TestGet(t *testing.T) {
-	hkid, err := hex.DecodeString("1312ac161875b270da2ae4e1471ba94a" +
+	dabytes, err := hex.DecodeString("1312ac161875b270da2ae4e1471ba94a" +
 		"9883419250caa4c2f1fd80a91b37907e")
+	hkid := HKID(dabytes)
 	path := "testTag/testBlob"
 	b := []byte(":(")
 	if err == nil {
+		fmt.Println(hkid.Hex())
 		b, err = get(hkid, path)
 	}
 	if !bytes.Equal([]byte("testing"), b) || err != nil {
@@ -159,14 +161,14 @@ func BenchmarkPath(b *testing.B) {
 	}
 }
 
-func dontTestKeyGen(b *testing.T) {
+func TestKeyGen(b *testing.T) {
 	c := elliptic.P521()
 	priv, err := ecdsa.GenerateKey(c, rand.Reader)
 	if err != nil {
 		b.Errorf("Error %v", err)
 	}
-	fmt.Printf("TestKeyGen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X,
-		priv.PublicKey.Y, priv.D)
+	//fmt.Printf("TestKeyGen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X,
+	//	priv.PublicKey.Y, priv.D)
 	err = PostKey(priv)
 	if err != nil {
 		b.Errorf("Error %v", err)

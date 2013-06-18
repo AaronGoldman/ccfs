@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	golist "container/list"
-
+	"encoding/hex"
 	"fmt"
 	"os"
 )
@@ -20,16 +20,26 @@ func main() {
 	return
 }
 
-type hkid []byte
+type HCID []byte
 
-func regen(objectsToRegen *golist.List, objecthash hkid, b blob) error {
+func (hcid HCID) Hex() string {
+	return hex.EncodeToString(hcid)
+}
+
+type HKID HCID
+
+func (hkid HKID) Hex() string {
+	return hex.EncodeToString(hkid)
+}
+
+func regen(objectsToRegen *golist.List, objecthash HKID, b blob) error {
 	return nil
 }
 
-func initRepo(objecthash hkid, path string) (repoHkid []byte) {
+func initRepo(objecthash HKID, path string) (repoHkid []byte) {
 	return nil
 }
 
-func initDomain(objecthash hkid, path string) (domainHkid []byte) {
+func initDomain(objecthash HCID, path string) (domainHkid []byte) {
 	return nil
 }
