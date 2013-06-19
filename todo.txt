@@ -1,32 +1,43 @@
  _
+|_| ccfs _
+	|_| Get(HKID, path)
+	|_| Post(blob, HKID, Path)
+	|_| InsertRopo(thereHKID, myHKID, path)
+	|_| InsertDomain(thereHKID, myHKID, path)
+	|_| InitRepo(HKID, Path)(HKID)
+	|_| InitDomain(HKID, Path)(HKID)
+	|_| GenHKID()(HKID)
+ _
 |_| blob
-	|_| hash()
+	|x| Hash()
  _
 |_| list
-	|_| lookup(nameSegment)
-	|_| hash()
-	|_| string()
+	|_| Lookup(nameSegment)
+	|x| Hash()
+	|x| String()
  _
 |_| tag
-	|_| lookup(nameSegment)
-	|_| hash()
-	|_| verify()
-	|_| string()
+	|_| Lookup(nameSegment)
+	|x| Hash()
+	|x| Verify()
+	|x| String()
  _
 |_| commit
-	|_| hash()
-	|_| verify()
-	|_| string()
+	|x| Hash()
+	|x| Verify()
+	|x| String()
+
  _
-|_| ccfs
-	|_| getBlob(hash)
-	|_| storeBlob(blob)
-	|_| getTag(hkid, nameSegment)
-	|_| storeTag(tag)
-	|_| getCommit(hkid)
-	|_| storeCommit(Commit)
-	|_| getKey(hkid)
-	|_| storeKey(key)
+|_| localfileservice
+	|x| GetBlob(hash)
+	|x| StoreBlob(blob)
+	|x| GetTag(hkid, nameSegment)
+	|x| PostTag(t Tag)
+	|x| GetCommit(hkid HKID)
+	|x| PostCommit(c commit)
+	|x| GetKey(hkid []byte)
+	|x| PostKey(p *ecdsa.PrivateKey
+	
  _
 |_| folderToList()
 |_| folderToTags()

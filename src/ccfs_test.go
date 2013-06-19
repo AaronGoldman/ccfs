@@ -52,7 +52,7 @@ func BenchmarkPath(b *testing.B) {
 	keyT := elliptic.Marshal(privT.PublicKey.Curve,
 		privT.PublicKey.X, privT.PublicKey.Y)
 	hkidT := GenerateHKID(privT) //gen HKID for tag
-	err := PostKey(privT)                             //place key for tag	
+	err := PostKey(privT)        //place key for tag	
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -69,7 +69,7 @@ func BenchmarkPath(b *testing.B) {
 	keyC := elliptic.Marshal(privC.PublicKey.Curve,
 		privC.PublicKey.X, privC.PublicKey.Y)
 	hkidC := GenerateHKID(privC) //gen HKID for commit
-	err = PostKey(privC)                              //place key for commit
+	err = PostKey(privC)         //place key for commit
 	if err != nil {
 		fmt.Println(err)
 	}

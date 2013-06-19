@@ -52,6 +52,10 @@ func (c commit) Verifiy() bool {
 	return ecdsa.Verify(pubkey, ObjectHash, r, s)
 }
 
+func (c commit) Update() commit {
+	return c
+}
+
 func commitSign(listHash []byte, version int64, hkid []byte) (signature []byte) {
 	ObjectHash := genCommitHash(listHash, version, hkid)
 	prikey, err := getPrivateKeyForHkid(hkid)
@@ -84,10 +88,11 @@ func NewCommit(listHash []byte, hkid HKID) (c commit) {
 	return
 }
 
-func InitCommit()(commit,*ecdsa.PrivateKey){
+func InitCommit() HKID {
 	privkey := KeyGen()
 	hkid := GenerateHKID(privkey)
-	return NewCommit(sha256.New().Sum(nil), hkid), privkey
+	PostCommit(NewCommit(sha256.New().Sum(nil), hkid))
+	return hkid
 }
 
 func CommitFromBytes(bytes []byte) (c commit, err error) {

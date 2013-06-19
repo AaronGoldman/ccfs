@@ -54,6 +54,10 @@ func (t Tag) Verifiy() bool {
 	return ecdsa.Verify(PublicKey, ObjectHash, r, s)
 }
 
+func (t Tag) Update() Tag {
+	return t
+}
+
 func NewTag(HashBytes []byte, TypeString string,
 	nameSegment string, hkid []byte) Tag {
 	prikey, _ := getPrivateKeyForHkid(hkid)

@@ -9,7 +9,7 @@ import (
 )
 
 type entry struct {
-	Hash        []byte
+	Hash        HCID
 	TypeString  string
 	nameSegment string
 }

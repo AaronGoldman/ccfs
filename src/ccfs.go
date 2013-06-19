@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	golist "container/list"
-	"encoding/hex"
+	"crypto/elliptic"
 	"fmt"
 	"os"
 )
@@ -20,31 +20,45 @@ func main() {
 	return
 }
 
-type HCID []byte
+func Get(hkid HKID, path string) {
 
-func (hcid HCID) Hex() string {
-	return hex.EncodeToString(hcid)
 }
 
-type HKID HCID
+func Post(b blob, hkid HKID, path string) {
 
-func (hkid HKID) Hex() string {
-	return hex.EncodeToString(hkid)
+}
+
+func InsertRopo(thereHKID, myHKID, path string) {
+
+}
+
+func InsertDomain(thereHKID, myHKID, path string) {
+
+}
+
+func InitRepo(hkid HKID, path string) HKID {
+	return InitCommit()
+}
+func InitDomain(hkid HKID, path string) HKID {
+	return GenHKID()
+}
+
+func GenHKID() HKID {
+	privkey := KeyGen()
+	PostBlob(elliptic.Marshal(privkey.PublicKey.Curve,
+		privkey.PublicKey.X, privkey.PublicKey.Y))
+	return GenerateHKID(privkey)
 }
 
 func regen(objectsToRegen *golist.List, objecthash HKID, b blob) error {
 	return nil
 }
 
-func initRepo(objecthash HKID, path string) (repoHkid HKID) {
+/*func initRepo(objecthash HKID, path string) (repoHkid HKID) {
 	c, privkey := InitCommit()
 	err := PostKey(privkey)
 	if err != nil {
 		panic(err)
 	}
 	return c.hkid
-}
-
-func initDomain(objecthash HCID, path string) (domainHkid []byte) {
-	return nil
-}
+}*/
