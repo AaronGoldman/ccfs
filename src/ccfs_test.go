@@ -20,7 +20,7 @@ func TestGet(t *testing.T) {
 	b := []byte(":(")
 	if err == nil {
 		fmt.Println(hkid.Hex())
-		b, err = get(hkid, path)
+		b, err = Get(hkid, path)
 	}
 	if !bytes.Equal([]byte("testing"), b) || err != nil {
 		t.Fail()

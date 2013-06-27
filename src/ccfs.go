@@ -20,14 +20,6 @@ func main() {
 	return
 }
 
-func Get(hkid HKID, path string) {
-
-}
-
-func Post(b blob, hkid HKID, path string) {
-
-}
-
 func InsertRopo(thereHKID, myHKID, path string) {
 
 }

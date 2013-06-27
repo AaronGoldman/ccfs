@@ -6,7 +6,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/sha256"
-	//"fmt"
 	"crypto/rand"
 	"hash"
 	"math/big"
