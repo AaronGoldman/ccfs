@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	golist "container/list"
-
 	"fmt"
 	"os"
 )
