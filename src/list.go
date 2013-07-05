@@ -9,7 +9,7 @@ import (
 )
 
 type entry struct {
-	Hash        []byte
+	Hash        HCID
 	TypeString  string
 	nameSegment string
 }
@@ -20,6 +20,10 @@ func (e entry) String() string {
 }
 
 type list []entry
+
+func (l list) add(e entry) list {
+	return append(l, e)
+}
 
 func (l list) Hash() []byte {
 	var h hash.Hash = sha256.New()

@@ -13,12 +13,14 @@ import (
 )
 
 func TestGet(t *testing.T) {
-	hkid, err := hex.DecodeString("1312ac161875b270da2ae4e1471ba94a" +
+	dabytes, err := hex.DecodeString("1312ac161875b270da2ae4e1471ba94a" +
 		"9883419250caa4c2f1fd80a91b37907e")
+	hkid := HKID(dabytes)
 	path := "testTag/testBlob"
 	b := []byte(":(")
 	if err == nil {
-		b, err = get(hkid, path)
+		fmt.Println(hkid.Hex())
+		b, err = Get(hkid, path)
 	}
 	if !bytes.Equal([]byte("testing"), b) || err != nil {
 		t.Fail()
@@ -49,8 +51,8 @@ func BenchmarkPath(b *testing.B) {
 	privT := PrivteKeyFromD(*D)
 	keyT := elliptic.Marshal(privT.PublicKey.Curve,
 		privT.PublicKey.X, privT.PublicKey.Y)
-	hkidT, _ := hex.DecodeString(GenerateHKID(privT)) //gen HKID for tag
-	err := PostKey(privT)                             //place key for tag	
+	hkidT := GenerateHKID(privT) //gen HKID for tag
+	err := PostKey(privT)        //place key for tag	
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -66,8 +68,8 @@ func BenchmarkPath(b *testing.B) {
 	privC := PrivteKeyFromD(*D)
 	keyC := elliptic.Marshal(privC.PublicKey.Curve,
 		privC.PublicKey.X, privC.PublicKey.Y)
-	hkidC, _ := hex.DecodeString(GenerateHKID(privC)) //gen HKID for commit
-	err = PostKey(privC)                              //place key for commit
+	hkidC := GenerateHKID(privC) //gen HKID for commit
+	err = PostKey(privC)         //place key for commit
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -159,14 +161,14 @@ func BenchmarkPath(b *testing.B) {
 	}
 }
 
-func dontTestKeyGen(b *testing.T) {
+func TestKeyGen(b *testing.T) {
 	c := elliptic.P521()
 	priv, err := ecdsa.GenerateKey(c, rand.Reader)
 	if err != nil {
 		b.Errorf("Error %v", err)
 	}
-	fmt.Printf("TestKeyGen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X,
-		priv.PublicKey.Y, priv.D)
+	//fmt.Printf("TestKeyGen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X,
+	//	priv.PublicKey.Y, priv.D)
 	err = PostKey(priv)
 	if err != nil {
 		b.Errorf("Error %v", err)

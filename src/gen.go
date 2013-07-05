@@ -5,7 +5,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"hash"
 	"net/url"
@@ -35,11 +34,11 @@ func GenerateSignature(prikey *ecdsa.PrivateKey, ObjectHash []byte) (signature s
 	return fmt.Sprintf("%v %v", r, s)
 }
 
-func GenerateHKID(prikey *ecdsa.PrivateKey) (hkid string) {
+func GenerateHKID(prikey *ecdsa.PrivateKey) (hkid HKID) {
 	var h hash.Hash = sha256.New()
 	h.Write(elliptic.Marshal(
 		prikey.PublicKey.Curve,
 		prikey.PublicKey.X,
 		prikey.PublicKey.Y))
-	return fmt.Sprintf("%v", hex.EncodeToString(h.Sum(make([]byte, 0))))
+	return h.Sum(make([]byte, 0))
 }

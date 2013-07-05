@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func get(objecthash hkid, path string) (b blob, err error) {
+func Get(objecthash HKID, path string) (b blob, err error) {
 	typeString := "commit"
 	//objecthash := hkid
 	err = nil
