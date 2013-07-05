@@ -20,19 +20,21 @@ func main() {
 	return
 }
 
-func InsertRopo(thereHKID, myHKID, path string) {
+func InsertRopo(thereHKID HKID, myHKID HKID, path string) {
 
 }
 
-func InsertDomain(thereHKID, myHKID, path string) {
+func InsertDomain(thereHKID HKID, myHKID HKID, path string) {
 
 }
 
-func InitRepo(hkid HKID, path string) HKID {
-	return InitCommit()
+func InitRepo(hkid HKID) error {
+	//InitCommit()
+	return nil
 }
-func InitDomain(hkid HKID, path string) HKID {
-	return GenHKID()
+func InitDomain(hkid HKID) error {
+	//GenHKID()
+	return nil
 }
 
 func GenHKID() HKID {

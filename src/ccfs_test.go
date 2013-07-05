@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
-	"math/big"
 	"testing"
 )
 
@@ -27,6 +26,31 @@ func TestGet(t *testing.T) {
 	}
 }
 
+/*//test for new post flow
+func TestPath(t *testing.T) {
+	repoHkid := hkidFromDString("399681106706823979931786798252509423226869972672"+
+		"2344370689730210711314983767775860556101498400185744208447673206609026128"+
+		"894016152514163591905578729891874833", 10)
+	domainHkid := hkidFromDString("462981482389329648001641133480879383618612455972"+
+		"3200979962176753724976464088706463001383556112424820911870650421151988906"+
+		"751710824965155500230480521264034469", 10)
+	err := InitRepo(repoHkid) // post commit //post list
+	if err != nil {
+		panic(err)
+	}
+
+	err = InitDomain(domainHkid) // post tag
+	if err != nil {
+		panic(err)
+	}
+	InsertDomain(repoHkid, domainHkid, "testTag")
+	// Post blob
+	err = Post(repoHkid, "testTag/testBlob", blob([]byte("testing")))
+	if err != nil {
+		panic(err)
+	}
+} //*/
+
 func BenchmarkStoreOne(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		err := ioutil.WriteFile("../bin/storeone", []byte("storeone"), 0664)
@@ -42,46 +66,20 @@ func BenchmarkStoreOne(b *testing.B) {
 }
 
 func BenchmarkPath(b *testing.B) {
-
 	//key for tag
-	D := new(big.Int)
-	D, _ = new(big.Int).SetString("399681106706823979931786798252509423226869972"+
-		"6722344370689730210711314983767775860556101498400185744208447673206609026"+
-		"128894016152514163591905578729891874833", 10) //this number is the key
-	privT := PrivteKeyFromD(*D)
-	keyT := elliptic.Marshal(privT.PublicKey.Curve,
-		privT.PublicKey.X, privT.PublicKey.Y)
-	hkidT := GenerateHKID(privT) //gen HKID for tag
-	err := PostKey(privT)        //place key for tag	
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = PostBlob(keyT) //store public key
-	if err != nil {
-		fmt.Println(err)
-	}
+	hkidT := hkidFromDString("39968110670682397993178679825250942322686997267223"+
+		"4437068973021071131498376777586055610149840018574420844767320660902612889"+
+		"4016152514163591905578729891874833", 10)
 
 	//key for commit
-	D, _ = new(big.Int).SetString("462981482389329648001641133480879383618612455"+
-		"9723200979962176753724976464088706463001383556112424820911870650421151988"+
-		"906751710824965155500230480521264034469", 10)
-	privC := PrivteKeyFromD(*D)
-	keyC := elliptic.Marshal(privC.PublicKey.Curve,
-		privC.PublicKey.X, privC.PublicKey.Y)
-	hkidC := GenerateHKID(privC) //gen HKID for commit
-	err = PostKey(privC)         //place key for commit
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = PostBlob(keyC) //store public key
-	if err != nil {
-		fmt.Println(err)
-	}
+hkidC := hkidFromDString("4629814823893296480016411334808793836186124559723200"+
+		"9799621767537249764640887064630013835561124248209118706504211519889067517"+
+		"10824965155500230480521264034469", 10)
 
 	for i := 0; i < b.N; i++ {
 		//Post blob
 		testBlob := blob([]byte("testing")) //gen test blob
-		err = PostBlob(testBlob)            //store test blob
+		err := PostBlob(testBlob)            //store test blob
 		if err != nil {
 			fmt.Println(err)
 		}
