@@ -58,8 +58,8 @@ func (t Tag) Update() Tag {
 	return t
 }
 
-func NewTag(HashBytes []byte, TypeString string,
-	nameSegment string, hkid []byte) Tag {
+func NewTag(HashBytes HCID, TypeString string,
+	nameSegment string, hkid HKID) Tag {
 	prikey, _ := getPrivateKeyForHkid(hkid)
 	version := time.Now().UnixNano()
 	ObjectHash := genTagHash(HashBytes, TypeString, nameSegment, version, hkid)

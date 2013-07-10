@@ -43,7 +43,7 @@ func (l list) String() string {
 	return s[:len(s)-1]
 }
 
-func (l list) hash_for_namesegment(namesegment string) (string, []byte) {
+func (l list) hash_for_namesegment(namesegment string) (string, Hexer) {
 	for _, element := range l {
 		if strings.EqualFold(element.nameSegment, namesegment) {
 			return element.TypeString, element.Hash
@@ -63,6 +63,7 @@ func NewListFromBytes(listbytes []byte) (newlist list) {
 	cols := []string{}
 	for _, element := range listEntries {
 		cols = strings.Split(element, ",")
+		fmt.Print(cols)
 		entryHash, _ := hex.DecodeString(cols[0])
 		entryTypeString := cols[1]
 		entryNameSegment := cols[2]
@@ -75,6 +76,9 @@ func NewListFromBytes(listbytes []byte) (newlist list) {
 
 func GetList(hash []byte) (l list, err error) {
 	listbytes, err := GetBlob(hash)
+	if len(listbytes) == 0 {
+		return nil, err
+	}
 	l = NewListFromBytes(listbytes)
 	return
 }

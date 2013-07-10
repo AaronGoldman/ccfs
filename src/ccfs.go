@@ -4,6 +4,7 @@ import (
 	"bufio"
 	golist "container/list"
 	"crypto/elliptic"
+	"crypto/sha256"
 	"fmt"
 	"os"
 )
@@ -30,11 +31,15 @@ func InsertDomain(thereHKID HKID, myHKID HKID, path string) {
 
 func InitRepo(hkid HKID) error {
 	//InitCommit()
-	return nil
+	c := NewCommit(sha256.New().Sum(nil), hkid)
+	err := PostCommit(c)
+	return err
 }
-func InitDomain(hkid HKID) error {
+func InitDomain(hkid HKID, nameSegment string) error {
 	//GenHKID()
-	return nil
+	t := NewTag(sha256.New().Sum(nil), "blob", nameSegment, hkid)
+	err := PostTag(t)
+	return err
 }
 
 func GenHKID() HKID {
@@ -44,7 +49,7 @@ func GenHKID() HKID {
 	return GenerateHKID(privkey)
 }
 
-func regen(objectsToRegen *golist.List, objecthash HKID, b blob) error {
+func regen(objectsToRegen *golist.List, objecthash Hexer, b Byteser) error {
 	return nil
 }
 
