@@ -5,24 +5,43 @@ import (
 	"encoding/hex"
 	"fmt"
 	"hash"
+	"sort"
 	"strings"
 )
 
 type entry struct {
-	Hash        HCID
-	TypeString  string
-	nameSegment string
+	Hash       HID
+	TypeString string
 }
 
-func (e entry) String() string {
-	return fmt.Sprintf("%s,%s,%s", hex.EncodeToString(e.Hash),
-		e.TypeString, e.nameSegment)
+type list map[string]entry
+
+func (l list) add(nameSegment string, hash HID, typeString string) list {
+	l[nameSegment] = entry{hash, typeString}
+	return l
 }
 
-type list []entry
+func (l list) hash_for_namesegment(namesegment string) (string, Hexer) {
+	objectHash := l[namesegment].Hash
+	typeString := l[namesegment].TypeString
+	return typeString, objectHash
+}
 
-func (l list) add(e entry) list {
-	return append(l, e)
+func (l list) String() string {
+	var keys []string
+	for k := range l {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	s := ""
+	for _, k := range keys {
+		s = s + fmt.Sprintf("%s,%s,%s\n", l[k].Hash.Hex(), l[k].TypeString, k)
+	}
+	return s[:len(s)-1]
+}
+
+func (l list) Bytes() []byte {
+	return []byte(l.String())
 }
 
 func (l list) Hash() []byte {
@@ -31,35 +50,15 @@ func (l list) Hash() []byte {
 	return h.Sum(nil)
 }
 
-func (l list) Bytes() []byte {
-	return []byte(l.String())
-}
-
-func (l list) String() string {
-	s := ""
-	for _, element := range l {
-		s = s + fmt.Sprintf("%s\n", element.String())
-	}
-	return s[:len(s)-1]
-}
-
-func (l list) hash_for_namesegment(namesegment string) (string, Hexer) {
-	for _, element := range l {
-		if strings.EqualFold(element.nameSegment, namesegment) {
-			return element.TypeString, element.Hash
-		}
-	}
-	return "null", nil
-}
-
-func NewList(hash []byte, typestring string, nameSegment string) list {
-	e := entry{hash, typestring, nameSegment}
-	return list{e}
+func NewList(objectHash []byte, typestring string, nameSegment string) list {
+	l := make(list)
+	l[nameSegment] = entry{objectHash, typestring}
+	return l
 }
 
 func NewListFromBytes(listbytes []byte) (newlist list) {
+	l := make(list)
 	listEntries := strings.Split(string(listbytes), "\n")
-	entries := []entry{}
 	cols := []string{}
 	for _, element := range listEntries {
 		cols = strings.Split(element, ",")
@@ -67,11 +66,9 @@ func NewListFromBytes(listbytes []byte) (newlist list) {
 		entryHash, _ := hex.DecodeString(cols[0])
 		entryTypeString := cols[1]
 		entryNameSegment := cols[2]
-		entries = append(entries, entry{entryHash, entryTypeString,
-			entryNameSegment})
+		l[entryNameSegment] = entry{entryHash, entryTypeString}
 	}
-	newlist = list(entries)
-	return
+	return l
 }
 
 func GetList(hash []byte) (l list, err error) {
@@ -81,4 +78,8 @@ func GetList(hash []byte) (l list, err error) {
 	}
 	l = NewListFromBytes(listbytes)
 	return
+}
+
+func PostList(l list) (err error) {
+	return PostBlob(blob(l.Bytes()))
 }

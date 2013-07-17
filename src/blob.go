@@ -17,7 +17,7 @@ func (b blob) Bytes() []byte {
 	return []byte(b)
 }
 
-func BlobFromBytes(bytes []byte) (b blob, err error) {
+func BlobFromBytes(bytes []byte) (b blob) {
 	b = bytes
 	return
 }

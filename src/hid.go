@@ -14,7 +14,7 @@ func (hid HID) Bytes() []byte {
 	return []byte(hid)
 }
 
-type HCID []byte
+type HCID HID
 
 func (hcid HCID) Hex() string {
 	return HID(hcid).Hex()
@@ -25,7 +25,7 @@ func (hcid HCID) Bytes() []byte {
 	return HID(hcid).Bytes()
 }
 
-type HKID HCID
+type HKID HID
 
 func (hkid HKID) Hex() string {
 	return HID(hkid).Hex()

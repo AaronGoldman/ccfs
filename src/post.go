@@ -7,36 +7,40 @@ import (
 	"strings"
 )
 
-func Post(objecthash Hexer, path string, b Byteser) (err error) {
+func Post(objecthash Hexer, path string, b Byteser) (hid HID, err error) {
 	typeString := "commit"
 	//objecthash := hkid
 	err = nil
 	nameSegments := strings.SplitN(path, "/", 2)
 	regenlist := golist.New()
-	regenpath := []string{}
+	//regenpath := []string{}
 	//for {
 	fmt.Printf("%t %t %t\n", objecthash, path, b)
 	switch typeString {
 	case "blob":
 		if len(nameSegments) < 2 {
 			b, err = GetBlob(objecthash.(HID))
-			return
+			err = PostBlob(b.Bytes())
+			return BlobFromBytes(b.Bytes()).Hash(), err
 		}
 	case "list":
 		nameSegments = strings.SplitN(nameSegments[1], "/", 2)
 		l, _ := GetList(objecthash.(HID))
 		typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
-		if err == nil {
-			regenlist.PushBack(l)
-			regenpath = append(regenpath, nameSegments[0])
-		} else {
-			regen(regenlist, objecthash.(HID), b)
-		}
+		hash_of_new_entry, err := Post(objecthash, nameSegments[1], b)
+		PostList(l.add(nameSegments[0], hash_of_new_entry, "list"))
+		return l.Hash(), err
+		//if err == nil {
+		//	regenlist.PushBack(l)
+		//	regenpath = append(regenpath, nameSegments[0])
+		//} else {
+		//	regen(regenlist, objecthash.(HID), b)
+		//}
 	case "tag":
 		nameSegments = strings.SplitN(nameSegments[1], "/", 2)
-		t, _ := GetTag(objecthash.(HID), nameSegments[0])
+		t, _ := GetTag(objecthash.(HKID), nameSegments[0])
 		if !t.Verifiy() {
-			return errors.New("Tag Verifiy Failed")
+			return nil, errors.New("Tag Verifiy Failed")
 		}
 		typeString = t.TypeString
 		objecthash = HID(t.HashBytes)
@@ -45,7 +49,7 @@ func Post(objecthash Hexer, path string, b Byteser) (err error) {
 	case "commit":
 		c, _ := GetCommit(objecthash.(HKID))
 		if !c.Verifiy() {
-			return errors.New("Commit Verifiy Failed")
+			return nil, errors.New("Commit Verifiy Failed")
 		}
 		regenlist.Init()
 		regenlist.PushBack(c)
@@ -54,12 +58,11 @@ func Post(objecthash Hexer, path string, b Byteser) (err error) {
 		typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
 	}
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if typeString != "list" {
-
-		regenpath = []string{}
-	}
+	//if typeString != "list" {
+	//	regenpath = []string{}
+	//}
 	fmt.Printf("%t %t %t\n", objecthash, path, b)
 	//}
 	b = nil

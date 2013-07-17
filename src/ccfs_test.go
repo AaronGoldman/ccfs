@@ -48,7 +48,7 @@ func TestPost(t *testing.T) {
 	InsertDomain(repoHkid, domainHkid, "testTag")
 	fmt.Println("InsertDomain")
 	// Post blob
-	err = Post(repoHkid, "testTag/testBlob", blob([]byte("testing")))
+	_, err = Post(repoHkid, "testTag/testBlob2", blob([]byte("testing2")))
 	if err != nil {
 		panic(err)
 	}
@@ -148,7 +148,8 @@ func BenchmarkPath(b *testing.B) {
 			b.FailNow()
 		}
 		//get tag
-		testTag, err := GetTag(testlist[0].Hash, "testBlob")
+		_, testTagHash := testlist.hash_for_namesegment("testTag")
+		testTag, err := GetTag(testTagHash.(HKID), "testBlob")
 		//fmt.Printf("authentic tag:%v\n", testTag.Verifiy())
 		if !testTag.Verifiy() {
 			b.FailNow()

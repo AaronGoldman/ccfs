@@ -18,7 +18,7 @@ func GetBlob(hash []byte) (b blob, err error) {
 		fmt.Println(err)
 	}
 	//build object
-	b, _ = BlobFromBytes(data)
+	b = BlobFromBytes(data)
 	return
 }
 
@@ -28,7 +28,7 @@ func PostBlob(b blob) (err error) {
 	return
 }
 
-func GetTag(hkid []byte, nameSegment string) (t Tag, err error) {
+func GetTag(hkid HKID, nameSegment string) (t Tag, err error) {
 	//ToDo Validate input
 	matches, err := filepath.Glob(fmt.Sprintf("../tags/%s/%s/*",
 		hex.EncodeToString(hkid), nameSegment))

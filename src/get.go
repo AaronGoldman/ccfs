@@ -23,7 +23,7 @@ func Get(objecthash Hexer, path string) (b blob, err error) {
 			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
 		case "tag":
 			nameSegments = strings.SplitN(nameSegments[1], "/", 2)
-			t, err := GetTag(objecthash.(HID), nameSegments[0])
+			t, err := GetTag(objecthash.(HKID), nameSegments[0])
 			if !t.Verifiy() {
 				b = nil
 				err = errors.New("Tag Verifiy Failed")
