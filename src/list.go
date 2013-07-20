@@ -71,8 +71,8 @@ func NewListFromBytes(listbytes []byte) (newlist list) {
 	return l
 }
 
-func GetList(hash []byte) (l list, err error) {
-	listbytes, err := GetBlob(hash)
+func GetList(objectHash HCID) (l list, err error) {
+	listbytes, err := GetBlob(objectHash)
 	if len(listbytes) == 0 {
 		return nil, err
 	}

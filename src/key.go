@@ -21,8 +21,8 @@ func KeyBytes(p ecdsa.PrivateKey) []byte {
 	return p.D.Bytes()
 }
 
-func getPiblicKeyForHkid(hkid []byte) *ecdsa.PublicKey {
-	marshaledKey, _ := GetBlob(hkid)
+func getPiblicKeyForHkid(hkid HKID) *ecdsa.PublicKey {
+	marshaledKey, _ := GetBlob(HCID(hkid))
 	curve := elliptic.P521()
 	x, y := elliptic.Unmarshal(elliptic.P521(), marshaledKey)
 	publicKey := ecdsa.PublicKey{

@@ -40,7 +40,7 @@ func TestPost(t *testing.T) {
 	}
 	fmt.Println("InitRepo")
 
-	err = InitDomain(domainHkid, "testTag") // post tag
+	err = InitDomain(domainHkid, "null") // post tag
 	if err != nil {
 		panic(err)
 	}

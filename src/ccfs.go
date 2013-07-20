@@ -1,32 +1,46 @@
 package main
 
 import (
-	"bufio"
-	golist "container/list"
 	"crypto/elliptic"
 	"crypto/sha256"
 	"fmt"
-	"os"
+	"strings"
 )
 
 func main() {
 	//go BlobServerStart()
 	//hashfindwalk()
-	in := bufio.NewReader(os.Stdin)
-	input, err := in.ReadString('\n')
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(input)
+	repoHkid := hkidFromDString("46298148238932964800164113348087938361861245597"+
+		"2320097996217675372497646408870646300138355611242482091187065042115198890"+
+		"6751710824965155500230480521264034469", 10)
+	hash, err := Post(repoHkid, "postedBlob", blob([]byte("Posted Blob")))
+	//in := bufio.NewReader(os.Stdin)
+	//input, err := in.ReadString('\n')
+	//if err != nil {
+	//	panic(err)
+	//}
+	fmt.Println(hash, err)
 	return
 }
 
 func InsertRopo(thereHKID HKID, myHKID HKID, path string) {
-
+	c, err := GetCommit(myHKID)
+	if err == nil {
+		Post(thereHKID, path, c)
+	}
 }
 
 func InsertDomain(thereHKID HKID, myHKID HKID, path string) {
-
+	//split path in to tag_name and leading_path
+	nameSegments := strings.Split(path, "/")
+	tag_name := nameSegments[len(nameSegments)]
+	leading_path := path[:(len(path) - len(tag_name) - 1)]
+	//l := list/tag from leading_path
+	l, err := Get(thereHKID, leading_path)
+	//add new tag to tag/list
+	l.add(tag_name, myHKID, "tag")
+	//post the modified list
+	hid, err := Post(thereHKID, path, l)
 }
 
 func InitRepo(hkid HKID) error {
@@ -47,10 +61,6 @@ func GenHKID() HKID {
 	PostBlob(elliptic.Marshal(privkey.PublicKey.Curve,
 		privkey.PublicKey.X, privkey.PublicKey.Y))
 	return GenerateHKID(privkey)
-}
-
-func regen(objectsToRegen *golist.List, objecthash Hexer, b Byteser) error {
-	return nil
 }
 
 /*func initRepo(objecthash HKID, path string) (repoHkid HKID) {

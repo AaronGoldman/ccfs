@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 )
 
-func GetBlob(hash []byte) (b blob, err error) {
+func GetBlob(hash HCID) (b blob, err error) {
 	//ToDo Validate input
-	filepath := fmt.Sprintf("../blobs/%s", hex.EncodeToString(hash))
+	filepath := fmt.Sprintf("../blobs/%s", hash.Hex())
 	data, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		fmt.Println(err)
@@ -23,7 +23,7 @@ func GetBlob(hash []byte) (b blob, err error) {
 }
 
 func PostBlob(b blob) (err error) {
-	filepath := fmt.Sprintf("../blobs/%s", hex.EncodeToString(b.Hash()))
+	filepath := fmt.Sprintf("../blobs/%s", b.Hash())
 	err = ioutil.WriteFile(filepath, b.Bytes(), 0664)
 	return
 }
