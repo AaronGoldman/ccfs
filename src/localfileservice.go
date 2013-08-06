@@ -23,7 +23,7 @@ func GetBlob(hash HCID) (b blob, err error) {
 }
 
 func PostBlob(b blob) (err error) {
-	filepath := fmt.Sprintf("../blobs/%s", b.Hash())
+	filepath := fmt.Sprintf("../blobs/%s", b.Hash().Hex())
 	err = ioutil.WriteFile(filepath, b.Bytes(), 0664)
 	return
 }
@@ -53,8 +53,13 @@ func GetCommit(hkid HKID) (c commit, err error) {
 	matches, err := filepath.Glob(fmt.Sprintf("../commits/%s/*",
 		hex.EncodeToString(hkid)))
 	filepath := latestVersion(matches)
+
 	data, err := ioutil.ReadFile(filepath)
-	c, _ = CommitFromBytes(data)
+	//fmt.Printf("%v\n", err)
+	if err == nil {
+		c, _ = CommitFromBytes(data)
+	}
+
 	return
 }
 

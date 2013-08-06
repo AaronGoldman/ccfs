@@ -36,11 +36,13 @@ func InsertDomain(thereHKID HKID, myHKID HKID, path string) {
 	tag_name := nameSegments[len(nameSegments)]
 	leading_path := path[:(len(path) - len(tag_name) - 1)]
 	//l := list/tag from leading_path
-	l, err := Get(thereHKID, leading_path)
+	b, err := Get(thereHKID, leading_path)
+	l := NewListFromBytes(b.Bytes())
 	//add new tag to tag/list
-	l.add(tag_name, myHKID, "tag")
+	l.add(tag_name, HID(myHKID), "tag")
 	//post the modified list
 	hid, err := Post(thereHKID, path, l)
+	_, _ = hid, err
 }
 
 func InitRepo(hkid HKID) error {

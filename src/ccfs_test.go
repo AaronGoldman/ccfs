@@ -11,6 +11,21 @@ import (
 	"testing"
 )
 
+func TestPostBlob(t *testing.T) {
+	testhkid := hkidFromDString("65232373562705602286177837897283294165955126"+
+		"49112249373497830592072241416893611216069423804730437860475300564272"+
+		"976762085068519188612732562106886379081213385", 10)
+	indata := []byte("TestPostBlob")
+	fmt.Printf("key: %s\n", testhkid.Hex())
+	Post(testhkid, "TestPostBlob", BlobFromBytes(indata))
+	fmt.Print("Posted")
+	outdata, err := Get(testhkid, "TestPostBlob")
+	if !bytes.Equal(indata, outdata) || err != nil {
+		t.Fail()
+	}
+	fmt.Print("Got")
+}
+
 func DontTestGet(t *testing.T) {
 	dabytes, err := hex.DecodeString("1312ac161875b270da2ae4e1471ba94a" +
 		"9883419250caa4c2f1fd80a91b37907e")
@@ -27,7 +42,7 @@ func DontTestGet(t *testing.T) {
 }
 
 //test for new post flow
-func TestPost(t *testing.T) {
+func DontTestPost(t *testing.T) {
 	repoHkid := hkidFromDString("46298148238932964800164113348087938361861245597"+
 		"2320097996217675372497646408870646300138355611242482091187065042115198890"+
 		"6751710824965155500230480521264034469", 10)
@@ -164,14 +179,14 @@ func BenchmarkPath(b *testing.B) {
 	}
 }
 
-func DontTestKeyGen(b *testing.T) {
+func dontTestKeyGen(b *testing.T) {
 	c := elliptic.P521()
 	priv, err := ecdsa.GenerateKey(c, rand.Reader)
 	if err != nil {
 		b.Errorf("Error %v", err)
 	}
-	//fmt.Printf("TestKeyGen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X,
-	//	priv.PublicKey.Y, priv.D)
+	fmt.Printf("TestKeyGen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X,
+		priv.PublicKey.Y, priv.D)
 	err = PostKey(priv)
 	if err != nil {
 		b.Errorf("Error %v", err)

@@ -7,10 +7,10 @@ import (
 
 type blob []byte
 
-func (b blob) Hash() []byte {
+func (b blob) Hash() HCID {
 	var h hash.Hash = sha256.New()
 	h.Write(b)
-	return h.Sum(make([]byte, 0))
+	return HCID(h.Sum(make([]byte, 0)))
 }
 
 func (b blob) Bytes() []byte {

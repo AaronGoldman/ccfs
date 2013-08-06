@@ -15,7 +15,7 @@ func Post(objecthash Hexer, path string, b Byteser) (hid HID, err error) {
 		switch b.(type) {
 		case blob:
 			PostBlob(b.(blob))
-			return b.(blob).Hash(), nil
+			return HID(b.(blob).Hash()), nil
 		case list:
 			PostList(b.(list))
 			return b.(list).Hash(), nil
@@ -37,7 +37,7 @@ func Post(objecthash Hexer, path string, b Byteser) (hid HID, err error) {
 		if len(nameSegments) < 2 {
 			b, err = GetBlob(objecthash.(HCID))
 			err = PostBlob(b.Bytes())
-			return BlobFromBytes(b.Bytes()).Hash(), err
+			return HID(BlobFromBytes(b.Bytes()).Hash()), err
 		}
 	case "list":
 		nameSegments = strings.SplitN(nameSegments[1], "/", 2)
@@ -63,7 +63,12 @@ func Post(objecthash Hexer, path string, b Byteser) (hid HID, err error) {
 		regenlist.Init()
 		regenlist.PushBack(t)
 	case "commit":
-		c, _ := GetCommit(objecthash.(HKID))
+		c, err := GetCommit(objecthash.(HKID))
+		if err != nil {
+			fmt.Printf("GetCommit err: %v\n", err)
+			//commit_to_post = 
+			//err = PostCommit(commit_to_post)
+		}
 		if !c.Verifiy() {
 			return nil, errors.New("Commit Verifiy Failed")
 		}
