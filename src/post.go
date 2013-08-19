@@ -12,19 +12,22 @@ func Post(objecthash Hexer, path string, b Byteser) (hid HID, err error) {
 	//objecthash := hkid
 	err = nil
 	if path == "" {
-		switch b.(type) {
+		switch btype := b.(type) {
+		default:
+			return nil, errors.New(fmt.Sprintf("Can not post type %T", btype))
 		case blob:
-			PostBlob(b.(blob))
-			return HID(b.(blob).Hash()), nil
+			err = PostBlob(b.(blob))
+			return HID(b.(blob).Hash()), err
 		case list:
-			PostList(b.(list))
-			return b.(list).Hash(), nil
+			err = PostList(b.(list))
+			return b.(list).Hash(), err
 		case commit:
-			PostCommit(b.(commit))
-			return b.(commit).Hash(), nil
+			err = PostCommit(b.(commit))
+			return b.(commit).Hash(), err
 		case Tag:
-			PostTag(b.(Tag))
-			return b.(Tag).Hash(), nil
+			err = PostTag(b.(Tag))
+			return b.(Tag).Hash(), err
+
 		}
 	}
 	nameSegments := strings.SplitN(path, "/", 2)
@@ -68,7 +71,9 @@ func Post(objecthash Hexer, path string, b Byteser) (hid HID, err error) {
 			fmt.Printf("GetCommit err: %v\n", err)
 			//commit_to_post = 
 			//err = PostCommit(commit_to_post)
+			return nil, err
 		}
+		fmt.Printf("%v %v", c, err != nil)
 		if !c.Verifiy() {
 			return nil, errors.New("Commit Verifiy Failed")
 		}

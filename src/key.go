@@ -11,25 +11,30 @@ import (
 	"math/big"
 )
 
-func KeyHash(p ecdsa.PrivateKey) []byte {
+type PrivateKey ecdsa.PrivateKey
+
+type PublicKey ecdsa.PublicKey
+
+func (p PrivateKey) Hash() []byte {
+	//func KeyHash(p ecdsa.PrivateKey) []byte {
 	var h hash.Hash = sha256.New()
-	h.Write(KeyBytes(p))
+	h.Write(p.Bytes())
 	return h.Sum(nil)
 }
 
-func KeyBytes(p ecdsa.PrivateKey) []byte {
-	return p.D.Bytes()
+func (p PrivateKey) Bytes() []byte {
+	return ecdsa.PrivateKey(p).D.Bytes()
 }
 
-func getPiblicKeyForHkid(hkid HKID) *ecdsa.PublicKey {
+func getPiblicKeyForHkid(hkid HKID) PublicKey {
 	marshaledKey, _ := GetBlob(HCID(hkid))
 	curve := elliptic.P521()
 	x, y := elliptic.Unmarshal(elliptic.P521(), marshaledKey)
-	publicKey := ecdsa.PublicKey{
+	pubKey := ecdsa.PublicKey{
 		curve, //elliptic.Curve
 		x,     //big.Int
 		y}     //big.Int
-	return &publicKey
+	return PublicKey(pubKey)
 }
 
 func getPrivateKeyForHkid(hkid HKID) (priv *ecdsa.PrivateKey, err error) {

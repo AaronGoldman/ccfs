@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestPostBlob(t *testing.T) {
+func DontTestPostBlob(t *testing.T) {
 	testhkid := hkidFromDString("65232373562705602286177837897283294165955126"+
 		"49112249373497830592072241416893611216069423804730437860475300564272"+
 		"976762085068519188612732562106886379081213385", 10)
@@ -26,7 +26,7 @@ func TestPostBlob(t *testing.T) {
 	fmt.Print("Got")
 }
 
-func DontTestGet(t *testing.T) {
+func TestGet(t *testing.T) {
 	dabytes, err := hex.DecodeString("1312ac161875b270da2ae4e1471ba94a" +
 		"9883419250caa4c2f1fd80a91b37907e")
 	hkid := HKID(dabytes)
@@ -164,7 +164,7 @@ func BenchmarkPath(b *testing.B) {
 		}
 		//get tag
 		_, testTagHash := testlist.hash_for_namesegment("testTag")
-		testTag, err := GetTag(testTagHash.(HKID), "testBlob")
+		testTag, err := GetTag(HKID(testTagHash.(HID)), "testBlob")
 		//fmt.Printf("authentic tag:%v\n", testTag.Verifiy())
 		if !testTag.Verifiy() {
 			b.FailNow()

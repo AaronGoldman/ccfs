@@ -46,10 +46,10 @@ func (c commit) Hkid() []byte {
 
 func (c commit) Verifiy() bool {
 	ObjectHash := genCommitHash(c.listHash, c.version, c.hkid)
-	pubkey := getPiblicKeyForHkid(c.hkid)
+	pubkey := ecdsa.PublicKey(getPiblicKeyForHkid(c.hkid))
 	r, s := elliptic.Unmarshal(pubkey.Curve, c.signature)
 	//fmt.Println(pubkey, " pubkey\n", ObjectHash, " ObjectHash\n", r, " r\n", s, "s")
-	return ecdsa.Verify(pubkey, ObjectHash, r, s)
+	return ecdsa.Verify(&pubkey, ObjectHash, r, s)
 }
 
 func (c commit) Update() commit {

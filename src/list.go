@@ -29,8 +29,8 @@ func (l list) hash_for_namesegment(namesegment string) (string, Hexer) {
 
 func (l list) String() string {
 	var keys []string
-	for k := range l {
-		keys = append(keys, k)
+	for key := range l {
+		keys = append(keys, key)
 	}
 	sort.Strings(keys)
 	s := ""

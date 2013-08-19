@@ -85,7 +85,7 @@ func PostKey(p *ecdsa.PrivateKey) (err error) {
 	hkid := blob(elliptic.Marshal(p.PublicKey.Curve,
 		p.PublicKey.X, p.PublicKey.Y)).Hash()
 	filepath := fmt.Sprintf("../keys/%s", hex.EncodeToString(hkid))
-	err = ioutil.WriteFile(filepath, KeyBytes(*p), 0600)
+	err = ioutil.WriteFile(filepath, PrivateKey(*p).Bytes(), 0600)
 	return
 }
 

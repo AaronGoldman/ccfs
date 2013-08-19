@@ -12,7 +12,7 @@ func Get(objecthash Hexer, path string) (b blob, err error) {
 	err = nil
 	nameSegments := strings.SplitN(path, "/", 2)
 	for {
-		fmt.Printf("Path: %s Type: %t\n", path, typeString)
+		fmt.Printf("Path: %s Type: %s\n", path, typeString)
 		switch typeString {
 		case "blob":
 			if len(nameSegments) < 2 {
@@ -28,7 +28,7 @@ func Get(objecthash Hexer, path string) (b blob, err error) {
 			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
 		case "tag":
 			nameSegments = strings.SplitN(nameSegments[1], "/", 2)
-			t, err := GetTag(objecthash.(HKID), nameSegments[0])
+			t, err := GetTag(HKID(objecthash.(HID)), nameSegments[0])
 			if !t.Verifiy() {
 				b = nil
 				err = errors.New("Tag Verifiy Failed")
@@ -51,7 +51,7 @@ func Get(objecthash Hexer, path string) (b blob, err error) {
 			}
 			l, err := GetList(c.listHash)
 			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
-			fmt.Printf("%t", c)
+			//fmt.Printf("%v\n", c)
 			path = nameSegments[1]
 			_ = err
 
