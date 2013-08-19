@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-func GetBlob(hash HCID) (b blob, err error) {
+func localfileservice_GetBlob(hash HCID) (b blob, err error) {
 	//ToDo Validate input
 	filepath := fmt.Sprintf("../blobs/%s", hash.Hex())
 	data, err := ioutil.ReadFile(filepath)
@@ -28,7 +28,7 @@ func PostBlob(b blob) (err error) {
 	return
 }
 
-func GetTag(hkid HKID, nameSegment string) (t Tag, err error) {
+func localfileservice_GetTag(hkid HKID, nameSegment string) (t Tag, err error) {
 	//ToDo Validate input
 	matches, err := filepath.Glob(fmt.Sprintf("../tags/%s/%s/*",
 		hex.EncodeToString(hkid), nameSegment))
@@ -48,7 +48,7 @@ func PostTag(t Tag) (err error) {
 	return
 }
 
-func GetCommit(hkid HKID) (c commit, err error) {
+func localfileservice_GetCommit(hkid HKID) (c commit, err error) {
 	//Validate input
 	matches, err := filepath.Glob(fmt.Sprintf("../commits/%s/*",
 		hex.EncodeToString(hkid)))
@@ -72,7 +72,7 @@ func PostCommit(c commit) (err error) {
 	return
 }
 
-func GetKey(hkid []byte) (data []byte, err error) {
+func localfileservice_GetKey(hkid []byte) (data blob, err error) {
 	filepath := fmt.Sprintf("../keys/%s", hex.EncodeToString(hkid))
 	filedata, err := ioutil.ReadFile(filepath)
 	if err != nil {
