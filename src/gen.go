@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"hash"
+	"log"
 	"net/url"
 	"strconv"
 	"time"
@@ -29,7 +30,7 @@ func GenerateVersion() (versionstr string) {
 func GenerateSignature(prikey *ecdsa.PrivateKey, ObjectHash []byte) (signature string) {
 	r, s, err := ecdsa.Sign(rand.Reader, prikey, ObjectHash)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	return fmt.Sprintf("%v %v", r, s)
 }

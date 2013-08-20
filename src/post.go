@@ -4,6 +4,7 @@ import (
 	golist "container/list"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -34,7 +35,7 @@ func Post(objecthash Hexer, path string, b Byteser) (hid HID, err error) {
 	regenlist := golist.New()
 	//regenpath := []string{}
 	//for {
-	fmt.Printf("%t %t %t %t\n", objecthash, path, typeString, b)
+	log.Printf("%t %t %t %t\n", objecthash, path, typeString, b)
 	switch typeString {
 	case "blob":
 		if len(nameSegments) < 2 {
@@ -68,26 +69,26 @@ func Post(objecthash Hexer, path string, b Byteser) (hid HID, err error) {
 	case "commit":
 		c, err := GetCommit(objecthash.(HKID))
 		if err != nil {
-			fmt.Printf("GetCommit err: %v\n", err)
+			log.Printf("GetCommit err: %v\n", err)
 			//commit_to_post = 
 			//err = PostCommit(commit_to_post)
 			return nil, err
 		}
-		fmt.Printf("%v %v", c, err != nil)
+		log.Printf("%v %v", c, err != nil)
 		if !c.Verifiy() {
 			return nil, errors.New("Commit Verifiy Failed")
 		}
 		regenlist.Init()
 		regenlist.PushBack(c)
 		l, _ := GetList(c.listHash)
-		fmt.Printf("c.listHash: %s\n", c.listHash.Hex())
+		log.Printf("c.listHash: %s\n", c.listHash.Hex())
 		typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Printf("%t %t %t %t\n", objecthash, path, typeString, b)
+	log.Printf("%t %t %t %t\n", objecthash, path, typeString, b)
 	//}
 	b = nil
 	return

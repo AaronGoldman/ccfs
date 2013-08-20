@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"hash"
+	"log"
 	"math/big"
 )
 
@@ -62,11 +63,11 @@ func HkidFromD(D big.Int) HKID {
 	hkid := GenerateHKID(priv)
 	err := PostKey(priv) //store privet key
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	err = PostBlob(key) //store public key
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	return hkid
 }
@@ -74,7 +75,7 @@ func HkidFromD(D big.Int) HKID {
 func hkidFromDString(str string, base int) HKID {
 	D, success := new(big.Int).SetString(str, base)
 	if !success {
-		panic(nil)
+		log.Panic(nil)
 	}
 	return HkidFromD(*D)
 }
@@ -82,7 +83,7 @@ func hkidFromDString(str string, base int) HKID {
 func KeyGen() *ecdsa.PrivateKey {
 	priv, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	return priv
 }

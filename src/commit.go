@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"hash"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -48,7 +49,7 @@ func (c commit) Verifiy() bool {
 	ObjectHash := genCommitHash(c.listHash, c.version, c.hkid)
 	pubkey := ecdsa.PublicKey(getPiblicKeyForHkid(c.hkid))
 	r, s := elliptic.Unmarshal(pubkey.Curve, c.signature)
-	//fmt.Println(pubkey, " pubkey\n", ObjectHash, " ObjectHash\n", r, " r\n", s, "s")
+	log.Println(pubkey, " pubkey\n", ObjectHash, " ObjectHash\n", r, " r\n", s, "s")
 	return ecdsa.Verify(&pubkey, ObjectHash, r, s)
 }
 
@@ -61,7 +62,7 @@ func commitSign(listHash []byte, version int64, hkid []byte) (signature []byte) 
 	prikey, err := getPrivateKeyForHkid(hkid)
 	r, s, err := ecdsa.Sign(rand.Reader, prikey, ObjectHash)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	signature = elliptic.Marshal(prikey.PublicKey.Curve, r, s)
 	return

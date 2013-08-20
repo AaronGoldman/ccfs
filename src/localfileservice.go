@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -15,7 +16,7 @@ func localfileservice_GetBlob(hash HCID) (b blob, err error) {
 	filepath := fmt.Sprintf("../blobs/%s", hash.Hex())
 	data, err := ioutil.ReadFile(filepath)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err, hash.Hex())
 	}
 	//build object
 	b = BlobFromBytes(data)
@@ -24,6 +25,7 @@ func localfileservice_GetBlob(hash HCID) (b blob, err error) {
 
 func PostBlob(b blob) (err error) {
 	filepath := fmt.Sprintf("../blobs/%s", b.Hash().Hex())
+	err = os.MkdirAll("../blobs", 0764)
 	err = ioutil.WriteFile(filepath, b.Bytes(), 0664)
 	return
 }
@@ -34,7 +36,9 @@ func localfileservice_GetTag(hkid HKID, nameSegment string) (t Tag, err error) {
 		hex.EncodeToString(hkid), nameSegment))
 	filepath := latestVersion(matches)
 	data, err := ioutil.ReadFile(filepath)
-	t, _ = TagFromBytes(data)
+	if err == nil {
+		t, _ = TagFromBytes(data)
+	}
 	return
 }
 
@@ -55,7 +59,7 @@ func localfileservice_GetCommit(hkid HKID) (c commit, err error) {
 	filepath := latestVersion(matches)
 
 	data, err := ioutil.ReadFile(filepath)
-	//fmt.Printf("%v\n", err)
+	//log.Printf("%v\n", err)
 	if err == nil {
 		c, _ = CommitFromBytes(data)
 	}
@@ -76,7 +80,7 @@ func localfileservice_GetKey(hkid []byte) (data blob, err error) {
 	filepath := fmt.Sprintf("../keys/%s", hex.EncodeToString(hkid))
 	filedata, err := ioutil.ReadFile(filepath)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	return filedata, err
 }
@@ -84,6 +88,7 @@ func localfileservice_GetKey(hkid []byte) (data blob, err error) {
 func PostKey(p *ecdsa.PrivateKey) (err error) {
 	hkid := blob(elliptic.Marshal(p.PublicKey.Curve,
 		p.PublicKey.X, p.PublicKey.Y)).Hash()
+	err = os.MkdirAll("../keys", 0700)
 	filepath := fmt.Sprintf("../keys/%s", hex.EncodeToString(hkid))
 	err = ioutil.WriteFile(filepath, PrivateKey(*p).Bytes(), 0600)
 	return

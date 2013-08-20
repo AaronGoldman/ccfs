@@ -3,11 +3,12 @@ package main
 import (
 	"crypto/elliptic"
 	"crypto/sha256"
-	"fmt"
+	"log"
 	"strings"
 )
 
 func main() {
+	log.SetFlags(log.Lshortfile)
 	//go BlobServerStart()
 	//hashfindwalk()
 	repoHkid := hkidFromDString("46298148238932964800164113348087938361861245597"+
@@ -17,9 +18,9 @@ func main() {
 	//in := bufio.NewReader(os.Stdin)
 	//input, err := in.ReadString('\n')
 	//if err != nil {
-	//	panic(err)
+	//	log.Panic(err)
 	//}
-	fmt.Println(hash, err)
+	log.Println(hash, err)
 	return
 }
 
@@ -69,7 +70,7 @@ func GenHKID() HKID {
 	c, privkey := InitCommit()
 	err := PostKey(privkey)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	return c.hkid
 }*/

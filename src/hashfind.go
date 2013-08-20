@@ -3,9 +3,9 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"hash"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -13,7 +13,7 @@ import (
 func hashfindwalk() {
 	err := filepath.Walk("./", visit)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 }
 
@@ -22,7 +22,7 @@ func hashfindwalk() {
 func visit(path string, f os.FileInfo, err error) error {
 	if f.IsDir() == false {
 		hbuf := hashfile(path)
-		fmt.Printf("%v %s\n", hex.EncodeToString(hbuf), path)
+		log.Printf("%v %s\n", hex.EncodeToString(hbuf), path)
 	}
 	return nil
 }
@@ -31,9 +31,9 @@ func hashfile(filepath string) []byte {
 	fi, err := os.Open(filepath)
 
 	if err != nil {
-		fmt.Printf("%v", err)
+		log.Printf("%v", err)
 		return nil
-		//panic(err)
+		//log.Panic(err)
 	}
 	defer fi.Close()
 
@@ -42,9 +42,9 @@ func hashfile(filepath string) []byte {
 	for {
 		n, err := fi.Read(buf)
 		if err != nil && err != io.EOF {
-			fmt.Printf("%v", err)
+			log.Printf("%v", err)
 			return nil
-			//panic(err)
+			//log.Panic(err)
 		}
 		if n == 0 {
 			break

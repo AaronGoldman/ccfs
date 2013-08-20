@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -11,7 +12,7 @@ func (h BlobServer) ServeHTTP(
 	w http.ResponseWriter,
 	r *http.Request) {
 	fmt.Fprint(w, "Hello")
-	fmt.Println(r)
+	log.Println(r)
 }
 
 func BlobServerStart() {

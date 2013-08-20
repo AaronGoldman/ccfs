@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"fmt"
+	"log"
 	"strings"
 )
 
@@ -12,13 +12,13 @@ func Get(objecthash Hexer, path string) (b blob, err error) {
 	err = nil
 	nameSegments := strings.SplitN(path, "/", 2)
 	for {
-		fmt.Printf("Path: %s Type: %s\n", path, typeString)
+		log.Printf("Path: %s Type: %s\n", path, typeString)
 		switch typeString {
 		case "blob":
 			if len(nameSegments) < 2 {
 				b, err = GetBlob(objecthash.(HCID))
 				if err != nil {
-					panic(err)
+					log.Panic(err)
 				}
 				return
 			}
@@ -51,7 +51,7 @@ func Get(objecthash Hexer, path string) (b blob, err error) {
 			}
 			l, err := GetList(c.listHash)
 			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
-			//fmt.Printf("%v\n", c)
+			//log.Printf("%v\n", c)
 			path = nameSegments[1]
 			_ = err
 
