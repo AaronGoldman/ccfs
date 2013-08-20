@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"hash"
-	"log"
+	//"log"
 	"sort"
 	"strings"
 )
@@ -63,7 +63,7 @@ func NewListFromBytes(listbytes []byte) (newlist list) {
 	cols := []string{}
 	for _, element := range listEntries {
 		cols = strings.Split(element, ",")
-		log.Print(cols)
+		//log.Print(cols)
 		entryHash, _ := hex.DecodeString(cols[0])
 		entryTypeString := cols[1]
 		entryNameSegment := cols[2]
