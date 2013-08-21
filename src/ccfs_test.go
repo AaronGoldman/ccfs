@@ -18,7 +18,7 @@ func DontTestPostBlob(t *testing.T) {
 		"49112249373497830592072241416893611216069423804730437860475300564272"+
 		"976762085068519188612732562106886379081213385", 10)
 	indata := []byte("TestPostBlob")
-	log.Printf("key: %s\n", testhkid.Hex())
+	log.Printf("\n\tkey: %s\n", testhkid.Hex())
 	Post(testhkid, "TestPostBlob", BlobFromBytes(indata))
 	log.Print("Posted")
 	outdata, err := Get(testhkid, "TestPostBlob")
@@ -53,6 +53,7 @@ func TestGet(t *testing.T) {
 //test for new post flow
 func DontTestPost(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
+	//t.SkipNow()
 	repoHkid := hkidFromDString("46298148238932964800164113348087938361861245597"+
 		"2320097996217675372497646408870646300138355611242482091187065042115198890"+
 		"6751710824965155500230480521264034469", 10)
@@ -77,7 +78,7 @@ func DontTestPost(t *testing.T) {
 	if err != nil {
 		log.Panic(err)
 	}
-	log.Println("Post")
+	log.Println("Posted")
 } //*/
 
 func BenchmarkStoreOne(b *testing.B) {
@@ -117,7 +118,7 @@ func BenchmarkPath(b *testing.B) {
 		}
 
 		//post tag
-		testTagPointingToTestBlob := NewTag(testBlob.Hash(),
+		testTagPointingToTestBlob := NewTag(HID(testBlob.Hash()),
 			"blob",
 			"testBlob",
 			hkidT) //gen test tag
@@ -177,13 +178,13 @@ func BenchmarkPath(b *testing.B) {
 		}
 		//get tag
 		_, testTagHash := testlist.hash_for_namesegment("testTag")
-		testTag, err := GetTag(HKID(testTagHash.(HID)), "testBlob")
+		testTag, err := GetTag(testTagHash.Bytes(), "testBlob")
 		//log.Printf("authentic tag:%v\n", testTag.Verifiy())
 		if !testTag.Verifiy() {
 			b.FailNow()
 		}
 		//get blob
-		testBlob, _ = GetBlob(testTag.HashBytes)
+		testBlob, _ = GetBlob(HCID(testTag.HashBytes))
 		//log.Printf("authentic blob:%v\n", bytes.Equal(testTag.HashBytes,
 		//	testBlob.Hash()))
 		if !bytes.Equal(testTag.HashBytes, testBlob.Hash()) {
@@ -192,18 +193,19 @@ func BenchmarkPath(b *testing.B) {
 	}
 }
 
-func dontTestKeyGen(b *testing.T) {
+func DontTestKeyGen(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
+	//t.SkipNow
 	c := elliptic.P521()
 	priv, err := ecdsa.GenerateKey(c, rand.Reader)
 	if err != nil {
-		b.Errorf("Error %v", err)
+		t.Errorf("Error %v", err)
 	}
 	log.Printf("TestKeyGen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X,
 		priv.PublicKey.Y, priv.D)
 	err = PostKey(priv)
 	if err != nil {
-		b.Errorf("Error %v", err)
+		t.Errorf("Error %v", err)
 	}
 	PostBlob(elliptic.Marshal(priv.PublicKey.Curve,
 		priv.PublicKey.X, priv.PublicKey.Y))
@@ -227,7 +229,7 @@ func setup_for_gets() {
 	}
 
 	//post tag
-	testTagPointingToTestBlob := NewTag(testBlob.Hash(),
+	testTagPointingToTestBlob := NewTag(HID(testBlob.Hash()),
 		"blob",
 		"testBlob",
 		hkidT) //gen test tag

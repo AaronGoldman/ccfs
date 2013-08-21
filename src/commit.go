@@ -22,7 +22,7 @@ type commit struct {
 	signature []byte //131 byte max
 }
 
-func (c commit) Hash() []byte {
+func (c commit) Hash() HCID {
 	var h hash.Hash = sha256.New()
 	h.Write(c.Bytes())
 	return h.Sum(nil)

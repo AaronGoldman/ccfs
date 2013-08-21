@@ -16,7 +16,7 @@ func localfileservice_GetBlob(hash HCID) (b blob, err error) {
 	filepath := fmt.Sprintf("../blobs/%s", hash.Hex())
 	data, err := ioutil.ReadFile(filepath)
 	if err != nil {
-		log.Println(err, hash.Hex())
+		log.Printf("\n\t%v\n", err)
 	}
 	//build object
 	b = BlobFromBytes(data)

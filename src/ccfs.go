@@ -54,10 +54,18 @@ func InitRepo(hkid HKID) error {
 }
 func InitDomain(hkid HKID, nameSegment string) error {
 	//GenHKID()
-	t := NewTag(sha256.New().Sum(nil), "blob", nameSegment, hkid)
+	t := NewTag(HCID(sha256.New().Sum(nil)), "blob", nameSegment, hkid)
 	err := PostTag(t)
 	return err
-}
+} //type HID []byte
+
+//func (hid HID) Hex() string {
+//	return hex.EncodeToString(hid)
+///}
+
+//func (hid HID) Bytes() []byte {
+//	return []byte(hid)
+//}
 
 func GenHKID() HKID {
 	privkey := KeyGen()

@@ -1,13 +1,92 @@
 package main
 
 import (
-	golist "container/list"
+	//golist "container/list"
 	"errors"
 	"fmt"
-	"log"
+	//"log"
 	"strings"
 )
 
+func Post(objecthash HKID, path string, post_bytes Byteser) (hid HID, err error) {
+	hid, err = post(HID(objecthash), path, "commit", post_bytes)
+	return hid, err
+}
+
+func post(h HID, path string, next_path_segment_type string,
+	post_bytes Byteser) (hid HID, err error) {
+	if path == "" {
+		err := PostBlob(post_bytes.(blob))
+		return HID(post_bytes.(blob).Hash()), err
+		//switch btype := b.(type) {
+		//default:
+		//	return nil, errors.New(fmt.Sprintf("Can not post type %T", btype))
+		//case blob:
+		//	err := PostBlob(post_bytes.(blob))
+		//	return HID(post_bytes.(blob).Hash()), err
+		//case list:
+		//	return nil, errors.New("posting lists must have a path")
+		//case commit:
+		//case Tag:
+		//}
+	}
+	nameSegments := strings.SplitN(path, "/", 2)
+	next_path_segment := nameSegments[0]
+	rest_of_path := ""
+	if len(nameSegments) < 1 {
+		rest_of_path = nameSegments[1]
+	}
+	switch next_path_segment_type {
+	default:
+		return nil, errors.New(fmt.Sprintf("Invalid type %T", next_path_segment_type))
+	case "blob":
+		return nil, errors.New(fmt.Sprintf("only \"\" path can be blob"))
+	case "list":
+		//posted_hash, err := list_helper(h, next_path_segment, rest_of_path, post_bytes)
+		//return posted_hash, err
+		l, geterr := GetList(h.Bytes())
+		posterr := error(nil)
+		if geterr == nil {
+			//update and publish old list
+			next_typeString, next_hash := l.hash_for_namesegment(next_path_segment)
+			next_path := rest_of_path
+			var hash_of_posted HID
+			hash_of_posted, posterr = post(next_hash, next_path,
+				next_typeString, post_bytes)
+			l.add(next_path_segment, hash_of_posted, "list")
+		} else {
+			//build and publish new list
+			next_hash := HID(nil)
+			next_path := rest_of_path
+			next_typeString := "list"
+			if rest_of_path == "" {
+				next_typeString = "blob"
+			}
+			var hash_of_posted HID
+			hash_of_posted, posterr = post(next_hash, next_path,
+				next_typeString, post_bytes)
+			l = NewList(hash_of_posted, "list", next_path_segment)
+		}
+		if posterr != nil {
+			return nil, posterr
+		} else {
+			err := PostList(l)
+			if err == nil {
+				return l.Hash(), nil
+			}
+			return nil, err
+		}
+	case "commit":
+
+	case "tag":
+
+	}
+	return nil, errors.New("failed to return before end of function")
+}
+
+func list_helper(h HCID, next_path_segment string, rest_of_path string, post_bytes Byteser)
+
+/*
 func Post(objecthash Hexer, path string, b Byteser) (hid HID, err error) {
 	typeString := "commit"
 	//objecthash := hkid
@@ -21,13 +100,13 @@ func Post(objecthash Hexer, path string, b Byteser) (hid HID, err error) {
 			return HID(b.(blob).Hash()), err
 		case list:
 			err = PostList(b.(list))
-			return b.(list).Hash(), err
+			return HID(b.(list).Hash()), err
 		case commit:
 			err = PostCommit(b.(commit))
-			return b.(commit).Hash(), err
+			return HID(b.(commit).Hash()), err
 		case Tag:
 			err = PostTag(b.(Tag))
-			return b.(Tag).Hash(), err
+			return HID(b.(Tag).Hash()), err
 
 		}
 	}
@@ -35,7 +114,8 @@ func Post(objecthash Hexer, path string, b Byteser) (hid HID, err error) {
 	regenlist := golist.New()
 	//regenpath := []string{}
 	//for {
-	log.Printf("%t %t %t %t\n", objecthash, path, typeString, b)
+	log.Printf("\n\tobjecthash: %v\n\tpath: %v\n\ttypeString: %v\n\tblob %t\n",
+		objecthash, path, typeString, b)
 	switch typeString {
 	case "blob":
 		if len(nameSegments) < 2 {
@@ -69,7 +149,7 @@ func Post(objecthash Hexer, path string, b Byteser) (hid HID, err error) {
 	case "commit":
 		c, err := GetCommit(objecthash.(HKID))
 		if err != nil {
-			log.Printf("GetCommit err: %v\n", err)
+			log.Printf("\n\tGetCommit err: %v\n", err)
 			//commit_to_post = 
 			//err = PostCommit(commit_to_post)
 			return nil, err
@@ -92,4 +172,4 @@ func Post(objecthash Hexer, path string, b Byteser) (hid HID, err error) {
 	//}
 	b = nil
 	return
-}
+}*/

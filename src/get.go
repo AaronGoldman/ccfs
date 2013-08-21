@@ -6,29 +6,37 @@ import (
 	"strings"
 )
 
-func Get(objecthash Hexer, path string) (b blob, err error) {
+func Get(objecthash HID, path string) (b blob, err error) {
 	typeString := "commit"
 	//objecthash := hkid
 	err = nil
 	nameSegments := strings.SplitN(path, "/", 2)
 	for {
-		log.Printf("Path: %s Type: %s\n", path, typeString)
+		log.Printf("\n\tPath: %s\n\tType: %s\n", path, typeString)
 		switch typeString {
 		case "blob":
 			if len(nameSegments) < 2 {
 				b, err = GetBlob(objecthash.(HCID))
 				if err != nil {
-					log.Panic(err)
+					if err != nil {
+						log.Printf("\n\t%v\n", err)
+					}
 				}
 				return
 			}
 		case "list":
 			nameSegments = strings.SplitN(nameSegments[1], "/", 2)
-			l, _ := GetList(objecthash.(HCID))
+			l, err := GetList(objecthash.(HCID))
+			if err != nil {
+				log.Printf("\n\t%v\n", err)
+			}
 			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
 		case "tag":
 			nameSegments = strings.SplitN(nameSegments[1], "/", 2)
-			t, err := GetTag(HKID(objecthash.(HID)), nameSegments[0])
+			t, err := GetTag(objecthash.Bytes(), nameSegments[0])
+			if err != nil {
+				log.Printf("\n\t%v\n", err)
+			}
 			if !t.Verifiy() {
 				b = nil
 				err = errors.New("Tag Verifiy Failed")
@@ -44,6 +52,9 @@ func Get(objecthash Hexer, path string) (b blob, err error) {
 
 		case "commit":
 			c, err := GetCommit(objecthash.(HKID))
+			if err != nil {
+				log.Printf("\n\t%v\n", err)
+			}
 			if !c.Verifiy() {
 				b = nil
 				err = errors.New("Commit Verifiy Failed")

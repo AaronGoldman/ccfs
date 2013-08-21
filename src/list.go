@@ -22,7 +22,7 @@ func (l list) add(nameSegment string, hash HID, typeString string) list {
 	return l
 }
 
-func (l list) hash_for_namesegment(namesegment string) (string, Hexer) {
+func (l list) hash_for_namesegment(namesegment string) (string, HID) {
 	objectHash := l[namesegment].Hash
 	typeString := l[namesegment].TypeString
 	return typeString, objectHash
@@ -45,13 +45,13 @@ func (l list) Bytes() []byte {
 	return []byte(l.String())
 }
 
-func (l list) Hash() []byte {
+func (l list) Hash() HCID {
 	var h hash.Hash = sha256.New()
 	h.Write(l.Bytes())
 	return h.Sum(nil)
 }
 
-func NewList(objectHash []byte, typestring string, nameSegment string) list {
+func NewList(objectHash HID, typestring string, nameSegment string) list {
 	l := make(list)
 	l[nameSegment] = entry{objectHash, typestring}
 	return l
@@ -67,7 +67,7 @@ func NewListFromBytes(listbytes []byte) (newlist list) {
 		entryHash, _ := hex.DecodeString(cols[0])
 		entryTypeString := cols[1]
 		entryNameSegment := cols[2]
-		l[entryNameSegment] = entry{entryHash, entryTypeString}
+		l[entryNameSegment] = entry{HCID(entryHash), entryTypeString}
 	}
 	return l
 }

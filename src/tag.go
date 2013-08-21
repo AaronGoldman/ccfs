@@ -22,7 +22,7 @@ type Tag struct {
 	signature   []byte
 }
 
-func (t Tag) Hash() []byte {
+func (t Tag) Hash() HCID {
 	var h hash.Hash = sha256.New()
 	h.Write(t.Bytes())
 	return h.Sum(nil)
@@ -42,7 +42,7 @@ func (t Tag) String() string {
 		hex.EncodeToString(t.signature))
 }
 
-func (t Tag) Hkid() []byte {
+func (t Tag) Hkid() HKID {
 	return t.hkid
 }
 
@@ -58,14 +58,14 @@ func (t Tag) Update() Tag {
 	return t
 }
 
-func NewTag(HashBytes HCID, TypeString string,
+func NewTag(HashBytes HID, TypeString string,
 	nameSegment string, hkid HKID) Tag {
 	prikey, _ := getPrivateKeyForHkid(hkid)
 	version := time.Now().UnixNano()
-	ObjectHash := genTagHash(HashBytes, TypeString, nameSegment, version, hkid)
+	ObjectHash := genTagHash(HashBytes.Bytes(), TypeString, nameSegment, version, hkid)
 	r, s, _ := ecdsa.Sign(rand.Reader, prikey, ObjectHash)
 	signature := elliptic.Marshal(elliptic.P521(), r, s)
-	t := Tag{HashBytes,
+	t := Tag{HashBytes.Bytes(),
 		TypeString,
 		nameSegment,
 		version,
