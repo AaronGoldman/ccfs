@@ -42,19 +42,19 @@ func post(h HID, path string, next_path_segment_type string,
 	case "blob":
 		return nil, errors.New(fmt.Sprintf("only \"\" path can be blob"))
 	case "list":
-		posted_hash, err := list_helper(h.Bytes(), next_path_segment, rest_of_path, post_bytes)
+		posted_hash, err := list_helper(h, next_path_segment, rest_of_path, post_bytes)
 		return posted_hash, err
 	case "commit":
 		posted_hash, err := commit_helper(h.Bytes(), path, post_bytes)
 		return posted_hash, err
 	case "tag":
-		posted_hash, err := tag_helper(h.Bytes(), next_path_segment, rest_of_path, post_bytes)
+		posted_hash, err := tag_helper(h, next_path_segment, rest_of_path, post_bytes)
 		return posted_hash, err
 	}
-	return nil, errors.New("failed to return before end of function")
+	//return nil, errors.New("failed to return before end of function")
 }
 
-func list_helper(h HCID, next_path_segment string, rest_of_path string,
+func list_helper(h HID, next_path_segment string, rest_of_path string,
 	post_bytes Byteser) (HID, error) {
 	//if h == nil {
 	//is uninitalised list and has no HCID
@@ -70,10 +70,13 @@ func list_helper(h HCID, next_path_segment string, rest_of_path string,
 		//update and publish old list
 		next_typeString, next_hash := l.hash_for_namesegment(next_path_segment)
 		next_path := rest_of_path
+		if rest_of_path == "" {
+			next_typeString = "blob"
+		}
 		var hash_of_posted HID
 		hash_of_posted, posterr = post(next_hash, next_path,
 			next_typeString, post_bytes)
-		l.add(next_path_segment, hash_of_posted, "list")
+		l.add(next_path_segment, hash_of_posted, next_typeString)
 	} else {
 		//build and publish new list
 		next_hash := HID(nil)
@@ -85,7 +88,7 @@ func list_helper(h HCID, next_path_segment string, rest_of_path string,
 		var hash_of_posted HID
 		hash_of_posted, posterr = post(next_hash, next_path,
 			next_typeString, post_bytes)
-		l = NewList(hash_of_posted, "list", next_path_segment)
+		l = NewList(hash_of_posted, next_typeString, next_path_segment)
 	}
 	if posterr != nil {
 		return nil, posterr
@@ -115,11 +118,8 @@ func commit_helper(h HCID, path string, post_bytes Byteser) (HID, error) {
 			next_path := path
 			next_typeString := "list"
 			var hash_of_posted HID
-			log.Printf("Got to here\n\tnext_hash: %v\n\tnext_path: %v\n\tnext_typeString: %v\n\tpost_bytes: %v\n",
-				next_hash, next_path, next_typeString, post_bytes)
 			hash_of_posted, posterr = post(next_hash, next_path,
 				next_typeString, post_bytes)
-			log.Print("did not get here")
 			c = NewCommit(hash_of_posted.Bytes(), h.Bytes())
 		} else {
 			log.Panic("commit not found")
@@ -128,7 +128,7 @@ func commit_helper(h HCID, path string, post_bytes Byteser) (HID, error) {
 	if posterr != nil {
 		return nil, posterr
 	}
-	log.Print(c)
+	//log.Print(c)
 	err := PostCommit(c)
 	if err == nil {
 		return c.Hash(), nil
@@ -136,7 +136,7 @@ func commit_helper(h HCID, path string, post_bytes Byteser) (HID, error) {
 	return nil, err
 }
 
-func tag_helper(h HCID, next_path_segment string, rest_of_path string,
+func tag_helper(h HID, next_path_segment string, rest_of_path string,
 	post_bytes Byteser) (HID, error) {
 	log.Panic("Not yet implimented")
 	return nil, nil
@@ -206,7 +206,7 @@ func Post(objecthash Hexer, path string, b Byteser) (hid HID, err error) {
 		c, err := GetCommit(objecthash.(HKID))
 		if err != nil {
 			log.Printf("\n\tGetCommit err: %v\n", err)
-			//commit_to_post = 
+			//commit_to_post =
 			//err = PostCommit(commit_to_post)
 			return nil, err
 		}

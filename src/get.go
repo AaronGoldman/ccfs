@@ -12,7 +12,7 @@ func Get(objecthash HID, path string) (b blob, err error) {
 	err = nil
 	nameSegments := strings.SplitN(path, "/", 2)
 	for {
-		log.Printf("\n\tPath: %s\n\tType: %s\n", path, typeString)
+		//log.Printf("\n\tPath: %s\n\tType: %s\n", path, typeString)
 		switch typeString {
 		case "blob":
 			if len(nameSegments) < 2 {
@@ -25,8 +25,12 @@ func Get(objecthash HID, path string) (b blob, err error) {
 				return
 			}
 		case "list":
-			nameSegments = strings.SplitN(nameSegments[1], "/", 2)
-			l, err := GetList(objecthash.(HCID))
+
+			if len(nameSegments) > 1 {
+				nameSegments = strings.SplitN(nameSegments[1], "/", 2)
+			}
+			log.Printf("\n\t%v\n\t%v\n", nameSegments, objecthash.Hex())
+			l, err := GetList(objecthash.Bytes())
 			if err != nil {
 				log.Printf("\n\t%v\n", err)
 			}
@@ -51,7 +55,7 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			}
 
 		case "commit":
-			c, err := GetCommit(objecthash.(HKID))
+			c, err := GetCommit(objecthash.Bytes())
 			if err != nil {
 				log.Printf("\n\t%v\n", err)
 			}
@@ -63,8 +67,13 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			l, err := GetList(c.listHash)
 			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
 			//log.Printf("%v\n", c)
-			path = nameSegments[1]
-			_ = err
+			path = ""
+			if len(nameSegments) > 1 {
+				path = nameSegments[1]
+			}
+			if err != nil {
+				log.Printf("%v\n", err)
+			}
 
 		case "":
 			return nil, err
@@ -74,6 +83,6 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			return nil, err
 		}
 	}
-	b = nil
-	return
+	//b = nil
+	//return
 }

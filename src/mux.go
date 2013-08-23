@@ -19,7 +19,7 @@ func GetCommit(h HKID) (commit, error) {
 	case <-time.After(time.Second):
 		return commit{}, errors.New("GetCommit Timeout")
 	}
-	return commit{}, errors.New("select mux.go")
+	//return commit{}, errors.New("select mux.go")
 }
 
 func GetTag(h HKID, namesegment string) (Tag, error) {
@@ -36,7 +36,7 @@ func GetTag(h HKID, namesegment string) (Tag, error) {
 	case <-time.After(time.Second):
 		return Tag{}, errors.New("GetTag Timeout")
 	}
-	return Tag{}, errors.New("select mux.go")
+	//return Tag{}, errors.New("select mux.go")
 }
 
 func GetBlob(h HCID) (blob, error) {
@@ -53,7 +53,7 @@ func GetBlob(h HCID) (blob, error) {
 	case <-time.After(time.Second):
 		return nil, errors.New("GetBlob Timeout")
 	}
-	return nil, errors.New("select mux.go")
+	//return nil, errors.New("select mux.go")
 }
 
 func GetKey(h HKID) (blob, error) {
@@ -70,5 +70,5 @@ func GetKey(h HKID) (blob, error) {
 	case <-time.After(time.Second):
 		return nil, errors.New("GetBlob Timeout")
 	}
-	return nil, errors.New("select mux.go")
+	//return nil, errors.New("select mux.go")
 }
