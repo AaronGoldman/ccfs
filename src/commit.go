@@ -53,7 +53,12 @@ func (c commit) Verifiy() bool {
 	return ecdsa.Verify(&pubkey, ObjectHash, r, s)
 }
 
-func (c commit) Update() commit {
+func (c commit) Update(listHash HCID) commit {
+	c.version = time.Now().UnixNano()
+	//c.hkid = c.hkid
+	c.parent = c.listHash
+	c.listHash = listHash
+	c.signature = commitSign(c.listHash, c.version, c.hkid)
 	return c
 }
 

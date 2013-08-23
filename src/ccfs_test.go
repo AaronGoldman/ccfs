@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-func DontTestPostBlob(t *testing.T) {
+func TestPostBlob(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
 	testhkid := hkidFromDString("65232373562705602286177837897283294165955126"+
 		"49112249373497830592072241416893611216069423804730437860475300564272"+
