@@ -24,11 +24,11 @@ func TestPostBlob(t *testing.T) {
 	if !bytes.Equal(indata, outdata) || err != nil {
 		t.Fail()
 	}
-	log.Printf("\n\tkey: %s\n\tpath: %s\n\tindata: %s\n\toutdata: %s\n",
-		testhkid.Hex(),
-		testpath,
-		indata,
-		outdata)
+	//log.Printf("\n\tkey: %s\n\tpath: %s\n\tindata: %s\n\toutdata: %s\n",
+	//	testhkid.Hex(),
+	//	testpath,
+	//	indata,
+	//	outdata)
 }
 
 func TestGet(t *testing.T) {

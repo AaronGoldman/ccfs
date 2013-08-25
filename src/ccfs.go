@@ -1,9 +1,11 @@
 package main
 
 import (
+	//"bufio"
 	"crypto/elliptic"
 	"crypto/sha256"
 	"log"
+	//"os"
 	"strings"
 )
 
@@ -16,7 +18,7 @@ func main() {
 		"6751710824965155500230480521264034469", 10)
 	hash, err := Post(repoHkid, "postedBlob", blob([]byte("Posted Blob")))
 	//in := bufio.NewReader(os.Stdin)
-	//input, err := in.ReadString('\n')
+	//_, err = in.ReadString('\n')
 	//if err != nil {
 	//	log.Panic(err)
 	//}

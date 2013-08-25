@@ -18,6 +18,5 @@ func (b blob) Bytes() []byte {
 }
 
 func BlobFromBytes(bytes []byte) (b blob) {
-	b = bytes
-	return
+	return bytes
 }

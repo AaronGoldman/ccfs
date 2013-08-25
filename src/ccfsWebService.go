@@ -17,10 +17,10 @@ func (h BlobServer) ServeHTTP(
 
 func BlobServerStart() {
 	http.Handle("/blob/", http.StripPrefix("/blob/",
-		http.FileServer(http.Dir("/home/aaron/ccfs/blobs"))))
+		http.FileServer(http.Dir("../blobs"))))
 	http.Handle("/tag/", http.StripPrefix("/tag/",
-		http.FileServer(http.Dir("/home/aaron/ccfs/tag"))))
+		http.FileServer(http.Dir("../tag"))))
 	http.Handle("/commit/", http.StripPrefix("/commit/",
-		http.FileServer(http.Dir("/home/aaron/ccfs/commit"))))
+		http.FileServer(http.Dir("../commit"))))
 	http.ListenAndServe(":8080", nil)
 }
