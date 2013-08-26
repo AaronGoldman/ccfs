@@ -1,53 +1,43 @@
  _
-|_| ccfs _
-	|_| Get(HKID, path)
-	|_| Post(blob, HKID, Path)
-	|_| InsertRopo(thereHKID, myHKID, path)
-	|_| InsertDomain(thereHKID, myHKID, path)
-	|_| InitRepo(HKID, Path)(HKID)
-	|_| InitDomain(HKID, Path)(HKID)
-	|_| GenHKID()(HKID)
- _
-|_| blob
-	|x| Hash()
- _
-|_| list
-	|_| Lookup(nameSegment)
-	|x| Hash()
-	|x| String()
- _
-|_| tag
-	|_| Lookup(nameSegment)
-	|x| Hash()
-	|x| Verify()
-	|x| String()
- _
-|_| commit
-	|x| Hash()
-	|x| Verify()
-	|x| String()
-
- _
-|_| localfileservice
-	|x| GetBlob(hash)
-	|x| StoreBlob(blob)
-	|x| GetTag(hkid, nameSegment)
-	|x| PostTag(t Tag)
-	|x| GetCommit(hkid HKID)
-	|x| PostCommit(c commit)
-	|x| GetKey(hkid []byte)
-	|x| PostKey(p *ecdsa.PrivateKey
-	
- _
-|_| folderToList()
-|_| folderToTags()
- _
-|_| blob_test.go
-|_| list_test.go
-|_| tag_test.go
-|_| commit_test.go
-|_| key_test.go
-|_| ccfs_test.go
+|_| ccfs
+ |_| test
+   |_| list -> blob
+    |_| post
+	|_| get
+   |_| list -> list
+    |_| post
+	|_| get
+   |_| list -> commit
+    |_| post
+	|_| get
+   |_| list -> tag
+    |_| post
+	|_| get
+   |_| commit -> blob
+    |_| post
+	|_| get
+   |_| commit -> list
+    |_| post
+	|_| get
+   |_| commit -> commit
+    |_| post
+	|_| get
+   |_| commit -> tag
+    |_| post
+	|_| get
+   |_| tag -> blob
+    |_| post
+	|_| get
+   |_| tag -> list
+    |_| post
+	|_| get
+   |_| tag -> commit
+    |_| post
+	|_| get
+   |_| tag -> tag
+    |_| post
+	|_| get
+   
 
  _
 | |things to wrap

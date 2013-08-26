@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"hash"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -54,7 +55,24 @@ func (t Tag) Verifiy() bool {
 	return ecdsa.Verify(&tPublicKey, ObjectHash, r, s)
 }
 
-func (t Tag) Update() Tag {
+func (t Tag) Update(hashBytes HCID) Tag {
+	t.HashBytes = hashBytes
+	//t.TypeString = typeString
+	//t.nameSegment = t.nameSegment
+	t.version = time.Now().UnixNano()
+	//t.hkid = t.hkid
+	prikey, err := getPrivateKeyForHkid(t.hkid)
+	if err != nil {
+		log.Panic("You don't seem to own this Domain")
+	}
+	ObjectHash := genTagHash(
+		t.HashBytes.Bytes(),
+		t.TypeString,
+		t.nameSegment,
+		t.version,
+		t.hkid)
+	r, s, _ := ecdsa.Sign(rand.Reader, prikey, ObjectHash)
+	t.signature = elliptic.Marshal(elliptic.P521(), r, s)
 	return t
 }
 

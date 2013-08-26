@@ -3,10 +3,8 @@ package main
 import (
 	//"bufio"
 	"crypto/elliptic"
-	"crypto/sha256"
 	"log"
 	//"os"
-	"strings"
 )
 
 func main() {
@@ -26,48 +24,38 @@ func main() {
 	return
 }
 
-func InsertRopo(thereHKID HKID, myHKID HKID, path string) {
-	c, err := GetCommit(myHKID)
-	if err == nil {
-		Post(thereHKID, path, c)
-	}
-}
-
-func InsertDomain(thereHKID HKID, myHKID HKID, path string) {
-	//split path in to tag_name and leading_path
-	nameSegments := strings.Split(path, "/")
-	tag_name := nameSegments[len(nameSegments)]
-	leading_path := path[:(len(path) - len(tag_name) - 1)]
-	//l := list/tag from leading_path
-	b, err := Get(thereHKID, leading_path)
-	l := NewListFromBytes(b.Bytes())
-	//add new tag to tag/list
-	l.add(tag_name, HID(myHKID), "tag")
-	//post the modified list
-	hid, err := Post(thereHKID, path, l)
-	_, _ = hid, err
-}
-
-func InitRepo(hkid HKID) error {
-	//InitCommit()
-	c := NewCommit(sha256.New().Sum(nil), hkid)
-	err := PostCommit(c)
+func InsertRepo(h HKID, path string, foreign_hkid HKID) error {
+	//splitpath path -> path/last_segment
+	_, err := post(
+		h,
+		path,
+		"commit",
+		foreign_hkid,
+		"commit")
 	return err
 }
-func InitDomain(hkid HKID, nameSegment string) error {
-	//GenHKID()
-	t := NewTag(HCID(sha256.New().Sum(nil)), "blob", nameSegment, hkid)
-	err := PostTag(t)
+
+func InsertDomain(h HKID, path string, foreign_hkid HKID) error {
+	_, err := post(
+		h,
+		path,
+		"commit",
+		foreign_hkid,
+		"tag")
 	return err
-} //type HID []byte
+}
 
-//func (hid HID) Hex() string {
-//	return hex.EncodeToString(hid)
-///}
+func InitRepo(h HKID, path string) error {
+	foreign_hkid := GenHKID()
+	err := InsertRepo(h, path, foreign_hkid)
+	return err
+}
 
-//func (hid HID) Bytes() []byte {
-//	return []byte(hid)
-//}
+func InitDomain(h HKID, path string) error {
+	foreign_hkid := GenHKID()
+	err := InsertDomain(h, path, foreign_hkid)
+	return err
+}
 
 func GenHKID() HKID {
 	privkey := KeyGen()
@@ -75,12 +63,3 @@ func GenHKID() HKID {
 		privkey.PublicKey.X, privkey.PublicKey.Y))
 	return GenerateHKID(privkey)
 }
-
-/*func initRepo(objecthash HKID, path string) (repoHkid HKID) {
-	c, privkey := InitCommit()
-	err := PostKey(privkey)
-	if err != nil {
-		log.Panic(err)
-	}
-	return c.hkid
-}*/

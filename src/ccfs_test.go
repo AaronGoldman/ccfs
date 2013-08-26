@@ -56,33 +56,48 @@ func TestGet(t *testing.T) {
 //test for new post flow
 func TestPost(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
-	t.SkipNow()
+	//t.SkipNow()
 	repoHkid := hkidFromDString("46298148238932964800164113348087938361861245597"+
 		"2320097996217675372497646408870646300138355611242482091187065042115198890"+
 		"6751710824965155500230480521264034469", 10)
+	//log.Println(repoHkid.Hex())
 	domainHkid := hkidFromDString("399681106706823979931786798252509423226869972"+
 		"6722344370689730210711314983767775860556101498400185744208447673206609026"+
 		"128894016152514163591905578729891874833", 10)
-	err := InitRepo(repoHkid) // post commit //post list
+	//log.Printf("\n\tInsertDomain: \n")
+	err := InsertDomain(domainHkid, "testTag", domainHkid)
 	if err != nil {
 		log.Panic(err)
 	}
-	log.Println("InitRepo")
-
-	err = InitDomain(domainHkid, "null") // post tag
-	if err != nil {
-		log.Panic(err)
-	}
-	log.Println("InitDomain")
-	InsertDomain(repoHkid, domainHkid, "testTag")
-	log.Println("InsertDomain")
-	// Post blob
+	//log.Printf("\n\tInsertBlob: \n")
 	_, err = Post(repoHkid, "testTag/testBlob2", blob([]byte("testing2")))
 	if err != nil {
 		log.Panic(err)
 	}
-	log.Println("Posted")
-} //*/
+	//log.Println("Posted testTag/testBlob2")
+	b, err := Get(repoHkid, "testTag/testBlob2")
+	if !bytes.Equal([]byte("testing2"), b) || err != nil {
+		t.Fail()
+	}
+	repoHkid2 := hkidFromDString("94522678075182002377842140271746150201976673"+
+		"730106294642304628025881734951643954647962522689521180808353215150536"+
+		"034481206091147220911087792299373183736254", 10)
+	err = InsertRepo(repoHkid, "testTag/testCommit", repoHkid2)
+	if err != nil {
+		log.Panic(err)
+	}
+	_, err = Post(repoHkid, "testTag/testCommit/testBlob3",
+		blob([]byte("testing3")))
+	if err != nil {
+		log.Panic(err)
+	}
+	b, err = Get(repoHkid, "testTag/testCommit/testBlob3")
+	//log.Println("Posted testTag/testCommit/testBlob3")
+	if !bytes.Equal([]byte("testing3"), b) || err != nil {
+		t.Fail()
+	}
+
+}
 
 func BenchmarkStoreOne(b *testing.B) {
 	log.SetFlags(log.Lshortfile)
