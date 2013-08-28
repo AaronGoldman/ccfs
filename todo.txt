@@ -1,49 +1,45 @@
- _
 |_| ccfs
  |_| test
-   |_| list -> blob
-    |_| post
-	|_| get
-   |_| list -> list
-    |_| post
-	|_| get
-   |_| list -> commit
-    |_| post
-	|_| get
-   |_| list -> tag
-    |_| post
-	|_| get
-   |_| commit -> blob
-    |_| post
-	|_| get
-   |_| commit -> list
-    |_| post
-	|_| get
-   |_| commit -> commit
-    |_| post
-	|_| get
-   |_| commit -> tag
-    |_| post
-	|_| get
-   |_| tag -> blob
-    |_| post
-	|_| get
-   |_| tag -> list
-    |_| post
-	|_| get
-   |_| tag -> commit
-    |_| post
-	|_| get
-   |_| tag -> tag
-    |_| post
-	|_| get
-   
-
+   |x| list -> blob
+    |x| post
+	|x| get
+   |x| list -> list
+    |x| post
+	|x| get
+   |x| list -> commit
+    |x| post
+	|x| get
+   |x| list -> tag
+    |x| post
+	|x| get
+   |x| commit -> blob
+    |x| post
+	|x| get
+   |x| commit -> list
+    |x| post
+	|x| get
+   |x| commit -> commit
+    |x| post
+	|x| get
+   |x| commit -> tag
+    |x| post
+	|x| get
+   |x| tag -> blob
+    |x| post
+	|x| get
+   |x| tag -> list
+    |x| post
+	|x| get
+   |x| tag -> commit
+    |x| post
+	|x| get
+   |x| tag -> tag
+    |x| post
+	|x| get
  _
-| |things to wrap
+|_|things to wrap
 	|_| local fs
 	|_| mdns
 	|_| apt-script
-	
  _
 |_|	surve as web

@@ -29,7 +29,7 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			if len(nameSegments) > 1 {
 				nameSegments = strings.SplitN(nameSegments[1], "/", 2)
 			}
-			log.Printf("\n\t%v\n\t%v\n", nameSegments, objecthash.Hex())
+			//log.Printf("\n\t%v\n\t%v\n", nameSegments, objecthash.Hex())
 			l, err := GetList(objecthash.Bytes())
 			if err != nil {
 				log.Printf("\n\t%v\n", err)

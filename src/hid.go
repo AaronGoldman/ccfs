@@ -26,6 +26,14 @@ func (hkid HKID) Bytes() []byte {
 	return hkid
 }
 
+func (hkid HKID) String() string {
+	return hkid.Hex()
+}
+
+func (hcid HCID) String() string {
+	return hcid.Hex()
+}
+
 type HID interface {
 	Byteser
 	Hexer
