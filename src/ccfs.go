@@ -1,25 +1,26 @@
 package main
 
 import (
-	//"bufio"
+	"bufio"
 	"crypto/elliptic"
 	"log"
-	//"os"
+	"os"
 )
 
 func main() {
 	log.SetFlags(log.Lshortfile)
-	//go BlobServerStart()
+	go BlobServerStart()
+	go RepoServerStart()
 	//hashfindwalk()
 	repoHkid := hkidFromDString("46298148238932964800164113348087938361861245597"+
 		"2320097996217675372497646408870646300138355611242482091187065042115198890"+
 		"6751710824965155500230480521264034469", 10)
 	hash, err := Post(repoHkid, "postedBlob", blob([]byte("Posted Blob")))
-	//in := bufio.NewReader(os.Stdin)
-	//_, err = in.ReadString('\n')
-	//if err != nil {
-	//	log.Panic(err)
-	//}
+	in := bufio.NewReader(os.Stdin)
+	_, err = in.ReadString('\n')
+	if err != nil {
+		log.Panic(err)
+	}
 	log.Println(hash, err)
 	return
 }

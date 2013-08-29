@@ -30,6 +30,14 @@ func (hkid HKID) String() string {
 	return hkid.Hex()
 }
 
+func HkidFromHex(s string) (HKID, error) {
+	dabytes, err := hex.DecodeString(s)
+	if err == nil {
+		return HKID(dabytes), err
+	}
+	return nil, err
+}
+
 func (hcid HCID) String() string {
 	return hcid.Hex()
 }
