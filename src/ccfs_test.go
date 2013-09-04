@@ -179,7 +179,7 @@ func TestPostListTagBlob(t *testing.T) {
 	}
 }
 
-func TestGet(t *testing.T) {
+func TestGetBlob(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
 	//hkidFromDString("4629814823893296480016411334808793836186124559723200"+
 	//	"9799621767537249764640887064630013835561124248209118706504211519889067517"+
@@ -197,6 +197,51 @@ func TestGet(t *testing.T) {
 		b, err = Get(hkid, path)
 	}
 	if !bytes.Equal([]byte("testing"), b) || err != nil {
+		t.Fail()
+	}
+}
+
+func TestGetList(t *testing.T) {
+	log.SetFlags(log.Lshortfile)
+	testhkid := hkidFromDString("65232373562705602286177837897283294165955126"+
+		"49112249373497830592072241416893611216069423804730437860475300564272"+
+		"976762085068519188612732562106886379081213385", 10)
+	testpath := "TestPostList1/TestPostList2/TestPostBlob"
+	indata := []byte("TestPostListListBlobData")
+	Post(testhkid, testpath, BlobFromBytes(indata))
+	outdata, err := Get(testhkid, "TestPostList1/")
+	truthdata := []byte("9700d700f22b2c4b07382304abcef84d" +
+		"4356598cba5c0bb5953c90840804f300,list,TestPostList2")
+	if !bytes.Equal(truthdata, outdata) || err != nil {
+		log.Printf("\n\tTestGetList:\n\t%s\n", outdata)
+		t.Fail()
+	}
+}
+
+func TestGetCommit(t *testing.T) {
+	log.SetFlags(log.Lshortfile)
+	testhkid := hkidFromDString("65232373562705602286177837897283294165955126"+
+		"49112249373497830592072241416893611216069423804730437860475300564272"+
+		"976762085068519188612732562106886379081213385", 10)
+	outdata, err := Get(testhkid, "TestPostCommit/")
+	truthdata := []byte("90014ae279fa5034a51def77132457cd" +
+		"66403facc3d88b54bd3e84ecade8f633,blob,TestPostBlob")
+	if !bytes.Equal(truthdata, outdata) || err != nil {
+		log.Printf("\n\tTestGetList:\n\t%s\n", outdata)
+		t.Fail()
+	}
+}
+
+func TestGetTag(t *testing.T) {
+	//think about what it means to get a domain with no path
+	log.SetFlags(log.Lshortfile)
+	testhkid := hkidFromDString("65232373562705602286177837897283294165955126"+
+		"49112249373497830592072241416893611216069423804730437860475300564272"+
+		"976762085068519188612732562106886379081213385", 10)
+	outdata, err := Get(testhkid, "TestPostTag/")
+	truthdata := []byte("")
+	if !bytes.Equal(truthdata, outdata) {
+		log.Printf("\n\tTestGetList:\n\t%s\n\terror: \n", outdata, err)
 		t.Fail()
 	}
 }

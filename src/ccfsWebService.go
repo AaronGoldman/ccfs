@@ -34,17 +34,19 @@ func RepoServerStart() {
 		if len(parts) > 1 {
 			path = parts[1]
 		}
+		err := error(nil)
 		if len(hkidhex) == 64 {
 			h, err := HkidFromHex(hkidhex)
 			if err == nil {
 				b, err := Get(h, path)
+				//log.Printf("\n\th: %v\n\t%v\n\t%v\n\t%v\n", h, path, b, err)
 				if err == nil {
 					w.Write(b.Bytes())
 					return
 				}
 			}
 		}
-		w.Write([]byte("Invalid HKID"))
+		w.Write([]byte(fmt.Sprintf("Invalid HKID\nerr: %v", err)))
 		return
 	})
 }
