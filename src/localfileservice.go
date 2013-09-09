@@ -19,7 +19,7 @@ func localfileservice_GetBlob(hash HCID) (b blob, err error) {
 		log.Printf("\n\t%v\n", err)
 	}
 	//build object
-	b = BlobFromBytes(data)
+	b = blob(data)
 	//log.Printf("\n\t%v\n", string(b))
 	return
 }

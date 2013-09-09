@@ -17,11 +17,11 @@ func (h BlobServer) ServeHTTP(
 }
 
 func BlobServerStart() {
-	http.Handle("/blob/", http.StripPrefix("/blob/",
+	http.Handle("/b/", http.StripPrefix("/blob/",
 		http.FileServer(http.Dir("../blobs"))))
-	http.Handle("/tag/", http.StripPrefix("/tag/",
+	http.Handle("/t/", http.StripPrefix("/tag/",
 		http.FileServer(http.Dir("../tag"))))
-	http.Handle("/commit/", http.StripPrefix("/commit/",
+	http.Handle("/c/", http.StripPrefix("/commit/",
 		http.FileServer(http.Dir("../commit"))))
 	http.ListenAndServe(":8080", nil)
 }
@@ -39,7 +39,6 @@ func RepoServerStart() {
 			h, err := HkidFromHex(hkidhex)
 			if err == nil {
 				b, err := Get(h, path)
-				//log.Printf("\n\th: %v\n\t%v\n\t%v\n\t%v\n", h, path, b, err)
 				if err == nil {
 					w.Write(b.Bytes())
 					return

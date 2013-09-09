@@ -189,3 +189,35 @@ func tag_helper(h HID, next_path_segment string, rest_of_path string,
 	}
 	return nil, err
 }
+
+func InsertRepo(h HKID, path string, foreign_hkid HKID) error {
+	_, err := post(
+		h,
+		path,
+		"commit",
+		foreign_hkid,
+		"commit")
+	return err
+}
+
+func InsertDomain(h HKID, path string, foreign_hkid HKID) error {
+	_, err := post(
+		h,
+		path,
+		"commit",
+		foreign_hkid,
+		"tag")
+	return err
+}
+
+func InitRepo(h HKID, path string) error {
+	foreign_hkid := GenHKID()
+	err := InsertRepo(h, path, foreign_hkid)
+	return err
+}
+
+func InitDomain(h HKID, path string) error {
+	foreign_hkid := GenHKID()
+	err := InsertDomain(h, path, foreign_hkid)
+	return err
+}

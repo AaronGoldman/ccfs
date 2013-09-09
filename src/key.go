@@ -18,24 +18,17 @@ type PublicKey ecdsa.PublicKey
 
 func (p PublicKey) Hkid() HKID {
 	var h hash.Hash = sha256.New()
-	h.Write(elliptic.Marshal(
-		p.Curve,
-		p.X,
-		p.Y))
+	h.Write(elliptic.Marshal(p.Curve, p.X, p.Y))
 	return h.Sum(make([]byte, 0))
 }
 
 func (p PrivateKey) Hkid() HKID {
 	var h hash.Hash = sha256.New()
-	h.Write(elliptic.Marshal(
-		p.PublicKey.Curve,
-		p.PublicKey.X,
-		p.PublicKey.Y))
+	h.Write(elliptic.Marshal(p.PublicKey.Curve, p.PublicKey.X, p.PublicKey.Y))
 	return h.Sum(make([]byte, 0))
 }
 
 func (p PrivateKey) Hash() []byte {
-	//func KeyHash(p ecdsa.PrivateKey) []byte {
 	var h hash.Hash = sha256.New()
 	h.Write(p.Bytes())
 	return h.Sum(nil)
@@ -104,4 +97,11 @@ func KeyGen() *ecdsa.PrivateKey {
 		log.Panic(err)
 	}
 	return priv
+}
+
+func GenHKID() HKID {
+	privkey := KeyGen()
+	PostBlob(elliptic.Marshal(privkey.PublicKey.Curve,
+		privkey.PublicKey.X, privkey.PublicKey.Y))
+	return GenerateHKID(privkey)
 }

@@ -19,7 +19,7 @@ func TestPostBlob(t *testing.T) {
 		"976762085068519188612732562106886379081213385", 10)
 	testpath := "TestPostBlob"
 	indata := []byte("TestPostData")
-	Post(testhkid, testpath, BlobFromBytes(indata))
+	Post(testhkid, testpath, blob(indata))
 	outdata, err := Get(testhkid, testpath)
 	if !bytes.Equal(indata, outdata) || err != nil {
 		t.Fail()
@@ -38,7 +38,7 @@ func TestPostListListBlob(t *testing.T) {
 		"976762085068519188612732562106886379081213385", 10)
 	testpath := "TestPostList1/TestPostList2/TestPostBlob"
 	indata := []byte("TestPostListListBlobData")
-	Post(testhkid, testpath, BlobFromBytes(indata))
+	Post(testhkid, testpath, blob(indata))
 	outdata, err := Get(testhkid, testpath)
 	if !bytes.Equal(indata, outdata) || err != nil {
 		t.Fail()
@@ -56,7 +56,7 @@ func TestPostCommitBlob(t *testing.T) {
 	InsertRepo(testhkid, "TestPostCommit", testRepoHkid)
 	testpath := "TestPostCommit/TestPostBlob"
 	indata := []byte("TestPostCommitBlobData")
-	Post(testhkid, testpath, BlobFromBytes(indata))
+	Post(testhkid, testpath, blob(indata))
 	outdata, err := Get(testhkid, testpath)
 	if !bytes.Equal(indata, outdata) || err != nil {
 		t.Fail()
@@ -74,7 +74,7 @@ func TestPostTagBlob(t *testing.T) {
 	InsertDomain(testhkid, "TestPostTag", testDomainHkid)
 	testpath := "TestPostTag/TestPostBlob"
 	indata := []byte("TestPostTagBlobData")
-	Post(testhkid, testpath, BlobFromBytes(indata))
+	Post(testhkid, testpath, blob(indata))
 	outdata, err := Get(testhkid, testpath)
 	if !bytes.Equal(indata, outdata) || err != nil {
 		t.Fail()
@@ -208,7 +208,7 @@ func TestGetList(t *testing.T) {
 		"976762085068519188612732562106886379081213385", 10)
 	testpath := "TestPostList1/TestPostList2/TestPostBlob"
 	indata := []byte("TestPostListListBlobData")
-	Post(testhkid, testpath, BlobFromBytes(indata))
+	Post(testhkid, testpath, blob(indata))
 	outdata, err := Get(testhkid, "TestPostList1/")
 	truthdata := []byte("9700d700f22b2c4b07382304abcef84d" +
 		"4356598cba5c0bb5953c90840804f300,list,TestPostList2")

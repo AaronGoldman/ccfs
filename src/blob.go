@@ -16,7 +16,3 @@ func (b blob) Hash() HCID {
 func (b blob) Bytes() []byte {
 	return []byte(b)
 }
-
-func BlobFromBytes(bytes []byte) (b blob) {
-	return bytes
-}

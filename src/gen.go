@@ -13,11 +13,6 @@ import (
 	"time"
 )
 
-func GenerateObjectHash(blob []byte) (objectHash []byte) {
-	var h hash.Hash = sha256.New()
-	h.Write(blob)
-	return h.Sum(make([]byte, 0))
-}
 func GenerateObjectType(objectType string) (objectTypestr string) {
 	return objectType
 }
