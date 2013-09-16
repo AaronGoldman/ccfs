@@ -223,7 +223,7 @@ func TestGetCommit(t *testing.T) {
 	testhkid := hkidFromDString("65232373562705602286177837897283294165955126"+
 		"49112249373497830592072241416893611216069423804730437860475300564272"+
 		"976762085068519188612732562106886379081213385", 10)
-	outdata, err := Get(testhkid, "TestPostCommit/")
+	outdata, err := Get(testhkid, "TestPostCommit")
 	truthdata := []byte("90014ae279fa5034a51def77132457cd" +
 		"66403facc3d88b54bd3e84ecade8f633,blob,TestPostBlob")
 	if !bytes.Equal(truthdata, outdata) || err != nil {

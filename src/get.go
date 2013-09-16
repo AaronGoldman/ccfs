@@ -11,11 +11,13 @@ func Get(objecthash HID, path string) (b blob, err error) {
 	err = nil
 	nameSegments := []string{"", path}
 	for {
-		//log.Printf("\n\tPath: %s\n\tType: %v\n\tobjecthash: %v\n",
-		//	nameSegments, typeString, objecthash)
 		if len(nameSegments) > 1 {
 			nameSegments = strings.SplitN(nameSegments[1], "/", 2)
+		} else {
+			nameSegments = []string{""}
 		}
+		//log.Printf("\n\tPath: %s\n\tType: %v\n\tobjecthash: %v\n",
+		//	nameSegments, typeString, objecthash)
 		switch typeString {
 		case "blob":
 			b, err = GetBlob(objecthash.Bytes())
@@ -24,14 +26,19 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			}
 			return b, err
 		case "list":
-			l, err := GetList(objecthash.Bytes())
+			var l list
+			l, err = GetList(objecthash.Bytes())
 			if err != nil {
 				log.Printf("\n\t%v\n", err)
 			}
 			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
+			if objecthash == nil && nameSegments[0] != "" {
+				err = errors.New("Blob not found")
+			}
 			b = l.Bytes()
 		case "tag":
-			t, err := GetTag(objecthash.Bytes(), nameSegments[0])
+			var t Tag
+			t, err = GetTag(objecthash.Bytes(), nameSegments[0])
 			if err != nil {
 				log.Printf("\n\t%v\n", err)
 				return nil, err
@@ -43,18 +50,23 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			objecthash = HCID(t.HashBytes)
 			b = t.Bytes()
 		case "commit":
-			c, err := GetCommit(objecthash.Bytes())
+			var c commit
+			c, err = GetCommit(objecthash.Bytes())
 			if err != nil {
 				log.Printf("\n\t%v\n", err)
 			}
 			if !c.Verifiy() {
 				return nil, errors.New("Commit Verifiy Failed")
 			}
-			l, err := GetList(c.listHash)
+			var l list
+			l, err = GetList(c.listHash)
 			if err != nil {
 				log.Printf("\n\t%v\n", err)
 			}
 			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
+			if objecthash == nil && nameSegments[0] != "" {
+				err = errors.New("Blob not found")
+			}
 			if err != nil {
 				log.Printf("%v\n", err)
 			}
@@ -63,7 +75,8 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			log.Printf("\n\t%v\n", err)
 			panic(err)
 		}
-		if len(nameSegments) == 1 && typeString != "blob" {
+		//if len(nameSegments) == 1 && typeString != "blob" {
+		if objecthash == nil {
 			return b, err
 		}
 	}

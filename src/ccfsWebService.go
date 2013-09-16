@@ -39,9 +39,13 @@ func RepoServerStart() {
 			h, err := HkidFromHex(hkidhex)
 			if err == nil {
 				b, err := Get(h, path)
+				log.Printf("\n\t%s\n", path)
 				if err == nil {
 					w.Write(b.Bytes())
 					return
+				} else {
+					http.Error(w, fmt.Sprint(
+						"HTTP Error 500 Internal server error\n\n", err), 500)
 				}
 			}
 		}

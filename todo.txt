@@ -1,45 +1,13 @@
 |_| ccfs
+ |_| DEMO
+  |_| create folder
+  |_| create repo
+  |_| create domain
+  |_| delete cache and demo netowrk discovery
+ |_| fix trailing /
  |_| test
-   |x| list -> blob
-    |x| post
-	|x| get
-   |x| list -> list
-    |x| post
-	|x| get
-   |x| list -> commit
-    |x| post
-	|x| get
-   |x| list -> tag
-    |x| post
-	|x| get
-   |x| commit -> blob
-    |x| post
-	|x| get
-   |x| commit -> list
-    |x| post
-	|x| get
-   |x| commit -> commit
-    |x| post
-	|x| get
-   |x| commit -> tag
-    |x| post
-	|x| get
-   |x| tag -> blob
-    |x| post
-	|x| get
-   |x| tag -> list
-    |x| post
-	|x| get
-   |x| tag -> commit
-    |x| post
-	|x| get
-   |x| tag -> tag
-    |x| post
-	|x| get
  _
 |_|things to wrap
-	|_| local fs
+	|X| local fs
 	|_| mdns
 	|_| apt-script
- _
-|_|	surve as web
