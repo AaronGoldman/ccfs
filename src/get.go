@@ -40,7 +40,7 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			var t Tag
 			t, err = GetTag(objecthash.Bytes(), nameSegments[0])
 			if err != nil {
-				log.Printf("\n\t%v\n", err)
+				//log.Printf("\n\t%v\n", err)
 				return nil, err
 			}
 			if !t.Verifiy() {
@@ -67,9 +67,9 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			if objecthash == nil && nameSegments[0] != "" {
 				err = errors.New("Blob not found")
 			}
-			if err != nil {
-				log.Printf("%v\n", err)
-			}
+			//if err != nil {
+			//	log.Printf("%v\n", err)
+			//}
 			b = l.Bytes()
 		default:
 			log.Printf("\n\t%v\n", err)
