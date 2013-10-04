@@ -10,29 +10,22 @@ import (
 	"testing"
 )
 
-var setup_for_benchmark func() (HKID, HKID, HKID)
+var benchmarkRepo = hkidFromDString("44089867384569081480066871308647"+
+	"4832666868594293316444099156169623352946493325312681245061254048"+
+	"6538169821270508889792789331438131875225590398664679212538621", 10)
+
+var benchmarkCommitHkid = hkidFromDString("36288652923287342545336063204999"+
+	"9357791979761632757400493952327434464825857894440491353330036559"+
+	"1539025688752776406270441884985963379175226110071953813093104", 10)
+
+var benchmarkTagHkid = hkidFromDString("54430439211086161065670118078952"+
+	"6855263811485554809970416168964497131310494084201908881724207840"+
+	"2305843436117034888111308798569392135240661266075941854101839", 10)
 
 func init() {
-	setup_for_benchmark = func() (HKID, HKID, HKID) {
-		log.SetFlags(log.Lshortfile)
-		benchmarkRepo := hkidFromDString("44089867384569081480066871308647"+
-			"4832666868594293316444099156169623352946493325312681245061254048"+
-			"6538169821270508889792789331438131875225590398664679212538621", 10)
-		benchmarkCommitHkid := hkidFromDString(
-			"362886529232873425453360632049999357791979761632757400493952327"+
-				"434464825857894440491353330036559153902568875277640627044188498"+
-				"5963379175226110071953813093104", 10)
-		benchmarkTagHkid := hkidFromDString("54430439211086161065670118078952"+
-			"6855263811485554809970416168964497131310494084201908881724207840"+
-			"2305843436117034888111308798569392135240661266075941854101839", 10)
-		Post(benchmarkRepo, "BlobFound", blob("blob found"))
-		Post(benchmarkRepo, "listFound/BlobFound", blob("list found"))
-
-		setup_for_benchmark = func() (HKID, HKID, HKID) {
-			return benchmarkRepo, benchmarkCommitHkid, benchmarkTagHkid
-		}
-		return benchmarkRepo, benchmarkCommitHkid, benchmarkTagHkid
-	}
+	Post(benchmarkRepo, "BlobFound", blob("blob found"))
+	Post(benchmarkRepo, "listFound/BlobFound", blob("list found"))
+	log.SetFlags(log.Lshortfile)
 }
 
 func BenchmarkStoreOne(b *testing.B) {
@@ -166,7 +159,6 @@ func BenchmarkHighLevelPath(b *testing.B) {
 }
 
 func BenchmarkBlobFound(b *testing.B) {
-	benchmarkRepo, _, _ := setup_for_benchmark()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, err := Get(benchmarkRepo, "BlobFound")
@@ -177,7 +169,6 @@ func BenchmarkBlobFound(b *testing.B) {
 }
 
 func BenchmarkBlobNotFound(b *testing.B) {
-	benchmarkRepo, _, _ := setup_for_benchmark()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, err := Get(benchmarkRepo, "BlobNotFound")
@@ -189,18 +180,38 @@ func BenchmarkBlobNotFound(b *testing.B) {
 }
 
 func BenchmarkBlobInsert(b *testing.B) {
-	setup_for_benchmark()
 	log.SetFlags(log.Lshortfile)
-	b.FailNow()
+	b.ResetTimer()
+	indata := blob("Benchmark Blob Data")
+	for i := 0; i < b.N; i++ {
+		Post(benchmarkRepo, "benchmarkBlob", indata)
+		//TODO clear blob after each insert
+	}
+	outdata, err := Get(benchmarkRepo, "benchmarkBlob")
+	if !bytes.Equal(indata, outdata) || err != nil {
+		log.Printf("\tExpected: %s\n\tActual: %s\n\tErr:%s\n",
+			indata, outdata, err)
+		b.FailNow()
+	}
 }
 
 func BenchmarkBlobUpdate(b *testing.B) {
-	setup_for_benchmark()
-	b.FailNow()
+	log.SetFlags(log.Lshortfile)
+	indata := blob("Benchmark Blob Data")
+	Post(benchmarkRepo, "benchmarkBlob", indata) //  to ensure is update
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Post(benchmarkRepo, "benchmarkBlob", indata)
+	}
+	outdata, err := Get(benchmarkRepo, "benchmarkBlob")
+	if !bytes.Equal(indata, outdata) || err != nil {
+		log.Printf("\tExpected: %s\n\tActual: %s\n\tErr:%s\n",
+			indata, outdata, err)
+		b.FailNow()
+	}
 }
 
 func BenchmarkListBlobFound(b *testing.B) {
-	benchmarkRepo, _, _ := setup_for_benchmark()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, err := Get(benchmarkRepo, "listFound/BlobFound")
@@ -211,7 +222,6 @@ func BenchmarkListBlobFound(b *testing.B) {
 }
 
 func BenchmarkListBlobNotFound(b *testing.B) {
-	benchmarkRepo, _, _ := setup_for_benchmark()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, err := Get(benchmarkRepo, "listNotFound/BlobFound")
@@ -223,51 +233,150 @@ func BenchmarkListBlobNotFound(b *testing.B) {
 }
 
 func BenchmarkListBlobInsert(b *testing.B) {
-	setup_for_benchmark()
-	b.FailNow()
+	log.SetFlags(log.Lshortfile)
+	b.ResetTimer()
+	indata := blob("Benchmark Blob Data")
+	for i := 0; i < b.N; i++ {
+		Post(benchmarkRepo, "listFound/benchmarkBlob", indata)
+		//TODO clear list after each insert
+	}
+	outdata, err := Get(benchmarkRepo, "listFound/benchmarkBlob")
+	if !bytes.Equal(indata, outdata) || err != nil {
+		log.Printf("\tExpected: %s\n\tActual: %s\n\tErr:%s\n",
+			indata, outdata, err)
+		b.FailNow()
+	}
 }
 
 func BenchmarkListBlobUpdate(b *testing.B) {
-	setup_for_benchmark()
-	b.FailNow()
+	log.SetFlags(log.Lshortfile)
+	indata := blob("Benchmark Blob Data")
+	Post(benchmarkRepo, "listFound/benchmarkBlob", indata)
+	//  to ensure is update
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Post(benchmarkRepo, "listFound/benchmarkBlob", indata)
+	}
+	outdata, err := Get(benchmarkRepo, "listFound/benchmarkBlob")
+	if !bytes.Equal(indata, outdata) || err != nil {
+		log.Printf("\tExpected: %s\n\tActual: %s\n\tErr:%s\n",
+			indata, outdata, err)
+		b.FailNow()
+	}
 }
 
 func BenchmarkCommitBlobFound(b *testing.B) {
-	setup_for_benchmark()
-	b.FailNow()
+	log.SetFlags(log.Lshortfile)
+	err := InsertRepo(benchmarkRepo, "commitFound", benchmarkCommitHkid)
+	if err != nil {
+		log.Println(err)
+		b.FailNow()
+	}
+	_, err = Post(benchmarkRepo, "commitFound/benchmarkBlob",
+		blob("Benchmark Blob Data"))
+	if err != nil {
+		log.Println(err)
+		b.FailNow()
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := Get(benchmarkRepo, "commitFound/benchmarkBlob")
+		if err != nil {
+			log.Println(err)
+			b.FailNow()
+		}
+	}
 }
 
 func BenchmarkCommitBlobNotFound(b *testing.B) {
-	setup_for_benchmark()
-	b.FailNow()
+	log.SetFlags(log.Lshortfile)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := Get(benchmarkRepo, "commitNotFound/benchmarkBlob")
+		if err.Error() != "Blob not found" {
+			b.Fatal(err)
+		}
+	}
 }
 
 func BenchmarkCommitBlobInsert(b *testing.B) {
-	setup_for_benchmark()
-	b.FailNow()
+	log.SetFlags(log.Lshortfile)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		err := InsertRepo(benchmarkRepo, "commitFound", benchmarkCommitHkid)
+		//TODO clear list after each insert
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
 }
 
 func BenchmarkCommitBlobUpdate(b *testing.B) {
-	setup_for_benchmark()
-	b.FailNow()
+	log.SetFlags(log.Lshortfile)
+	err := InsertRepo(benchmarkRepo, "commitFound", benchmarkCommitHkid)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		err = InsertRepo(benchmarkRepo, "commitFound", benchmarkCommitHkid)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
 }
 
 func BenchmarkTagBlobFound(b *testing.B) {
-	setup_for_benchmark()
-	b.FailNow()
+	log.SetFlags(log.Lshortfile)
+	err := InsertDomain(benchmarkRepo, "tagFound", benchmarkTagHkid)
+	if err != nil {
+		log.Println(err)
+		b.FailNow()
+	}
+	_, err = Post(benchmarkRepo, "tagFound/benchmarkBlob",
+		blob("Benchmark Blob Data"))
+	if err != nil {
+		log.Println(err)
+		b.FailNow()
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := Get(benchmarkRepo, "tagFound/benchmarkBlob")
+		if err != nil {
+			log.Println(err)
+			b.FailNow()
+		}
+	}
 }
 
 func BenchmarkTagBlobNotFound(b *testing.B) {
-	setup_for_benchmark()
-	b.FailNow()
+	log.SetFlags(log.Lshortfile)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := Get(benchmarkRepo, "tagNotFound/benchmarkBlob")
+		if err.Error() != "Blob not found" {
+			b.Fatal(err)
+		}
+	}
 }
 
 func BenchmarkTagBlobInsert(b *testing.B) {
-	setup_for_benchmark()
-	b.FailNow()
+	log.SetFlags(log.Lshortfile)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		err := InsertRepo(benchmarkRepo, "tagFound", benchmarkCommitHkid)
+		//TODO clear list after each insert
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
 }
 
 func BenchmarkTagBlobUpdate(b *testing.B) {
-	setup_for_benchmark()
-	b.FailNow()
+	log.SetFlags(log.Lshortfile)
+	err := InsertRepo(benchmarkRepo, "tagFound", benchmarkCommitHkid)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		err = InsertRepo(benchmarkRepo, "tagFound", benchmarkCommitHkid)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
 }

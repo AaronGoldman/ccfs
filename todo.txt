@@ -1,13 +1,15 @@
+ _
 |_| ccfs
- |_| DEMO
-  |_| create folder
-  |_| create repo
-  |_| create domain
-  |_| delete cache and demo netowrk discovery
- |_| fix trailing /
- |_| test
+ |_| lookup
+  |_| lookup service
+   |_| object discovery (Priya)
+   |_| object retrieval (Holly)
+  |_| Interface
+   |_| virtual file system (Mallika)
+   |_| collection management, explorer integration (Thomas)
+
  _
 |_|things to wrap
 	|X| local fs
 	|_| mdns
-	|_| apt-script
+	|_| Drive
