@@ -14,6 +14,8 @@ var benchmarkRepo = hkidFromDString("44089867384569081480066871308647"+
 	"4832666868594293316444099156169623352946493325312681245061254048"+
 	"6538169821270508889792789331438131875225590398664679212538621", 10)
 
+//hkid 549baa6497db3615332aae859680b511117e299879ee311fbac4d1a40f93b8d0
+
 var benchmarkCommitHkid = hkidFromDString("36288652923287342545336063204999"+
 	"9357791979761632757400493952327434464825857894440491353330036559"+
 	"1539025688752776406270441884985963379175226110071953813093104", 10)
@@ -361,7 +363,7 @@ func BenchmarkTagBlobInsert(b *testing.B) {
 	log.SetFlags(log.Lshortfile)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		err := InsertRepo(benchmarkRepo, "tagFound", benchmarkCommitHkid)
+		err := InsertDomain(benchmarkRepo, "tagFound", benchmarkTagHkid)
 		//TODO clear list after each insert
 		if err != nil {
 			b.Fatal(err)
@@ -371,10 +373,10 @@ func BenchmarkTagBlobInsert(b *testing.B) {
 
 func BenchmarkTagBlobUpdate(b *testing.B) {
 	log.SetFlags(log.Lshortfile)
-	err := InsertRepo(benchmarkRepo, "tagFound", benchmarkCommitHkid)
+	err := InsertRepo(benchmarkRepo, "tagFound", benchmarkTagHkid)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		err = InsertRepo(benchmarkRepo, "tagFound", benchmarkCommitHkid)
+		err = InsertDomain(benchmarkRepo, "tagFound", benchmarkTagHkid)
 		if err != nil {
 			b.Fatal(err)
 		}
