@@ -8,6 +8,9 @@ import (
 
 func main() {
 	log.SetFlags(log.Lshortfile)
+	action, hkidString, path := parseFlags()
+	takeActions(action, hkidString, path)
+
 	go BlobServerStart()
 	go RepoServerStart()
 	//hashfindwalk()
