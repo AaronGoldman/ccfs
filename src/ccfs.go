@@ -8,13 +8,17 @@ import (
 
 func main() {
 	log.SetFlags(log.Lshortfile)
-	action, hkidString, path := parseFlags()
-	takeActions(action, hkidString, path)
+	action, path, flagged := parseFlags()
+	takeActions(action, path)
 
-	go BlobServerStart()
-	go RepoServerStart()
-	//hashfindwalk()
-	in := bufio.NewReader(os.Stdin)
-	_, _ = in.ReadString('\n')
+	if flagged == false {
+
+		go BlobServerStart()
+		go RepoServerStart()
+		//hashfindwalk()
+		in := bufio.NewReader(os.Stdin)
+		_, _ = in.ReadString('\n')
+	}
+
 	return
 }
