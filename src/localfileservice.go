@@ -81,7 +81,7 @@ func localfileservice_GetKey(hkid []byte) (data blob, err error) {
 	filepath := fmt.Sprintf("../keys/%s", hex.EncodeToString(hkid))
 	filedata, err := ioutil.ReadFile(filepath)
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
 	}
 	return filedata, err
 }
