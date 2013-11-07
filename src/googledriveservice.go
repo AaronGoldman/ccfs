@@ -22,8 +22,7 @@ func init() { // Set up a configuration.
 	config := &oauth.Config{
 		ClientId: "755660992417.apps.googleusercontent.com",
 		// from https://code.google.com/apis/console/
-		//ClientSecret: "h8bA_4cKRD8nSE6kzC9vAEw2",
-		ClientSecret: "",
+		ClientSecret: "h8bA_4cKRD8nSE6kzC9vAEw2",
 		//TODO move this out of code and Reset client secret...
 		// from https://code.google.com/apis/console/
 		RedirectURL: "oob",
@@ -33,8 +32,7 @@ func init() { // Set up a configuration.
 		TokenCache:  oauth.CacheFile("../bin/tokencachefile.json"),
 	}
 
-	//code := "4/8JG6IFW1v7QucMzD-aaTG4TmqpjO.khB140k6OnMfshQV0ieZDAqGXAxGgwI"
-	code := ""
+	code := "4/8JG6IFW1v7QucMzD-aaTG4TmqpjO.khB140k6OnMfshQV0ieZDAqGXAxGgwI"
 
 	// Set up a Transport using the config.
 	transport = &oauth.Transport{Config: config}
@@ -65,69 +63,25 @@ func init() { // Set up a configuration.
 	transport.Token = token
 
 	// Make the request.
-	httpClient := transport.Client()
-	r, err := httpClient.Get("https://www.googleapis.com/oauth2/v1/userinfo")
-	if err != nil {
-		log.Fatal("Get:", err)
-	}
-	defer r.Body.Close()
+	//httpClient := transport.Client()
+	//r, err := httpClient.Get("https://www.googleapis.com/oauth2/v1/userinfo")
+	//if err != nil {
+	//	log.Fatal("Get:", err)
+	//}
+	//defer r.Body.Close()
 
-	// Write the response to standard output.
-	//log.Println(r.Body)
+	//get the ID's of the object folders'
+	httpClient := transport.Client()
 	driveService, err = drive.New(httpClient)
 	ccfsFolderId, err := getChildWithTitle(driveService, "root", "ccfs")
 	blobsFolderId, err = getChildWithTitle(driveService, ccfsFolderId, "blobs")
 	commitsFolderId, err = getChildWithTitle(driveService, ccfsFolderId, "commits")
 	tagsFolderId, err = getChildWithTitle(driveService, ccfsFolderId, "tags")
 	keysFolderId, err = getChildWithTitle(driveService, ccfsFolderId, "keys")
-	log.Printf("\n\tccfsFolderId: %v\n\tblobsFolderId: %v\n\t"+
-		"commitsFolderId: %v\n\ttagsFolderId: %v\n\tkeysFolderId: %v\n",
-		ccfsFolderId, blobsFolderId, commitsFolderId,
-		tagsFolderId, keysFolderId)
-
-	hb, err := HcidFromHex("42cc3a4c4a9d9d3ee7de9322b45acb0e5a5c33550d9ad4791df6ae937a869e12")
-	b, err := googledriveservice_GetBlob(hb)
-	log.Printf("\n\tBlob Contents: %v \n\tError: %v",
-		b.Hash().String() == hb.Hex(), err)
-
-	hc, err := HkidFromHex("c09b2765c6fd4b999d47c82f9cdf7f4b659bf7c29487cc0b357b8fc92ac8ad02")
-	c, err := googledriveservice_GetCommit(hc)
-	log.Printf("\n\tCommit Contents: %v \n\tError: %v", c.Verifiy(), err)
-
-	ht, err := HkidFromHex("f65b92b9ce15e167b98fc896f0a365c87c39565642a59ba0060db3b33be6d885")
-	t, err := googledriveservice_GetTag(ht, "testBlob")
-	log.Printf("\n\tTag Contents: %v \n\tError: %v", t.Verifiy(), err)
-
-	//fileId, err := getChildWithTitle(driveService, blobsFolderId,
-	//	"42cc3a4c4a9d9d3ee7de9322b45acb0e5a5c33550d9ad4791df6ae937a869e12")
-	//f, err := driveService.Files.Get(fileId).Do()
-	//fileString, err := DownloadFile(driveService, transport, f)
-	//if err != nil {
-	//	log.Printf("An error occurred: %v\n", err)
-	//	return
-	//} else {
-	//	log.Printf("File Contents: %s\n", fileString)
-	//}
-
-	//log.Printf("Title: %v", f.Title)
-	//log.Printf("Description: %v", f.Description)
-	//log.Printf("MIME type: %v", f.MimeType)
-	//log.Printf("Download Url: %v", f.DownloadUrl)
-
-	//var cs []*drive.ChildReference
-	//cs, err = AllChildren(driveService, fileId,
-	//  	"title = '42cc3a4c4a9d9d3ee7de9322b45acb0e5a5c33550d9ad4791df6ae937a869e12'")
-	//log.Printf("len(Children): %v", len(cs))
-	//for _, v := range cs {
-	//	f, err := driveService.Files.Get(v.Id).Do()
-	//	if err != nil {
-	//		log.Printf("Children: %v", f.Title)
-	//	} else {
-	//		log.Printf("Get Error: %v", f.Id)
-	//	}
-	//}
-
-	log.Printf("Done:")
+	//log.Printf("\n\tccfsFolderId: %v\n\tblobsFolderId: %v\n\t"+
+	//	"commitsFolderId: %v\n\ttagsFolderId: %v\n\tkeysFolderId: %v\n",
+	//	ccfsFolderId, blobsFolderId, commitsFolderId,
+	//	tagsFolderId, keysFolderId)
 }
 
 func getChildWithTitle(d *drive.Service, parentId string, title string) (string, error) {
@@ -227,9 +181,6 @@ func googledriveservice_GetCommit(hash HKID) (c commit, err error) {
 		}
 
 	}
-	//thisCommitID, err := getChildWithTitle(driveService,
-	//	thisCommitFolderId, latestID)
-	//thisCommitfile, err := driveService.Files.Get(thisCommitID).Do()
 	commitBytes, err := DownloadFile(driveService, transport, thisCommitfile)
 	c, err = CommitFromBytes(commitBytes)
 	return c, err
@@ -263,6 +214,7 @@ func googledriveservice_GetTag(hash HKID, nameSegment string) (t Tag, err error)
 	thisTagfile := new(drive.File)
 	for _, item := range r.Items {
 		f, err := driveService.Files.Get(item.Id).Do()
+		log.Println(f.Title)
 		if f.Title > latestTitle && err == nil {
 			latestTitle = f.Title
 			thisTagfile = f
