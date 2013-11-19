@@ -44,7 +44,7 @@ func init() { // Set up a configuration.
 			// Get an authorization code from the data provider.
 			// ("Please ask the user if I can access this resource.")
 			url := config.AuthCodeURL("")
-			log.Println("Visit this URL to get a code, then run again with -code=YOUR_CODE\n")
+			log.Println("Visit this URL to get a code, then run again with -code=YOUR_CODE")
 			log.Println(url)
 			panic("")
 		}

@@ -5,6 +5,42 @@ import (
 	"time"
 )
 
+// BEGIN []func experiment
+func GetBlob(h HCID) (blob, error) {
+	blobgeters := []func(ch chan blob, h HCID){
+		localfileservice_blobgeter,
+	}
+	ch := make(chan blob)
+	for _, blobgeter := range blobgeters {
+		go blobgeter(ch, h)
+	}
+	for {
+		select {
+		case b := <-ch:
+			return b, nil
+		case <-time.After(time.Second):
+			return nil, errors.New("GetBlob Timeout")
+		}
+	}
+}
+
+//func GetBlob(h HCID) (blob, error) {
+//	blob_chan := make(chan blob)
+//	go func(blob_chan chan blob) {
+//		c, err := localfileservice_GetBlob(h)
+//		if err == nil {
+//			blob_chan <- c
+//		}
+//	}(blob_chan)
+//	select {
+//	case b := <-blob_chan:
+//		return b, nil
+//	case <-time.After(time.Second):
+//		return nil, errors.New("GetBlob Timeout")
+//	}
+//}
+// END []func experiment
+
 func GetCommit(h HKID) (commit, error) {
 	commit_chan := make(chan commit)
 	go func(commit_chan chan commit) {
@@ -37,21 +73,21 @@ func GetTag(h HKID, namesegment string) (Tag, error) {
 	}
 }
 
-func GetBlob(h HCID) (blob, error) {
-	blob_chan := make(chan blob)
-	go func(blob_chan chan blob) {
-		c, err := localfileservice_GetBlob(h)
-		if err == nil {
-			blob_chan <- c
-		}
-	}(blob_chan)
-	select {
-	case b := <-blob_chan:
-		return b, nil
-	case <-time.After(time.Second):
-		return nil, errors.New("GetBlob Timeout")
-	}
-}
+//func GetBlob(h HCID) (blob, error) {
+//	blob_chan := make(chan blob)
+//	go func(blob_chan chan blob) {
+//		c, err := localfileservice_GetBlob(h)
+//		if err == nil {
+//			blob_chan <- c
+//		}
+//	}(blob_chan)
+//	select {
+//	case b := <-blob_chan:
+//		return b, nil
+//	case <-time.After(time.Second):
+//		return nil, errors.New("GetBlob Timeout")
+//	}
+//}
 
 func GetKey(h HKID) (blob, error) {
 	blob_chan := make(chan blob)

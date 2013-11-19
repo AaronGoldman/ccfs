@@ -24,6 +24,13 @@ func localfileservice_GetBlob(hash HCID) (b blob, err error) {
 	return
 }
 
+func localfileservice_blobgeter(ch chan blob, h HCID) {
+	b, err := localfileservice_GetBlob(h)
+	if err == nil {
+		ch <- b
+	}
+}
+
 func PostBlob(b blob) (err error) {
 	filepath := fmt.Sprintf("../blobs/%s", b.Hash().Hex())
 	err = os.MkdirAll("../blobs", 0764)
