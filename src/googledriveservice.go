@@ -32,7 +32,7 @@ func init() { // Set up a configuration.
 		TokenCache:  oauth.CacheFile("../bin/tokencachefile.json"),
 	}
 
-	code := "4/8JG6IFW1v7QucMzD-aaTG4TmqpjO.khB140k6OnMfshQV0ieZDAqGXAxGgwI"
+	code := "4/rSyLcOy_oBllG65sojDydzbxLp06.AgeuzdzuK-IWshQV0ieZDArWsFLjhAI"
 
 	// Set up a Transport using the config.
 	transport = &oauth.Transport{Config: config}

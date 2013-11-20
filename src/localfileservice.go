@@ -24,10 +24,12 @@ func localfileservice_GetBlob(hash HCID) (b blob, err error) {
 	return
 }
 
-func localfileservice_blobgeter(ch chan blob, h HCID) {
+func localfileservice_blobgeter(datach chan blob, errorch chan error, h HCID) {
 	b, err := localfileservice_GetBlob(h)
 	if err == nil {
-		ch <- b
+		datach <- b
+	} else {
+		errorch <- err
 	}
 }
 
@@ -48,6 +50,15 @@ func localfileservice_GetTag(hkid HKID, nameSegment string) (t Tag, err error) {
 		t, _ = TagFromBytes(data)
 	}
 	return
+}
+
+func localfileservice_taggeter(datach chan Tag, errorch chan error, h HKID, namesegment string) {
+	t, err := localfileservice_GetTag(h, namesegment)
+	if err == nil {
+		datach <- t
+	} else {
+		errorch <- err
+	}
 }
 
 func PostTag(t Tag) (err error) {
@@ -75,6 +86,15 @@ func localfileservice_GetCommit(hkid HKID) (c commit, err error) {
 	return
 }
 
+func localfileservice_commitgeter(datach chan commit, errorch chan error, h HKID) {
+	c, err := localfileservice_GetCommit(h)
+	if err == nil {
+		datach <- c
+	} else {
+		errorch <- err
+	}
+}
+
 func PostCommit(c commit) (err error) {
 	filepath := fmt.Sprintf("../commits/%s/%d", hex.EncodeToString(c.hkid),
 		c.version)
@@ -91,6 +111,15 @@ func localfileservice_GetKey(hkid []byte) (data blob, err error) {
 		log.Println(err)
 	}
 	return filedata, err
+}
+
+func localfileservice_keygeter(datach chan blob, errorch chan error, h HKID) {
+	b, err := localfileservice_GetKey(h.Bytes())
+	if err == nil {
+		datach <- b
+	} else {
+		errorch <- err
+	}
 }
 
 func PostKey(p *ecdsa.PrivateKey) (err error) {
