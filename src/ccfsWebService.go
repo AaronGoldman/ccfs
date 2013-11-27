@@ -53,3 +53,32 @@ func RepoServerStart() {
 		return
 	})
 }
+
+func composeQuery(typestring string, hash HKID, namesegment string) (message string) {
+	message = fmt.Sprintf("%s,%s", typestring, hash.String())
+	if namesegment != "" {
+		message = fmt.Sprintf("%s,%s", message, namesegment)
+	}
+	return message
+
+}
+
+func parseQuery(message string) (typestring string, hash HKID, namesegment string) {
+	arr_message := strings.SplitN(message, ",", 3)
+	if len(arr_message) < 2 {
+		panic("error: malformed parseQuery")
+	}
+	typestring = arr_message[0]
+
+	hash, err := HkidFromHex(arr_message[1])
+	if err != nil {
+		panic("error: malformed hexadecimal")
+	}
+	if len(arr_message) > 2 {
+		namesegment = arr_message[2]
+	} else {
+		namesegment = ""
+	}
+	fmt.Println("Error")
+	return typestring, hash, namesegment
+}
