@@ -38,6 +38,9 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			b = l.Bytes()
 		case "tag":
 			var t Tag
+			if nameSegments[0] == "" {
+				log.Printf("\n\tNo Path\n")
+			}
 			t, err = GetTag(objecthash.Bytes(), nameSegments[0])
 			if err != nil {
 				//log.Printf("\n\t%v\n", err)

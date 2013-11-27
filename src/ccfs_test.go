@@ -239,7 +239,7 @@ func TestGetTag(t *testing.T) {
 	outdata, err := Get(testhkid, "TestPostTag/")
 	truthdata := []byte("")
 	if !bytes.Equal(truthdata, outdata) {
-		log.Printf("\n\tTestGetList:\n\t%s\n\terror: \n", outdata, err)
+		log.Printf("\n\tTestGetList:\n\t%s\n\terror: %s\n", outdata, err)
 		t.Fail()
 	}
 }

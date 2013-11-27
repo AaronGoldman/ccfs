@@ -36,6 +36,14 @@ func HkidFromHex(s string) (HKID, error) {
 	return nil, err
 }
 
+func HcidFromHex(s string) (HCID, error) {
+	dabytes, err := hex.DecodeString(s)
+	if err == nil {
+		return HCID(dabytes), err
+	}
+	return nil, err
+}
+
 func (hcid HCID) String() string {
 	return hcid.Hex()
 }

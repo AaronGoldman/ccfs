@@ -7,9 +7,11 @@
   |_| Interface
    |_| virtual file system (Mallika)
    |_| collection management, explorer integration (Thomas)
+  |_| fix tests for ragid lists
+  |_| on verify fail log/cleanup
 
  _
 |_|things to wrap
 	|X| local fs
 	|_| mdns
-	|_| Drive
+	|X| Drive
