@@ -140,3 +140,10 @@ func latestVersion(matches []string) string {
 	}
 	return match
 }
+
+type localfileservice struct{}
+
+func (localfileservice) blobgeter(datach chan blob, errorch chan error, h HCID)                   {}
+func (localfileservice) commitgeter(datach chan commit, errorch chan error, h HKID)               {}
+func (localfileservice) taggeter(datach chan Tag, errorch chan error, h HKID, namesegment string) {}
+func (localfileservice) keygeter(datach chan blob, errorch chan error, h HKID)                    {}

@@ -5,9 +5,41 @@ import (
 	//"time"
 )
 
+type Contentservice interface {
+	blobgeter(datach chan blob, errorch chan error, h HCID)
+	commitgeter(datach chan commit, errorch chan error, h HKID)
+	keygeter(datach chan blob, errorch chan error, h HKID)
+	taggeter(datach chan Tag, errorch chan error, h HKID, namesegment string)
+}
+
+var services = []Contentservice{
+	localfileservice{},
+	timeoutservice{},
+	googledriveservice{},
+}
+
 var blobgeters = []func(chan blob, chan error, HCID){
 	localfileservice_blobgeter,
 	timeoutservice_blobgeter,
+	//googledriveservice_blobgeter,
+}
+
+var commitgeters = []func(chan commit, chan error, HKID){
+	localfileservice_commitgeter,
+	timeoutservice_commitgeter,
+	//googledriveservice_commitgeter,
+}
+
+var taggeters = []func(chan Tag, chan error, HKID, string){
+	localfileservice_taggeter,
+	timeoutservice_taggeter,
+	//googledriveservice_taggeter,
+}
+
+var keygeters = []func(chan blob, chan error, HKID){
+	localfileservice_keygeter,
+	timeoutservice_keygeter,
+	//googledriveservice_keygeter,
 }
 
 func GetBlob(h HCID) (blob, error) {
@@ -29,11 +61,6 @@ func GetBlob(h HCID) (blob, error) {
 	}
 }
 
-var commitgeters = []func(chan commit, chan error, HKID){
-	localfileservice_commitgeter,
-	timeoutservice_commitgeter,
-}
-
 func GetCommit(h HKID) (commit, error) {
 	datach := make(chan commit, len(commitgeters))
 	errorch := make(chan error, len(commitgeters))
@@ -51,27 +78,6 @@ func GetCommit(h HKID) (commit, error) {
 			return commit{}, err
 		}
 	}
-}
-
-//func GetCommit(h HKID) (commit, error) {
-//	commit_chan := make(chan commit)
-//	go func(commit_chan chan commit) {
-//		c, err := localfileservice_GetCommit(h)
-//		if err == nil {
-//			commit_chan <- c
-//		}
-//	}(commit_chan)
-//	select {
-//	case b := <-commit_chan:
-//		return b, nil
-//	case <-time.After(time.Second):
-//		return commit{}, errors.New("GetCommit Timeout")
-//	}
-//}
-
-var taggeters = []func(chan Tag, chan error, HKID, string){
-	localfileservice_taggeter,
-	timeoutservice_taggeter,
 }
 
 func GetTag(h HKID, namesegment string) (Tag, error) {
@@ -93,27 +99,6 @@ func GetTag(h HKID, namesegment string) (Tag, error) {
 	}
 }
 
-//func GetTag(h HKID, namesegment string) (Tag, error) {
-//	tag_chan := make(chan Tag)
-//	go func(tag_chan chan Tag) {
-//		c, err := localfileservice_GetTag(h, namesegment)
-//		if err == nil {
-//			tag_chan <- c
-//		}
-//	}(tag_chan)
-//	select {
-//	case b := <-tag_chan:
-//		return b, nil
-//	case <-time.After(time.Second):
-//		return Tag{}, errors.New("GetTag Timeout")
-//	}
-//}
-
-var keygeters = []func(chan blob, chan error, HKID){
-	localfileservice_keygeter,
-	timeoutservice_keygeter,
-}
-
 func GetKey(h HKID) (blob, error) {
 	datach := make(chan blob, len(keygeters))
 	errorch := make(chan error, len(keygeters))
@@ -132,6 +117,38 @@ func GetKey(h HKID) (blob, error) {
 		}
 	}
 }
+
+//func GetCommit(h HKID) (commit, error) {
+//	commit_chan := make(chan commit)
+//	go func(commit_chan chan commit) {
+//		c, err := localfileservice_GetCommit(h)
+//		if err == nil {
+//			commit_chan <- c
+//		}
+//	}(commit_chan)
+//	select {
+//	case b := <-commit_chan:
+//		return b, nil
+//	case <-time.After(time.Second):
+//		return commit{}, errors.New("GetCommit Timeout")
+//	}
+//}
+
+//func GetTag(h HKID, namesegment string) (Tag, error) {
+//	tag_chan := make(chan Tag)
+//	go func(tag_chan chan Tag) {
+//		c, err := localfileservice_GetTag(h, namesegment)
+//		if err == nil {
+//			tag_chan <- c
+//		}
+//	}(tag_chan)
+//	select {
+//	case b := <-tag_chan:
+//		return b, nil
+//	case <-time.After(time.Second):
+//		return Tag{}, errors.New("GetTag Timeout")
+//	}
+//}
 
 //func GetKey(h HKID) (blob, error) {
 //	blob_chan := make(chan blob)
