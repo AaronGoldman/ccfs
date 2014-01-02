@@ -5,18 +5,63 @@ import (
 	//"time"
 )
 
-type Contentservice interface {
-	blobgeter(datach chan blob, errorch chan error, h HCID)
-	commitgeter(datach chan commit, errorch chan error, h HKID)
-	keygeter(datach chan blob, errorch chan error, h HKID)
-	taggeter(datach chan Tag, errorch chan error, h HKID, namesegment string)
+type contentservice interface {
+	contentgeter
+	contentposter
 }
 
-var services = []Contentservice{
-	localfileservice{},
-	timeoutservice{},
-	googledriveservice{},
+type contentgeter interface {
+	blobgeter
+	commitgeter
+	taggeter
+	keygeter
 }
+
+type blobgeter interface {
+	getBlob(HCID) (blob, error)
+}
+type commitgeter interface {
+	getCommit(HKID) (commit, error)
+}
+type taggeter interface {
+	//	getTag(h HKID, namesegment string) (tag, error)
+}
+type keygeter interface {
+	getKey(HKID) (blob, error)
+}
+
+type contentposter interface {
+	blobpostter
+	commitposter
+	tagposter
+	keyposter
+}
+
+type blobpostter interface {
+	postBlob(b blob) error
+}
+type commitposter interface {
+	postCommit(c commit) error
+}
+type tagposter interface {
+	//	postTag(t tag) error
+}
+type keyposter interface {
+	//	postKey(p *ecdsa.PrivateKey) error
+}
+
+//type Contentservice interface {
+//	blobgeter(datach chan blob, errorch chan error, h HCID)
+//	commitgeter(datach chan commit, errorch chan error, h HKID)
+//	keygeter(datach chan blob, errorch chan error, h HKID)
+//	taggeter(datach chan Tag, errorch chan error, h HKID, namesegment string)
+//}
+
+//var services = []contentservice{
+//	localfileservice{},
+//	timeoutservice{},
+//	googledriveservice{},
+//}
 
 var blobgeters = []func(chan blob, chan error, HCID){
 	localfileservice_blobgeter,
