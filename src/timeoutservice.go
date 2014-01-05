@@ -5,29 +5,47 @@ import (
 	"time"
 )
 
-func timeoutservice_blobgeter(datach chan blob, errorch chan error, h HCID) {
-	time.Sleep(time.Second)
-	errorch <- errors.New("GetBlob Timeout")
-}
+//func timeoutservice_blobgeter(datach chan blob, errorch chan error, h HCID) {
+//	time.Sleep(time.Second)
+//	errorch <- errors.New("GetBlob Timeout")
+//}
 
-func timeoutservice_taggeter(datach chan Tag, errorch chan error, h HKID, namesegment string) {
-	time.Sleep(time.Second)
-	errorch <- errors.New("GetTag Timeout")
-}
+//func timeoutservice_taggeter(datach chan tag, errorch chan error, h HKID, namesegment string) {
+//	time.Sleep(time.Second)
+//	errorch <- errors.New("GetTag Timeout")
+//}
 
-func timeoutservice_commitgeter(datach chan commit, errorch chan error, h HKID) {
-	time.Sleep(time.Second)
-	errorch <- errors.New("GetCommit Timeout")
-}
+//func timeoutservice_commitgeter(datach chan commit, errorch chan error, h HKID) {
+//	time.Sleep(time.Second)
+//	errorch <- errors.New("GetCommit Timeout")
+//}
 
-func timeoutservice_keygeter(datach chan blob, errorch chan error, h HKID) {
-	time.Sleep(time.Second)
-	errorch <- errors.New("GetKey Timeout")
-}
+//func timeoutservice_keygeter(datach chan blob, errorch chan error, h HKID) {
+//	time.Sleep(time.Second)
+//	errorch <- errors.New("GetKey Timeout")
+//}
 
 type timeoutservice struct{}
 
-func (timeoutservice) blobgeter(datach chan blob, errorch chan error, h HCID)                   {}
-func (timeoutservice) commitgeter(datach chan commit, errorch chan error, h HKID)               {}
-func (timeoutservice) taggeter(datach chan Tag, errorch chan error, h HKID, namesegment string) {}
-func (timeoutservice) keygeter(datach chan blob, errorch chan error, h HKID)                    {}
+func (timeoutservice) getBlob(HCID) (blob, error) {
+	time.Sleep(time.Second)
+	return blob{}, errors.New("GetBlob Timeout")
+}
+func (timeoutservice) getCommit(HKID) (commit, error) {
+	time.Sleep(time.Second)
+	return commit{}, errors.New("GetCommit Timeout")
+}
+func (timeoutservice) getTag(h HKID, namesegment string) (tag, error) {
+	time.Sleep(time.Second)
+	return tag{}, errors.New("GetTag Timeout")
+}
+func (timeoutservice) getKey(HKID) (blob, error) {
+	time.Sleep(time.Second)
+	return blob{}, errors.New("GetKey Timeout")
+}
+
+var timeoutserviceInstance timeoutservice
+
+func init() {
+	timeoutserviceInstance = timeoutservice{}
+}

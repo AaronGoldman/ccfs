@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	//"time"
+	//"log"
 )
 
 type contentservice interface {
@@ -24,7 +25,7 @@ type commitgeter interface {
 	getCommit(HKID) (commit, error)
 }
 type taggeter interface {
-	//	getTag(h HKID, namesegment string) (tag, error)
+	getTag(h HKID, namesegment string) (tag, error)
 }
 type keygeter interface {
 	getKey(HKID) (blob, error)
@@ -44,54 +45,66 @@ type commitposter interface {
 	postCommit(c commit) error
 }
 type tagposter interface {
-	//	postTag(t tag) error
+	postTag(t tag) error
 }
 type keyposter interface {
-	//	postKey(p *ecdsa.PrivateKey) error
+	postKey(p PrivateKey) error
 }
 
-//type Contentservice interface {
-//	blobgeter(datach chan blob, errorch chan error, h HCID)
-//	commitgeter(datach chan commit, errorch chan error, h HKID)
-//	keygeter(datach chan blob, errorch chan error, h HKID)
-//	taggeter(datach chan Tag, errorch chan error, h HKID, namesegment string)
+var blobgeters = []blobgeter{
+	timeoutserviceInstance,
+	localfileserviceInstance,
+	//googledriveserviceInstance,
+	//appsscriptserviceInstance,
+}
+var commitgeters = []commitgeter{
+	timeoutserviceInstance,
+	localfileserviceInstance,
+	//googledriveserviceInstance,
+}
+var taggeters = []taggeter{
+	timeoutserviceInstance,
+	localfileserviceInstance,
+	//googledriveserviceInstance,
+}
+var keygeters = []keygeter{
+	timeoutserviceInstance,
+	localfileserviceInstance,
+	//googledriveserviceInstance,
+}
+
+//var commitgeters = []func(chan commit, chan error, HKID){
+//	localfileservice_commitgeter,
+//	timeoutservice_commitgeter,
+//	//googledriveservice_commitgeter,
 //}
 
-//var services = []contentservice{
-//	localfileservice{},
-//	timeoutservice{},
-//	googledriveservice{},
+//var taggeters = []func(chan tag, chan error, HKID, string){
+//	localfileservice_taggeter,
+//	timeoutservice_taggeter,
+//	//googledriveservice_taggeter,
 //}
 
-var blobgeters = []func(chan blob, chan error, HCID){
-	localfileservice_blobgeter,
-	timeoutservice_blobgeter,
-	//googledriveservice_blobgeter,
-}
-
-var commitgeters = []func(chan commit, chan error, HKID){
-	localfileservice_commitgeter,
-	timeoutservice_commitgeter,
-	//googledriveservice_commitgeter,
-}
-
-var taggeters = []func(chan Tag, chan error, HKID, string){
-	localfileservice_taggeter,
-	timeoutservice_taggeter,
-	//googledriveservice_taggeter,
-}
-
-var keygeters = []func(chan blob, chan error, HKID){
-	localfileservice_keygeter,
-	timeoutservice_keygeter,
-	//googledriveservice_keygeter,
-}
+//var keygeters = []func(chan blob, chan error, HKID){
+//	localfileservice_keygeter,
+//	timeoutservice_keygeter,
+//	//googledriveservice_keygeter,
+//}
 
 func GetBlob(h HCID) (blob, error) {
 	datach := make(chan blob, len(blobgeters))
 	errorch := make(chan error, len(blobgeters))
-	for _, blobgeter := range blobgeters {
-		go blobgeter(datach, errorch, h)
+	for _, blobgeterInstance := range blobgeters {
+		go func(datach chan blob, errorch chan error, h HCID) {
+			b, err := blobgeterInstance.getBlob(h)
+			if err == nil {
+				datach <- b
+				return
+			} else {
+				errorch <- err
+				return
+			}
+		}(datach, errorch, h)
 	}
 	for {
 		select {
@@ -99,7 +112,7 @@ func GetBlob(h HCID) (blob, error) {
 			if b != nil && b.Hash().Hex() == h.Hex() {
 				return b, nil
 			}
-			return nil, errors.New("Commit Verifiy Failed")
+			return nil, errors.New("Blob Verifiy Failed")
 		case err := <-errorch:
 			return nil, err
 		}
@@ -109,8 +122,18 @@ func GetBlob(h HCID) (blob, error) {
 func GetCommit(h HKID) (commit, error) {
 	datach := make(chan commit, len(commitgeters))
 	errorch := make(chan error, len(commitgeters))
-	for _, commitgeter := range commitgeters {
-		go commitgeter(datach, errorch, h)
+	for _, commitgeterInstance := range commitgeters {
+		//go commitgeter(datach, errorch, h)
+		go func(datach chan commit, errorch chan error, h HKID) {
+			c, err := commitgeterInstance.getCommit(h)
+			if err == nil {
+				datach <- c
+				return
+			} else {
+				errorch <- err
+				return
+			}
+		}(datach, errorch, h)
 	}
 	for {
 		select {
@@ -125,11 +148,21 @@ func GetCommit(h HKID) (commit, error) {
 	}
 }
 
-func GetTag(h HKID, namesegment string) (Tag, error) {
-	datach := make(chan Tag, len(taggeters))
+func GetTag(h HKID, namesegment string) (tag, error) {
+	datach := make(chan tag, len(taggeters))
 	errorch := make(chan error, len(taggeters))
-	for _, taggeter := range taggeters {
-		go taggeter(datach, errorch, h, namesegment)
+	for _, taggeterInstance := range taggeters {
+		//go taggeter(datach, errorch, h, namesegment)
+		go func(datach chan tag, errorch chan error, h HKID, namesegment string) {
+			t, err := taggeterInstance.getTag(h, namesegment)
+			if err == nil {
+				datach <- t
+				return
+			} else {
+				errorch <- err
+				return
+			}
+		}(datach, errorch, h, namesegment)
 	}
 	for {
 		select {
@@ -137,9 +170,9 @@ func GetTag(h HKID, namesegment string) (Tag, error) {
 			if t.Verifiy() {
 				return t, nil
 			}
-			return Tag{}, errors.New("Tag Verifiy Failed")
+			return tag{}, errors.New("Tag Verifiy Failed")
 		case err := <-errorch:
-			return Tag{}, err
+			return tag{}, err
 		}
 	}
 }
@@ -147,17 +180,32 @@ func GetTag(h HKID, namesegment string) (Tag, error) {
 func GetKey(h HKID) (blob, error) {
 	datach := make(chan blob, len(keygeters))
 	errorch := make(chan error, len(keygeters))
-	for _, keygeter := range keygeters {
-		go keygeter(datach, errorch, h)
+	for _, keygeterInstance := range keygeters {
+		//log.Printf("Instance %T\n", keygeterInstance)
+		//go keygeter(datach, errorch, h)
+		go func(datach chan blob, errorch chan error, h HKID) {
+			//log.Printf("begin %T\n", keygeterInstance)
+			k, err := keygeterInstance.getKey(h)
+			//log.Printf("end %T\n", keygeterInstance)
+			if err == nil {
+				datach <- k
+				return
+			} else {
+				errorch <- err
+				return
+			}
+		}(datach, errorch, h)
 	}
 	for {
 		select {
 		case b := <-datach:
+			//log.Printf("select loop data%v\n", b)
 			//if something { //How to Verifiy key?
 			return b, nil
 			//}
 			//return nil, errors.New("Key Verifiy Failed")
 		case err := <-errorch:
+			//log.Printf("select loop error%v\n", err)
 			return nil, err
 		}
 	}

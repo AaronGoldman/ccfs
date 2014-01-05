@@ -125,7 +125,7 @@ func commit_helper(h HCID, path string, post_bytes Byteser, post_type string) (H
 				next_typeString, post_bytes, post_type)
 			c = NewCommit(hash_of_posted.Bytes(), h.Bytes())
 		} else {
-			log.Println("You don't seem to own this repo")
+			log.Printf("You don't seem to own this repo\nh=%v\nerr=%v\n", h, err)
 			return HKID{}, fmt.Errorf("You don't seem to own this repo")
 		}
 	}

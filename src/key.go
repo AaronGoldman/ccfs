@@ -16,9 +16,13 @@ type PrivateKey ecdsa.PrivateKey
 
 type PublicKey ecdsa.PublicKey
 
+func (p PublicKey) Bytes() []byte {
+	return elliptic.Marshal(p.Curve, p.X, p.Y)
+}
+
 func (p PublicKey) Hkid() HKID {
 	var h hash.Hash = sha256.New()
-	h.Write(elliptic.Marshal(p.Curve, p.X, p.Y))
+	h.Write(p.Bytes())
 	return h.Sum(make([]byte, 0))
 }
 
@@ -59,8 +63,8 @@ func getPrivateKeyForHkid(hkid HKID) (priv *ecdsa.PrivateKey, err error) {
 	return
 }
 
-func PrivteKeyFromD(D big.Int) *ecdsa.PrivateKey {
-	priv := new(ecdsa.PrivateKey)
+func PrivteKeyFromD(D big.Int) *PrivateKey {
+	priv := new(PrivateKey)
 	priv.PublicKey.Curve = elliptic.P521()
 	priv.PublicKey.X, priv.PublicKey.Y = elliptic.P521().ScalarBaseMult(D.Bytes())
 	priv.D = &D
@@ -71,7 +75,7 @@ func HkidFromD(D big.Int) HKID {
 	priv := PrivteKeyFromD(D)
 	key := elliptic.Marshal(priv.PublicKey.Curve,
 		priv.PublicKey.X, priv.PublicKey.Y)
-	hkid := GenerateHKID(priv)
+	hkid := priv.Hkid()
 	err := PostKey(priv) //store privet key
 	if err != nil {
 		log.Panic(err)
@@ -91,17 +95,18 @@ func hkidFromDString(str string, base int) HKID {
 	return HkidFromD(*D)
 }
 
-func KeyGen() *ecdsa.PrivateKey {
+func KeyGen() *PrivateKey {
 	priv, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	if err != nil {
 		log.Panic(err)
 	}
-	return priv
+	prikey := PrivateKey(*priv)
+	return &prikey
 }
 
 func GenHKID() HKID {
 	privkey := KeyGen()
 	PostBlob(elliptic.Marshal(privkey.PublicKey.Curve,
 		privkey.PublicKey.X, privkey.PublicKey.Y))
-	return GenerateHKID(privkey)
+	return privkey.Hkid()
 }

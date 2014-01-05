@@ -37,7 +37,7 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			}
 			b = l.Bytes()
 		case "tag":
-			var t Tag
+			var t tag
 			if nameSegments[0] == "" {
 				log.Printf("\n\tNo Path\n")
 			}

@@ -16,9 +16,8 @@ var keysFolderId string
 var transport *oauth.Transport
 var driveService *drive.Service
 
-func init() { googledriveservice_setup() }
-
-func googledriveservice_setup() { // Set up a configuration.
+func googledriveservice_setup() {
+	// Set up a configuration.
 	log.Println(driveService)
 	//if driveService != nil {
 	//	return
@@ -158,17 +157,17 @@ func DownloadFile(d *drive.Service, t http.RoundTripper, f *drive.File) ([]byte,
 	return body, nil
 }
 
-func googledriveservice_blobgeter(datach chan blob, errorch chan error, h HCID) {
-	b, err := googledriveservice_GetBlob(h)
-	if err == nil {
-		datach <- b
-		return
-	} else {
-		log.Printf("Err: %s", err)
-		//errorch <- err
-		return
-	}
-}
+//func googledriveservice_blobgeter(datach chan blob, errorch chan error, h HCID) {
+//	b, err := googledriveservice_GetBlob(h)
+//	if err == nil {
+//		datach <- b
+//		return
+//	} else {
+//		log.Printf("Err: %s", err)
+//		//errorch <- err
+//		return
+//	}
+//}
 
 func googledriveservice_GetBlob(hash HCID) (b blob, err error) {
 	fileId, err := getChildWithTitle(driveService, blobsFolderId,
@@ -182,17 +181,17 @@ func googledriveservice_GetBlob(hash HCID) (b blob, err error) {
 	return blob(fileString), err
 }
 
-func googledriveservice_commitgeter(datach chan commit, errorch chan error, h HKID) {
-	c, err := googledriveservice_GetCommit(h)
-	if err == nil {
-		datach <- c
-		return
-	} else {
-		log.Printf("Err: %s", err)
-		//errorch <- err
-		return
-	}
-}
+//func googledriveservice_commitgeter(datach chan commit, errorch chan error, h HKID) {
+//	c, err := googledriveservice_GetCommit(h)
+//	if err == nil {
+//		datach <- c
+//		return
+//	} else {
+//		log.Printf("Err: %s", err)
+//		//errorch <- err
+//		return
+//	}
+//}
 
 func googledriveservice_GetCommit(hash HKID) (c commit, err error) {
 	thisCommitFolderId, err := getChildWithTitle(driveService, commitsFolderId,
@@ -222,17 +221,17 @@ func googledriveservice_GetCommit(hash HKID) (c commit, err error) {
 	return c, err
 }
 
-func googledriveservice_keygeter(datach chan blob, errorch chan error, h HKID) {
-	b, err := googledriveservice_GetKey(h.Bytes())
-	if err == nil {
-		datach <- b
-		return
-	} else {
-		log.Printf("Err: %s", err)
-		//errorch <- err
-		return
-	}
-}
+//func googledriveservice_keygeter(datach chan blob, errorch chan error, h HKID) {
+//	b, err := googledriveservice_GetKey(h.Bytes())
+//	if err == nil {
+//		datach <- b
+//		return
+//	} else {
+//		log.Printf("Err: %s", err)
+//		//errorch <- err
+//		return
+//	}
+//}
 
 func googledriveservice_GetKey(hash HKID) (data blob, err error) {
 	fileId, err := getChildWithTitle(driveService, keysFolderId,
@@ -246,19 +245,19 @@ func googledriveservice_GetKey(hash HKID) (data blob, err error) {
 	return blob(fileString), err
 }
 
-func googledriveservice_taggeter(datach chan Tag, errorch chan error, h HKID, namesegment string) {
-	t, err := googledriveservice_GetTag(h, namesegment)
-	if err == nil {
-		datach <- t
-		return
-	} else {
-		log.Printf("Err: %s", err)
-		//errorch <- err
-		return
-	}
-}
+//func googledriveservice_taggeter(datach chan tag, errorch chan error, h HKID, namesegment string) {
+//	t, err := googledriveservice_GetTag(h, namesegment)
+//	if err == nil {
+//		datach <- t
+//		return
+//	} else {
+//		log.Printf("Err: %s", err)
+//		//errorch <- err
+//		return
+//	}
+//}
 
-func googledriveservice_GetTag(hash HKID, nameSegment string) (t Tag, err error) {
+func googledriveservice_GetTag(hash HKID, nameSegment string) (t tag, err error) {
 	hkidTagFolderId, err := getChildWithTitle(driveService, tagsFolderId,
 		hash.Hex())
 	nameSegmentTagFolderId, err := getChildWithTitle(driveService, hkidTagFolderId,
@@ -266,10 +265,10 @@ func googledriveservice_GetTag(hash HKID, nameSegment string) (t Tag, err error)
 	r, err := driveService.Children.List(nameSegmentTagFolderId).Do()
 	if err != nil {
 		log.Printf("Error: %v\n", err)
-		return Tag{}, err
+		return tag{}, err
 	}
 	if len(r.Items) < 1 {
-		return Tag{}, fmt.Errorf("no file %s ,%s", hash.Hex(), nameSegment)
+		return tag{}, fmt.Errorf("no file %s ,%s", hash.Hex(), nameSegment)
 	}
 	latestTitle := ""
 	thisTagfile := new(drive.File)
@@ -289,9 +288,41 @@ func googledriveservice_GetTag(hash HKID, nameSegment string) (t Tag, err error)
 	return t, nil
 }
 
-type googledriveservice struct{}
+type googledriveservice struct {
+	blobsFolderId   string
+	commitsFolderId string
+	tagsFolderId    string
+	keysFolderId    string
+	transport       *oauth.Transport
+	driveService    *drive.Service
+}
 
-func (googledriveservice) blobgeter(datach chan blob, errorch chan error, h HCID)                   {}
-func (googledriveservice) commitgeter(datach chan commit, errorch chan error, h HKID)               {}
-func (googledriveservice) taggeter(datach chan Tag, errorch chan error, h HKID, namesegment string) {}
-func (googledriveservice) keygeter(datach chan blob, errorch chan error, h HKID)                    {}
+func (gds googledriveservice) getBlob(h HCID) (blob, error) {
+	b, err := googledriveservice_GetBlob(h)
+	return b, err
+}
+func (gds googledriveservice) getCommit(h HKID) (commit, error) {
+	c, err := googledriveservice_GetCommit(h)
+	return c, err
+}
+func (gds googledriveservice) getTag(h HKID, namesegment string) (tag, error) {
+	t, err := googledriveservice_GetTag(h, namesegment)
+	return t, err
+}
+func (gds googledriveservice) getKey(h HKID) (blob, error) {
+	k, err := googledriveservice_GetKey(h)
+	return k, err
+}
+
+func googledriveserviceFactory() googledriveservice {
+	instance := googledriveservice{}
+
+	return instance
+}
+
+var googledriveserviceInstance googledriveservice
+
+func init() {
+	//googledriveservice_setup()
+	googledriveserviceInstance = googledriveserviceFactory()
+}
