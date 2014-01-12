@@ -93,14 +93,6 @@ func BenchmarkLowLevelPath(b *testing.B) {
 			log.Println(err)
 		}
 
-		//print
-		//log.Printf("%s\n%s\n%s\n%s\n",
-		//	hex.EncodeToString(testBlob.Hash()),
-		//	hex.EncodeToString(testTagPointingToTestBlob.Hash()),
-		//	hex.EncodeToString(testListPiontingToTestTag.Hash()),
-		//	hex.EncodeToString(testCommitPointingToTestList.Hash()))
-		//commit -> list -> tag -> blob
-
 		//get commit
 		hkid, _ := hex.DecodeString("1312ac161875b270da2ae4e1471ba94a" +
 			"9883419250caa4c2f1fd80a91b37907e")

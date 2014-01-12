@@ -9,94 +9,17 @@ import (
 	"net/http"
 )
 
-var blobsFolderId string
-var commitsFolderId string
-var tagsFolderId string
-var keysFolderId string
-var transport *oauth.Transport
-var driveService *drive.Service
-
-func googledriveservice_setup() {
-	// Set up a configuration.
-	log.Println(driveService)
-	//if driveService != nil {
-	//	return
-	//}
-	log.SetFlags(log.Lshortfile)
-
-	config := &oauth.Config{
-		ClientId: "755660992417.apps.googleusercontent.com",
-		// from https://code.google.com/apis/console/
-		ClientSecret: "h8bA_4cKRD8nSE6kzC9vAEw2",
-		//TODO move this out of code and Reset client secret...
-		// from https://code.google.com/apis/console/
-		RedirectURL: "oob",
-		Scope:       drive.DriveReadonlyScope,
-		AuthURL:     "https://accounts.google.com/o/oauth2/auth",
-		TokenURL:    "https://accounts.google.com/o/oauth2/token",
-		TokenCache:  oauth.CacheFile("../bin/tokencachefile.json"),
+func (gds googledriveservice) getChildWithTitle(parentId string, title string) (string, error) {
+	if gds.driveService == nil {
+		log.Println("drive.Service not initialized")
+		return "", fmt.Errorf("drive.Service not initialized")
 	}
-
-	code := "4/rSyLcOy_oBllG65sojDydzbxLp06.AgeuzdzuK-IWshQV0ieZDArWsFLjhAI"
-
-	// Set up a Transport using the config.
-	transport = &oauth.Transport{Config: config}
-
-	// Try to pull the token from the cache; if this fails, we need to get one.
-	token, err := config.TokenCache.Token()
-	if err != nil {
-		if code == "" {
-			// Get an authorization code from the data provider.
-			// ("Please ask the user if I can access this resource.")
-			url := config.AuthCodeURL("")
-			log.Println("Visit this URL to get a code, then run again with -code=YOUR_CODE")
-			log.Println(url)
-			panic("")
-		}
-		// Exchange the authorization code for an access token.
-		// ("Here's the code you gave the user, now give me a token!")
-		token, err = transport.Exchange(code)
-		if err != nil {
-			log.Fatal("Exchange:", err)
-		}
-		// (The Exchange method will automatically cache the token.)
-		log.Printf("Token is cached in %v\n", config.TokenCache)
-	}
-
-	// Make the actual request using the cached token to authenticate.
-	// ("Here's the token, let me in!")
-	transport.Token = token
-
-	// Make the request.
-	//httpClient := transport.Client()
-	//r, err := httpClient.Get("https://www.googleapis.com/oauth2/v1/userinfo")
-	//if err != nil {
-	//	log.Fatal("Get:", err)
-	//}
-	//defer r.Body.Close()
-
-	//get the ID's of the object folders'
-	httpClient := transport.Client()
-	driveService, err = drive.New(httpClient)
-	ccfsFolderId, err := getChildWithTitle(driveService, "root", "ccfs")
-	blobsFolderId, err = getChildWithTitle(driveService, ccfsFolderId, "blobs")
-	commitsFolderId, err = getChildWithTitle(driveService, ccfsFolderId, "commits")
-	tagsFolderId, err = getChildWithTitle(driveService, ccfsFolderId, "tags")
-	keysFolderId, err = getChildWithTitle(driveService, ccfsFolderId, "keys")
-	//log.Printf("\n\tccfsFolderId: %v\n\tblobsFolderId: %v\n\t"+
-	//	"commitsFolderId: %v\n\ttagsFolderId: %v\n\tkeysFolderId: %v\n",
-	//	ccfsFolderId, blobsFolderId, commitsFolderId,
-	//	tagsFolderId, keysFolderId)
-}
-
-func getChildWithTitle(d *drive.Service, parentId string, title string) (string, error) {
-	//log.Println(d, parentId, title)
-	r, err := d.Children.List(parentId).Q(fmt.Sprintf("title = '%s'", title)).Do()
+	//log.Println(parentId, "\n\t", title)
+	r, err := gds.driveService.Children.List(parentId).Q(fmt.Sprintf("title = '%s'", title)).Do()
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return "", err
 	}
-
 	if len(r.Items) < 1 {
 		return "", fmt.Errorf("no file with title %s", title)
 	}
@@ -104,7 +27,7 @@ func getChildWithTitle(d *drive.Service, parentId string, title string) (string,
 }
 
 // AllChildren fetches all the children of a given folder
-func AllChildren(d *drive.Service, folderId string, qString string) ([]*drive.ChildReference,
+func (gds googledriveservice) AllChildren(d *drive.Service, folderId string, qString string) ([]*drive.ChildReference,
 	error) {
 	var cs []*drive.ChildReference
 	pageToken := ""
@@ -129,7 +52,7 @@ func AllChildren(d *drive.Service, folderId string, qString string) ([]*drive.Ch
 }
 
 // DownloadFile downloads the content of a given file object
-func DownloadFile(d *drive.Service, t http.RoundTripper, f *drive.File) ([]byte, error) {
+func (gds googledriveservice) DownloadFile(f *drive.File) ([]byte, error) {
 	// t parameter should use an oauth.Transport
 	downloadUrl := f.DownloadUrl
 	if downloadUrl == "" {
@@ -142,7 +65,7 @@ func DownloadFile(d *drive.Service, t http.RoundTripper, f *drive.File) ([]byte,
 		fmt.Printf("An error occurred: %v\n", err)
 		return []byte{}, err
 	}
-	resp, err := t.RoundTrip(req)
+	resp, err := gds.transport.RoundTrip(req)
 	// Make sure we close the Body later
 	defer resp.Body.Close()
 	if err != nil {
@@ -157,137 +80,6 @@ func DownloadFile(d *drive.Service, t http.RoundTripper, f *drive.File) ([]byte,
 	return body, nil
 }
 
-//func googledriveservice_blobgeter(datach chan blob, errorch chan error, h HCID) {
-//	b, err := googledriveservice_GetBlob(h)
-//	if err == nil {
-//		datach <- b
-//		return
-//	} else {
-//		log.Printf("Err: %s", err)
-//		//errorch <- err
-//		return
-//	}
-//}
-
-func googledriveservice_GetBlob(hash HCID) (b blob, err error) {
-	fileId, err := getChildWithTitle(driveService, blobsFolderId,
-		hash.Hex())
-	f, err := driveService.Files.Get(fileId).Do()
-	fileString, err := DownloadFile(driveService, transport, f)
-	if err != nil {
-		log.Printf("An error occurred: %v\n", err)
-		return nil, err
-	}
-	return blob(fileString), err
-}
-
-//func googledriveservice_commitgeter(datach chan commit, errorch chan error, h HKID) {
-//	c, err := googledriveservice_GetCommit(h)
-//	if err == nil {
-//		datach <- c
-//		return
-//	} else {
-//		log.Printf("Err: %s", err)
-//		//errorch <- err
-//		return
-//	}
-//}
-
-func googledriveservice_GetCommit(hash HKID) (c commit, err error) {
-	thisCommitFolderId, err := getChildWithTitle(driveService, commitsFolderId,
-		hash.Hex())
-	r, err := driveService.Children.List(thisCommitFolderId).Do()
-	if err != nil {
-		log.Fatalf("Error: %v\n", err)
-	}
-	if len(r.Items) < 1 {
-		return commit{}, fmt.Errorf("no file %s", hash.Hex())
-	}
-	latestTitle := ""
-	thisCommitfile := new(drive.File)
-	for _, item := range r.Items {
-		f, err := driveService.Files.Get(item.Id).Do()
-		if err != nil {
-			return c, err
-		}
-		if f.Title > latestTitle && err == nil {
-			latestTitle = f.Title
-			thisCommitfile = f
-		}
-
-	}
-	commitBytes, err := DownloadFile(driveService, transport, thisCommitfile)
-	c, err = CommitFromBytes(commitBytes)
-	return c, err
-}
-
-//func googledriveservice_keygeter(datach chan blob, errorch chan error, h HKID) {
-//	b, err := googledriveservice_GetKey(h.Bytes())
-//	if err == nil {
-//		datach <- b
-//		return
-//	} else {
-//		log.Printf("Err: %s", err)
-//		//errorch <- err
-//		return
-//	}
-//}
-
-func googledriveservice_GetKey(hash HKID) (data blob, err error) {
-	fileId, err := getChildWithTitle(driveService, keysFolderId,
-		hash.Hex())
-	f, err := driveService.Files.Get(fileId).Do()
-	fileString, err := DownloadFile(driveService, transport, f)
-	if err != nil {
-		log.Printf("An error occurred: %v\n", err)
-		return nil, err
-	}
-	return blob(fileString), err
-}
-
-//func googledriveservice_taggeter(datach chan tag, errorch chan error, h HKID, namesegment string) {
-//	t, err := googledriveservice_GetTag(h, namesegment)
-//	if err == nil {
-//		datach <- t
-//		return
-//	} else {
-//		log.Printf("Err: %s", err)
-//		//errorch <- err
-//		return
-//	}
-//}
-
-func googledriveservice_GetTag(hash HKID, nameSegment string) (t tag, err error) {
-	hkidTagFolderId, err := getChildWithTitle(driveService, tagsFolderId,
-		hash.Hex())
-	nameSegmentTagFolderId, err := getChildWithTitle(driveService, hkidTagFolderId,
-		nameSegment)
-	r, err := driveService.Children.List(nameSegmentTagFolderId).Do()
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-		return tag{}, err
-	}
-	if len(r.Items) < 1 {
-		return tag{}, fmt.Errorf("no file %s ,%s", hash.Hex(), nameSegment)
-	}
-	latestTitle := ""
-	thisTagfile := new(drive.File)
-	for _, item := range r.Items {
-		f, err := driveService.Files.Get(item.Id).Do()
-		if err != nil {
-			return t, err
-		} //log.Println(f.Title)
-		if f.Title > latestTitle && err == nil {
-			latestTitle = f.Title
-			thisTagfile = f
-		}
-
-	}
-	tagBytes, err := DownloadFile(driveService, transport, thisTagfile)
-	t, err = TagFromBytes(tagBytes)
-	return t, nil
-}
-
 type googledriveservice struct {
 	blobsFolderId   string
 	commitsFolderId string
@@ -298,31 +90,170 @@ type googledriveservice struct {
 }
 
 func (gds googledriveservice) getBlob(h HCID) (blob, error) {
-	b, err := googledriveservice_GetBlob(h)
-	return b, err
+	if gds.driveService == nil {
+		return nil, fmt.Errorf("Drive Service not initialized")
+	}
+	fileId, err := gds.getChildWithTitle(gds.blobsFolderId, h.Hex())
+	f, err := gds.driveService.Files.Get(fileId).Do()
+	fileString, err := gds.DownloadFile(f)
+	if err != nil {
+		log.Printf("An error occurred: %v\n", err)
+		return nil, err
+	}
+	return blob(fileString), err
 }
-func (gds googledriveservice) getCommit(h HKID) (commit, error) {
-	c, err := googledriveservice_GetCommit(h)
+func (gds googledriveservice) getCommit(h HKID) (c commit, err error) {
+	if gds.driveService == nil {
+		return commit{}, fmt.Errorf("Drive Service not initialized")
+	}
+	thisCommitFolderId, err := gds.getChildWithTitle(gds.commitsFolderId, h.Hex())
+	r, err := gds.driveService.Children.List(thisCommitFolderId).Do()
+	if err != nil {
+		log.Fatalf("Error: %v\n", err)
+	}
+	if len(r.Items) < 1 {
+		return commit{}, fmt.Errorf("no file %s", h.Hex())
+	}
+	latestTitle := ""
+	thisCommitfile := new(drive.File)
+	for _, item := range r.Items {
+		f, err := gds.driveService.Files.Get(item.Id).Do()
+		if err != nil {
+			return c, err
+		}
+		if f.Title > latestTitle && err == nil {
+			latestTitle = f.Title
+			thisCommitfile = f
+		}
+	}
+	commitBytes, err := gds.DownloadFile(thisCommitfile)
+	c, err = CommitFromBytes(commitBytes)
 	return c, err
 }
-func (gds googledriveservice) getTag(h HKID, namesegment string) (tag, error) {
-	t, err := googledriveservice_GetTag(h, namesegment)
-	return t, err
+func (gds googledriveservice) getTag(h HKID, namesegment string) (t tag, err error) {
+	if gds.driveService == nil {
+		return tag{}, fmt.Errorf("Drive Service not initialized")
+	}
+	hkidTagFolderId, err := gds.getChildWithTitle(gds.tagsFolderId, h.Hex())
+	nameSegmentTagFolderId, err := gds.getChildWithTitle(hkidTagFolderId, namesegment)
+	r, err := gds.driveService.Children.List(nameSegmentTagFolderId).Do()
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return tag{}, err
+	}
+	if len(r.Items) < 1 {
+		return tag{}, fmt.Errorf("no file %s ,%s", h.Hex(), namesegment)
+	}
+	latestTitle := ""
+	thisTagfile := new(drive.File)
+	for _, item := range r.Items {
+		f, err := gds.driveService.Files.Get(item.Id).Do()
+		if err != nil {
+			return t, err
+		} //log.Println(f.Title)
+		if f.Title > latestTitle && err == nil {
+			latestTitle = f.Title
+			thisTagfile = f
+		}
+
+	}
+	tagBytes, err := gds.DownloadFile(thisTagfile)
+	t, err = TagFromBytes(tagBytes)
+	return t, nil
 }
-func (gds googledriveservice) getKey(h HKID) (blob, error) {
-	k, err := googledriveservice_GetKey(h)
-	return k, err
+func (gds googledriveservice) getKey(h HKID) (b blob, err error) {
+	if gds.driveService == nil {
+		return nil, fmt.Errorf("Drive Service not initialized")
+	}
+	fileId, err := gds.getChildWithTitle(gds.keysFolderId, h.Hex())
+	f, err := gds.driveService.Files.Get(fileId).Do()
+	fileString, err := gds.DownloadFile(f)
+	if err != nil {
+		log.Printf("An error occurred: %v\n", err)
+		return nil, err
+	}
+	return blob(fileString), err
 }
 
 func googledriveserviceFactory() googledriveservice {
-	instance := googledriveservice{}
+	log.SetFlags(log.Lshortfile)
+	gds := googledriveservice{}
+	// Set up a configuration.
+	config := &oauth.Config{
+		ClientId: "755660992417.apps.googleusercontent.com",
+		// from https://code.google.com/apis/console/
+		ClientSecret: "h8bA_4cKRD8nSE6kzC9vAEw2",
+		//TODO move this out of code and Reset client secret...
+		// from https://code.google.com/apis/console/
+		RedirectURL: "oob",
+		Scope:       drive.DriveReadonlyScope,
+		AuthURL:     "https://accounts.google.com/o/oauth2/auth",
+		TokenURL:    "https://accounts.google.com/o/oauth2/token",
+		TokenCache:  oauth.CacheFile("../bin/tokencachefile.json"),
+	}
 
-	return instance
+	code := "4/rSyLcOy_oBllG65sojDydzbxLp06.AgeuzdzuK-IWshQV0ieZDArWsFLjhAI"
+
+	// Set up a Transport using the config.
+	gds.transport = &oauth.Transport{Config: config}
+
+	// Try to pull the token from the cache; if this fails, we need to get one.
+	token, err := config.TokenCache.Token()
+	if err != nil {
+		if code == "" {
+			// Get an authorization code from the data provider.
+			// ("Please ask the user if I can access this resource.")
+			url := config.AuthCodeURL("")
+			log.Println("Visit this URL to get a code, then run again with -code=YOUR_CODE")
+			log.Println(url)
+			panic("")
+		}
+		// Exchange the authorization code for an access token.
+		// ("Here's the code you gave the user, now give me a token!")
+		token, err = gds.transport.Exchange(code)
+		if err != nil {
+			log.Fatal("Exchange:", err)
+		}
+		// (The Exchange method will automatically cache the token.)
+		log.Printf("Token is cached in %v\n", config.TokenCache)
+	}
+
+	// Make the actual request using the cached token to authenticate.
+	// ("Here's the token, let me in!")
+	gds.transport.Token = token
+
+	// Make the request.
+	//httpClient := transport.Client()
+	//r, err := httpClient.Get("https://www.googleapis.com/oauth2/v1/userinfo")
+	//if err != nil {
+	//	log.Fatal("Get:", err)
+	//}
+	//defer r.Body.Close()
+
+	//get the ID's of the object folders'
+	httpClient := gds.transport.Client()
+	gds.driveService, err = drive.New(httpClient)
+	ccfsFolderId, err := gds.getChildWithTitle("root", "ccfs")
+	gds.blobsFolderId, err = gds.getChildWithTitle(ccfsFolderId, "blobs")
+	gds.commitsFolderId, err = gds.getChildWithTitle(ccfsFolderId, "commits")
+	gds.tagsFolderId, err = gds.getChildWithTitle(ccfsFolderId, "tags")
+	gds.keysFolderId, err = gds.getChildWithTitle(ccfsFolderId, "keys")
+	return gds
 }
 
 var googledriveserviceInstance googledriveservice
 
 func init() {
-	//googledriveservice_setup()
 	googledriveserviceInstance = googledriveserviceFactory()
+	log.Printf(
+		"\n\tblobsFolderId: %v\n\t"+
+			"commitsFolderId: %v\n\ttagsFolderId: %v\n\tkeysFolderId: %v\n\t"+
+			"driveService: %v\n\ttransport: %v\n",
+		googledriveserviceInstance.blobsFolderId,
+		googledriveserviceInstance.commitsFolderId,
+		googledriveserviceInstance.tagsFolderId,
+		googledriveserviceInstance.keysFolderId,
+		googledriveserviceInstance.driveService,
+		googledriveserviceInstance.transport,
+	)
 }

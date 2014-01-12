@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"hash"
 	"log"
-	"net/url"
+	//"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -307,28 +307,19 @@ func TagFromBytes(bytes []byte) (t tag, err error) {
 	return
 }
 
-func GenerateObjectType(objectType string) (objectTypestr string) {
-	return objectType
-}
-func GenerateNameSegment(nameSegment string) (nameSegmentstr string) {
-	return url.QueryEscape(nameSegment)
-}
-func GenerateVersion() (versionstr string) {
-	return strconv.FormatInt(time.Now().UnixNano(), 10)
-}
-func GenerateSignature(prikey *ecdsa.PrivateKey, ObjectHash []byte) (signature string) {
-	r, s, err := ecdsa.Sign(rand.Reader, prikey, ObjectHash)
-	if err != nil {
-		log.Panic(err)
-	}
-	return fmt.Sprintf("%v %v", r, s)
-}
-
-//func GenerateHKID(prikey *PrivateKey) (hkid HKID) {
-//	var h hash.Hash = sha256.New()
-//	h.Write(elliptic.Marshal(
-//		prikey.PublicKey.Curve,
-//		prikey.PublicKey.X,
-//		prikey.PublicKey.Y))
-//	return h.Sum(make([]byte, 0))
+//func GenerateObjectType(objectType string) (objectTypestr string) {
+//	return objectType
+//}
+//func GenerateNameSegment(nameSegment string) (nameSegmentstr string) {
+//	return url.QueryEscape(nameSegment)
+//}
+//func GenerateVersion() (versionstr string) {
+//	return strconv.FormatInt(time.Now().UnixNano(), 10)
+//}
+//func GenerateSignature(prikey *ecdsa.PrivateKey, ObjectHash []byte) (signature string) {
+//	r, s, err := ecdsa.Sign(rand.Reader, prikey, ObjectHash)
+//	if err != nil {
+//		log.Panic(err)
+//	}
+//	return fmt.Sprintf("%v %v", r, s)
 //}

@@ -43,6 +43,7 @@ func TestAppsscriptservice_GetTag(t *testing.T) {
 
 func TestAppsscriptservice_GetKey(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
+	//t.Skip()
 	h, err := HkidFromHex(
 		"f65b92b9ce15e167b98fc896f0a365c87c39565642a59ba0060db3b33be6d885",
 	)
@@ -52,7 +53,7 @@ func TestAppsscriptservice_GetKey(t *testing.T) {
 		t.Fail()
 	}
 	if k.Hash().Hex() != "478025f8e8d4f769986232ca120be2b9c51a184455f6de1925a62a6f46df15b1" {
-		log.Println(k)
+		log.Println(k.Hash().Hex())
 		t.Fail()
 	}
 }

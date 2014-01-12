@@ -1,9 +1,10 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	//"log"
+	"log"
 	"net/http"
 )
 
@@ -29,7 +30,13 @@ func (a appsscriptservice) getBlob(h HCID) (b blob, err error) {
 	if err != nil {
 		return b, err
 	}
-	return body, err
+	data, err := base64.StdEncoding.DecodeString(string(body))
+	if err != nil {
+		log.Printf("%s\n", body)
+		log.Println("error:", err)
+		return nil, err
+	}
+	return data, err
 }
 
 func (a appsscriptservice) getCommit(h HKID) (c commit, err error) {
@@ -52,7 +59,12 @@ func (a appsscriptservice) getCommit(h HKID) (c commit, err error) {
 	if err != nil {
 		return c, err
 	}
-	c, err = CommitFromBytes(body)
+	data, err := base64.StdEncoding.DecodeString(string(body))
+	if err != nil {
+		log.Println("error:", err)
+		return c, err
+	}
+	c, err = CommitFromBytes(data)
 	return c, err
 }
 
@@ -77,7 +89,12 @@ func (a appsscriptservice) getTag(h HKID, namesegment string) (t tag, err error)
 	if err != nil {
 		return t, err
 	}
-	t, err = TagFromBytes(body)
+	data, err := base64.StdEncoding.DecodeString(string(body))
+	if err != nil {
+		log.Println("error:", err)
+		return t, err
+	}
+	t, err = TagFromBytes(data)
 	return t, err
 }
 
@@ -100,7 +117,12 @@ func (a appsscriptservice) getKey(h HKID) (blob, error) {
 	if err != nil {
 		return blob{}, err
 	}
-	return body, err
+	data, err := base64.StdEncoding.DecodeString(string(body))
+	if err != nil {
+		log.Println("error:", err)
+		return nil, err
+	}
+	return data, err
 }
 
 var appsscriptserviceInstance appsscriptservice = appsscriptservice{}
