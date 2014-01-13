@@ -134,11 +134,14 @@ func (c commit) Hkid() []byte {
 	return c.hkid
 }
 
-func (c commit) Verifiy() bool {
+func (c commit) Verify() bool {
 	ObjectHash := genCommitHash(c.listHash, c.version, c.parent, c.hkid)
 	pubkey := ecdsa.PublicKey(getPiblicKeyForHkid(c.hkid))
 	r, s := elliptic.Unmarshal(pubkey.Curve, c.signature)
 	//log.Println(pubkey, " pubkey\n", ObjectHash, " ObjectHash\n", r, " r\n", s, "s")
+	if r.BitLen() == 0 || s.BitLen() == 0 {
+		return false
+	}
 	return ecdsa.Verify(&pubkey, ObjectHash, r, s)
 }
 
@@ -236,11 +239,14 @@ func (t tag) Hkid() HKID {
 	return t.hkid
 }
 
-func (t tag) Verifiy() bool {
+func (t tag) Verify() bool {
 	tPublicKey := ecdsa.PublicKey(getPiblicKeyForHkid(t.hkid))
 	r, s := elliptic.Unmarshal(elliptic.P521(), t.signature)
 	ObjectHash := genTagHash(t.HashBytes, t.TypeString, t.nameSegment,
 		t.version, t.hkid)
+	if r.BitLen() == 0 || s.BitLen() == 0 {
+		return false
+	}
 	return ecdsa.Verify(&tPublicKey, ObjectHash, r, s)
 }
 

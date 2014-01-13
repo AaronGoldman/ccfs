@@ -121,7 +121,7 @@ func GetCommit(h HKID) (commit, error) {
 	for {
 		select {
 		case c := <-datach:
-			if c.Verifiy() {
+			if c.Verify() {
 				return c, nil
 			}
 			return commit{}, errors.New("Commit Verifiy Failed")
@@ -153,7 +153,7 @@ func GetTag(h HKID, namesegment string) (tag, error) {
 	for {
 		select {
 		case t := <-datach:
-			if t.Verifiy() {
+			if t.Verify() {
 				return t, nil
 			}
 			return tag{}, errors.New("Tag Verifiy Failed")
@@ -197,4 +197,17 @@ func GetKey(h HKID) (blob, error) {
 			}
 		}
 	}
+}
+
+func PostBlob(b blob) (err error) {
+	return localfileserviceInstance.postBlob(b)
+}
+func PostCommit(c commit) (err error) {
+	return localfileserviceInstance.postCommit(c)
+}
+func PostKey(p *PrivateKey) (err error) {
+	return localfileserviceInstance.postKey(p)
+}
+func PostTag(t tag) (err error) {
+	return localfileserviceInstance.postTag(t)
 }

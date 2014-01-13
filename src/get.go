@@ -46,7 +46,7 @@ func Get(objecthash HID, path string) (b blob, err error) {
 				//log.Printf("\n\t%v\n", err)
 				return nil, err
 			}
-			if !t.Verifiy() {
+			if !t.Verify() {
 				return nil, errors.New("Tag Verifiy Failed")
 			}
 			typeString = t.TypeString
@@ -58,7 +58,7 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			if err != nil {
 				log.Printf("\n\t%v\n", err)
 			}
-			if !c.Verifiy() {
+			if !c.Verify() {
 				return nil, errors.New("Commit Verifiy Failed")
 			}
 			var l list

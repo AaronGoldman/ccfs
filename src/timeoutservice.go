@@ -5,26 +5,6 @@ import (
 	"time"
 )
 
-//func timeoutservice_blobgeter(datach chan blob, errorch chan error, h HCID) {
-//	time.Sleep(time.Second)
-//	errorch <- errors.New("GetBlob Timeout")
-//}
-
-//func timeoutservice_taggeter(datach chan tag, errorch chan error, h HKID, namesegment string) {
-//	time.Sleep(time.Second)
-//	errorch <- errors.New("GetTag Timeout")
-//}
-
-//func timeoutservice_commitgeter(datach chan commit, errorch chan error, h HKID) {
-//	time.Sleep(time.Second)
-//	errorch <- errors.New("GetCommit Timeout")
-//}
-
-//func timeoutservice_keygeter(datach chan blob, errorch chan error, h HKID) {
-//	time.Sleep(time.Second)
-//	errorch <- errors.New("GetKey Timeout")
-//}
-
 type timeoutservice struct{}
 
 func (timeoutservice) getBlob(HCID) (blob, error) {
@@ -45,7 +25,3 @@ func (timeoutservice) getKey(HKID) (blob, error) {
 }
 
 var timeoutserviceInstance timeoutservice
-
-func init() {
-	timeoutserviceInstance = timeoutservice{}
-}

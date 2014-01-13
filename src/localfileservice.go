@@ -30,7 +30,7 @@ import (
 //	}
 //}
 
-func PostBlob(b blob) (err error) {
+func (localfileservice) postBlob(b blob) (err error) {
 	filepath := fmt.Sprintf("../blobs/%s", b.Hash().Hex())
 	err = os.MkdirAll("../blobs", 0764)
 	err = ioutil.WriteFile(filepath, b.Bytes(), 0664)
@@ -58,7 +58,7 @@ func PostBlob(b blob) (err error) {
 //	}
 //}
 
-func PostTag(t tag) (err error) {
+func (localfileservice) postTag(t tag) (err error) {
 	filepath := fmt.Sprintf("../tags/%s/%s/%d", t.hkid.Hex(),
 		t.nameSegment, t.version)
 	dirpath := fmt.Sprintf("../tags/%s/%s", t.hkid.Hex(),
@@ -92,7 +92,7 @@ func PostTag(t tag) (err error) {
 //	}
 //}
 
-func PostCommit(c commit) (err error) {
+func (localfileservice) postCommit(c commit) (err error) {
 	filepath := fmt.Sprintf("../commits/%s/%d", c.hkid.Hex(),
 		c.version)
 	dirpath := fmt.Sprintf("../commits/%s", c.hkid.Hex())
@@ -120,7 +120,7 @@ func PostCommit(c commit) (err error) {
 //	}
 //}
 
-func PostKey(p *PrivateKey) (err error) {
+func (localfileservice) postKey(p *PrivateKey) (err error) {
 	//hkid := blob(elliptic.Marshal(p.PublicKey.Curve,
 	//	p.PublicKey.X, p.PublicKey.Y)).Hash()
 	err = os.MkdirAll("../keys", 0700)

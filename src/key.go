@@ -43,7 +43,10 @@ func (p PrivateKey) Bytes() []byte {
 }
 
 func getPiblicKeyForHkid(hkid HKID) PublicKey {
-	marshaledKey, _ := GetBlob(HCID(hkid))
+	marshaledKey, err := GetBlob(HCID(hkid))
+	if err != nil {
+		return PublicKey{}
+	}
 	curve := elliptic.P521()
 	x, y := elliptic.Unmarshal(elliptic.P521(), marshaledKey)
 	pubKey := ecdsa.PublicKey{

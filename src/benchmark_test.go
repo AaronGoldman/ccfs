@@ -102,7 +102,7 @@ func BenchmarkLowLevelPath(b *testing.B) {
 		}
 
 		//log.Printf("authentic commit:%v\n", testcommit.Verifiy())
-		if !testcommit.Verifiy() {
+		if !testcommit.Verify() {
 			b.FailNow()
 		}
 		//get list
@@ -121,7 +121,7 @@ func BenchmarkLowLevelPath(b *testing.B) {
 		_, testTagHash := testlist.hash_for_namesegment("testTag")
 		testTag, err := GetTag(testTagHash.Bytes(), "testBlob")
 		//log.Printf("authentic tag:%v\n", testTag.Verifiy())
-		if !testTag.Verifiy() {
+		if !testTag.Verify() {
 			b.FailNow()
 		}
 		//get blob

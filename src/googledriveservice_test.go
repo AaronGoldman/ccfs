@@ -26,7 +26,7 @@ func TestGoogledriveservice_GetCommit(t *testing.T) {
 	//googledriveservice_setup()
 	hc, err := HkidFromHex("c09b2765c6fd4b999d47c82f9cdf7f4b659bf7c29487cc0b357b8fc92ac8ad02")
 	c, err := googledriveserviceInstance.getCommit(hc)
-	if err != nil || c.Verifiy() == false {
+	if err != nil || c.Verify() == false {
 		log.Println(err, "\n", c)
 		t.Fail()
 	}
@@ -39,7 +39,7 @@ func TestGoogledriveservice_GetTag(t *testing.T) {
 	//googledriveservice_setup()
 	ht, err := HkidFromHex("f65b92b9ce15e167b98fc896f0a365c87c39565642a59ba0060db3b33be6d885")
 	tt, err := googledriveserviceInstance.getTag(ht, "testBlob")
-	if err != nil || tt.Verifiy() == false {
+	if err != nil || tt.Verify() == false {
 		log.Println(err, "\n", tt)
 		t.Fail()
 	}
