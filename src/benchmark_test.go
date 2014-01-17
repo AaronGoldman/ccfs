@@ -152,6 +152,7 @@ func BenchmarkHighLevelPath(b *testing.B) {
 	}
 }
 
+//BenchmarkBlobFound times the retreval of a blob that is found
 func BenchmarkBlobFound(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -162,6 +163,7 @@ func BenchmarkBlobFound(b *testing.B) {
 	}
 }
 
+//BenchmarkBlobNotFound times the retreval of a blob that is not found
 func BenchmarkBlobNotFound(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -173,6 +175,7 @@ func BenchmarkBlobNotFound(b *testing.B) {
 	}
 }
 
+//BenchmarkBlobInsert times the posting of a blob to a repository.
 func BenchmarkBlobInsert(b *testing.B) {
 	log.SetFlags(log.Lshortfile)
 	b.ResetTimer()

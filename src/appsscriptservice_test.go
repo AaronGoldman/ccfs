@@ -17,7 +17,7 @@ func TestAppsscriptservice_getBlob(t *testing.T) {
 	}
 }
 
-func TestAppsscriptservice_GetCommit(t *testing.T) {
+func TestAppsscriptservice_getCommit(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
 	h, err := HkidFromHex(
 		"c09b2765c6fd4b999d47c82f9cdf7f4b659bf7c29487cc0b357b8fc92ac8ad02",
@@ -29,7 +29,7 @@ func TestAppsscriptservice_GetCommit(t *testing.T) {
 	}
 }
 
-func TestAppsscriptservice_GetTag(t *testing.T) {
+func TestAppsscriptservice_getTag(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
 	h, err := HkidFromHex(
 		"f65b92b9ce15e167b98fc896f0a365c87c39565642a59ba0060db3b33be6d885",
@@ -41,7 +41,7 @@ func TestAppsscriptservice_GetTag(t *testing.T) {
 	}
 }
 
-func TestAppsscriptservice_GetKey(t *testing.T) {
+func TestAppsscriptservice_getKey(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
 	//t.Skip()
 	h, err := HkidFromHex(

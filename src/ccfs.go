@@ -1,3 +1,4 @@
+//CCFS a Cryptographically Curated File System binds a cryptographic chain of trust into content names.
 package main
 
 import (

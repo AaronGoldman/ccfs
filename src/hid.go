@@ -16,6 +16,7 @@ func (hcid HCID) Bytes() []byte {
 
 type HKID []byte
 
+//Hex reterns the HKID in the form of a hexidesimal string.
 func (hkid HKID) Hex() string {
 	return hex.EncodeToString(hkid)
 }

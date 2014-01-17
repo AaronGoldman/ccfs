@@ -243,12 +243,15 @@ func googledriveserviceFactory() googledriveservice {
 
 var googledriveserviceInstance googledriveservice
 
-func init() {
+func dont_init() {
 	googledriveserviceInstance = googledriveserviceFactory()
 	log.Printf(
-		"\n\tblobsFolderId: %v\n\t"+
-			"commitsFolderId: %v\n\ttagsFolderId: %v\n\tkeysFolderId: %v\n\t"+
-			"driveService: %v\n\ttransport: %v\n",
+		"\n\tblobsFolderId: %v"+
+			"\n\tcommitsFolderId: %v"+
+			"\n\ttagsFolderId: %v"+
+			"\n\tkeysFolderId: %v"+
+			"\n\tdriveService: %v"+
+			"\n\ttransport: %v\n",
 		googledriveserviceInstance.blobsFolderId,
 		googledriveserviceInstance.commitsFolderId,
 		googledriveserviceInstance.tagsFolderId,

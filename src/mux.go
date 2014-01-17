@@ -1,7 +1,7 @@
 package main
 
 import (
-	"errors"
+	"fmt"
 	"log"
 )
 
@@ -71,6 +71,7 @@ var keygeters = []keygeter{
 	//appsscriptserviceInstance,
 }
 
+//GetBlob looks up blobs by their HCIDs.
 func GetBlob(h HCID) (blob, error) {
 	datach := make(chan blob, len(blobgeters))
 	errorch := make(chan error, len(blobgeters))
@@ -92,7 +93,7 @@ func GetBlob(h HCID) (blob, error) {
 			if b != nil && b.Hash().Hex() == h.Hex() {
 				return b, nil
 			}
-			return nil, errors.New("Blob Verifiy Failed")
+			return nil, fmt.Errorf("Blob Verifiy Failed")
 		case err := <-errorch:
 			if err.Error() == "GetBlob Timeout" {
 				return nil, err
@@ -101,6 +102,10 @@ func GetBlob(h HCID) (blob, error) {
 			}
 		}
 	}
+}
+
+func PostList(l list) (err error) {
+	return PostBlob(blob(l.Bytes()))
 }
 
 func GetCommit(h HKID) (commit, error) {
@@ -124,7 +129,7 @@ func GetCommit(h HKID) (commit, error) {
 			if c.Verify() {
 				return c, nil
 			}
-			return commit{}, errors.New("Commit Verifiy Failed")
+			return commit{}, fmt.Errorf("Commit Verifiy Failed")
 		case err := <-errorch:
 			if err.Error() == "GetCommit Timeout" {
 				return commit{}, err
@@ -156,7 +161,7 @@ func GetTag(h HKID, namesegment string) (tag, error) {
 			if t.Verify() {
 				return t, nil
 			}
-			return tag{}, errors.New("Tag Verifiy Failed")
+			return tag{}, fmt.Errorf("Tag Verifiy Failed")
 		case err := <-errorch:
 			if err.Error() == "GetTag Timeout" {
 				return tag{}, err
@@ -167,7 +172,8 @@ func GetTag(h HKID, namesegment string) (tag, error) {
 	}
 }
 
-func GetKey(h HKID) (blob, error) {
+//GetKey uses the HKID to lookup the PrivateKey.
+func GetKey(h HKID) (*PrivateKey, error) {
 	datach := make(chan blob, len(keygeters))
 	errorch := make(chan error, len(keygeters))
 	for _, rangekeygeterInstance := range keygeters {
@@ -185,10 +191,12 @@ func GetKey(h HKID) (blob, error) {
 	for {
 		select {
 		case b := <-datach:
-			//if something { //How to Verifiy key?
-			return b, nil
-			//}
-			//return nil, errors.New("Key Verifiy Failed")
+			privkey := PrivteKeyFromBytes(b)
+			if privkey.Hkid().String() == h.String() && privkey.Verify() {
+				return PrivteKeyFromBytes(b), nil
+			} else {
+				log.Println("Key Verifiy Failed")
+			}
 		case err := <-errorch:
 			if err.Error() == "GetKey Timeout" {
 				return nil, err
@@ -199,15 +207,22 @@ func GetKey(h HKID) (blob, error) {
 	}
 }
 
+//release blob to storage
 func PostBlob(b blob) (err error) {
 	return localfileserviceInstance.postBlob(b)
 }
+
+//release commit to storage
 func PostCommit(c commit) (err error) {
 	return localfileserviceInstance.postCommit(c)
 }
+
+//release key to storage
 func PostKey(p *PrivateKey) (err error) {
 	return localfileserviceInstance.postKey(p)
 }
+
+//release tag to storage
 func PostTag(t tag) (err error) {
 	return localfileserviceInstance.postTag(t)
 }

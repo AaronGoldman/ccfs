@@ -1,8 +1,6 @@
 package main
 
 import (
-	//golist "container/list"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -31,9 +29,9 @@ func post(h HID, path string, next_path_segment_type string,
 	}
 	switch next_path_segment_type {
 	default:
-		return nil, errors.New(fmt.Sprintf("Invalid type %T", next_path_segment_type))
+		return nil, fmt.Errorf(fmt.Sprintf("Invalid type %T", next_path_segment_type))
 	case "blob":
-		return nil, errors.New(fmt.Sprintf("only \"\" path can be blob"))
+		return nil, fmt.Errorf(fmt.Sprintf("only \"\" path can be blob"))
 	case "list":
 		posted_hash, err := list_helper(h, next_path_segment, rest_of_path,
 			post_bytes, post_type)
@@ -51,7 +49,7 @@ func post(h HID, path string, next_path_segment_type string,
 
 func list_helper(h HID, next_path_segment string, rest_of_path string,
 	post_bytes Byteser, post_type string) (HID, error) {
-	geterr := errors.New("h in nil")
+	geterr := fmt.Errorf("h in nil")
 	l := list(nil)
 	if h != nil {
 		l, geterr = GetList(h.Bytes())
@@ -191,6 +189,7 @@ func tag_helper(h HID, next_path_segment string, rest_of_path string,
 	return nil, err
 }
 
+//InitRepo inserts a given foreign hkid to the local HKID at the path spesified
 func InsertRepo(h HKID, path string, foreign_hkid HKID) error {
 	_, err := post(
 		h,
@@ -201,6 +200,7 @@ func InsertRepo(h HKID, path string, foreign_hkid HKID) error {
 	return err
 }
 
+//InitDomain inserts a given foreign hkid to the local HKID at the path spesified
 func InsertDomain(h HKID, path string, foreign_hkid HKID) error {
 	_, err := post(
 		h,
@@ -211,12 +211,14 @@ func InsertDomain(h HKID, path string, foreign_hkid HKID) error {
 	return err
 }
 
+//InitRepo creates a new repository and inserts it to the HKID at the path spesified
 func InitRepo(h HKID, path string) error {
 	foreign_hkid := GenHKID()
 	err := InsertRepo(h, path, foreign_hkid)
 	return err
 }
 
+//InitDomain creates a new domain and inserts it to the HKID at the path spesified
 func InitDomain(h HKID, path string) error {
 	foreign_hkid := GenHKID()
 	err := InsertDomain(h, path, foreign_hkid)

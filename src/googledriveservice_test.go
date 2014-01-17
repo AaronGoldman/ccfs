@@ -8,7 +8,7 @@ import (
 
 func TestGoogledriveservice_GetBlob(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
-	//t.Skip("skipping google drive tests")
+	t.Skip("skipping google drive tests")
 	//googledriveservice_setup()
 	hb, err := HcidFromHex("42cc3a4c4a9d9d3ee7de9322b45acb0e5a5c33550d9ad4791df6ae937a869e12")
 	if err != nil {
@@ -22,7 +22,7 @@ func TestGoogledriveservice_GetBlob(t *testing.T) {
 
 func TestGoogledriveservice_GetCommit(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
-	//t.Skip("skipping google drive tests")
+	t.Skip("skipping google drive tests")
 	//googledriveservice_setup()
 	hc, err := HkidFromHex("c09b2765c6fd4b999d47c82f9cdf7f4b659bf7c29487cc0b357b8fc92ac8ad02")
 	c, err := googledriveserviceInstance.getCommit(hc)
@@ -35,7 +35,7 @@ func TestGoogledriveservice_GetCommit(t *testing.T) {
 
 func TestGoogledriveservice_GetTag(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
-	//t.Skip("skipping google drive tests")
+	t.Skip("skipping google drive tests")
 	//googledriveservice_setup()
 	ht, err := HkidFromHex("f65b92b9ce15e167b98fc896f0a365c87c39565642a59ba0060db3b33be6d885")
 	tt, err := googledriveserviceInstance.getTag(ht, "testBlob")
@@ -48,7 +48,7 @@ func TestGoogledriveservice_GetTag(t *testing.T) {
 
 func TestGoogledriveservice_GetKey(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
-	//t.Skip("skipping google drive tests")
+	t.Skip("skipping google drive tests")
 	//googledriveservice_setup()
 	hk, err := HkidFromHex("f65b92b9ce15e167b98fc896f0a365c87c39565642a59ba0060db3b33be6d885")
 	k, err := googledriveserviceInstance.getKey(hk)
