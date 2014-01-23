@@ -1,51 +1,27 @@
 package main
 
 import (
-	"errors"
+	"fmt"
 	"time"
 )
-
-//func timeoutservice_blobgeter(datach chan blob, errorch chan error, h HCID) {
-//	time.Sleep(time.Second)
-//	errorch <- errors.New("GetBlob Timeout")
-//}
-
-//func timeoutservice_taggeter(datach chan tag, errorch chan error, h HKID, namesegment string) {
-//	time.Sleep(time.Second)
-//	errorch <- errors.New("GetTag Timeout")
-//}
-
-//func timeoutservice_commitgeter(datach chan commit, errorch chan error, h HKID) {
-//	time.Sleep(time.Second)
-//	errorch <- errors.New("GetCommit Timeout")
-//}
-
-//func timeoutservice_keygeter(datach chan blob, errorch chan error, h HKID) {
-//	time.Sleep(time.Second)
-//	errorch <- errors.New("GetKey Timeout")
-//}
 
 type timeoutservice struct{}
 
 func (timeoutservice) getBlob(HCID) (blob, error) {
 	time.Sleep(time.Second)
-	return blob{}, errors.New("GetBlob Timeout")
+	return blob{}, fmt.Errorf("GetBlob Timeout")
 }
 func (timeoutservice) getCommit(HKID) (commit, error) {
 	time.Sleep(time.Second)
-	return commit{}, errors.New("GetCommit Timeout")
+	return commit{}, fmt.Errorf("GetCommit Timeout")
 }
 func (timeoutservice) getTag(h HKID, namesegment string) (tag, error) {
 	time.Sleep(time.Second)
-	return tag{}, errors.New("GetTag Timeout")
+	return tag{}, fmt.Errorf("GetTag Timeout")
 }
 func (timeoutservice) getKey(HKID) (blob, error) {
 	time.Sleep(time.Second)
-	return blob{}, errors.New("GetKey Timeout")
+	return blob{}, fmt.Errorf("GetKey Timeout")
 }
 
 var timeoutserviceInstance timeoutservice
-
-func init() {
-	timeoutserviceInstance = timeoutservice{}
-}

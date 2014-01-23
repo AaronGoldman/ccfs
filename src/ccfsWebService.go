@@ -2,20 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 )
 
-type BlobServer struct{}
-
-func (h BlobServer) ServeHTTP(
-	w http.ResponseWriter,
-	r *http.Request) {
-	fmt.Fprint(w, "Hello")
-	log.Println(r)
-}
-
+//BlobServerStart starts a server for the content services
 func BlobServerStart() {
 	http.Handle("/b/", http.StripPrefix("/blob/",
 		http.FileServer(http.Dir("../blobs"))))
@@ -26,6 +17,7 @@ func BlobServerStart() {
 	http.ListenAndServe(":8080", nil)
 }
 
+//RepoServerStart start a server for full CCFS queries HKID/path
 func RepoServerStart() {
 	http.HandleFunc("/r/", func(w http.ResponseWriter, r *http.Request) {
 		parts := strings.SplitN(r.RequestURI[3:], "/", 2)

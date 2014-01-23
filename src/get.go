@@ -1,11 +1,12 @@
 package main
 
 import (
-	"errors"
+	"fmt"
 	"log"
 	"strings"
 )
 
+//Get retreves the
 func Get(objecthash HID, path string) (b blob, err error) {
 	typeString := "commit"
 	err = nil
@@ -33,7 +34,7 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			}
 			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
 			if objecthash == nil && nameSegments[0] != "" {
-				err = errors.New("Blob not found")
+				err = fmt.Errorf("Blob not found")
 			}
 			b = l.Bytes()
 		case "tag":
@@ -46,8 +47,8 @@ func Get(objecthash HID, path string) (b blob, err error) {
 				//log.Printf("\n\t%v\n", err)
 				return nil, err
 			}
-			if !t.Verifiy() {
-				return nil, errors.New("Tag Verifiy Failed")
+			if !t.Verify() {
+				return nil, fmt.Errorf("Tag Verifiy Failed")
 			}
 			typeString = t.TypeString
 			objecthash = HCID(t.HashBytes)
@@ -58,8 +59,8 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			if err != nil {
 				log.Printf("\n\t%v\n", err)
 			}
-			if !c.Verifiy() {
-				return nil, errors.New("Commit Verifiy Failed")
+			if !c.Verify() {
+				return nil, fmt.Errorf("Commit Verifiy Failed")
 			}
 			var l list
 			l, err = GetList(c.listHash)
@@ -68,7 +69,7 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			}
 			typeString, objecthash = l.hash_for_namesegment(nameSegments[0])
 			if objecthash == nil && nameSegments[0] != "" {
-				err = errors.New("Blob not found")
+				err = fmt.Errorf("Blob not found")
 			}
 			//if err != nil {
 			//	log.Printf("%v\n", err)

@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"hash"
 	"log"
-	//"net/url"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+	//"net/url"
 )
 
 type blob []byte
@@ -99,10 +99,6 @@ func GetList(objectHash HCID) (l list, err error) {
 	return
 }
 
-func PostList(l list) (err error) {
-	return PostBlob(blob(l.Bytes()))
-}
-
 type commit struct {
 	listHash  HCID
 	version   int64
@@ -134,11 +130,14 @@ func (c commit) Hkid() []byte {
 	return c.hkid
 }
 
-func (c commit) Verifiy() bool {
-	ObjectHash := genCommitHash(c.listHash, c.version, c.parent, c.hkid)
+func (c commit) Verify() bool {
+	ObjectHash := c.genCommitHash(c.listHash, c.version, c.parent, c.hkid)
 	pubkey := ecdsa.PublicKey(getPiblicKeyForHkid(c.hkid))
 	r, s := elliptic.Unmarshal(pubkey.Curve, c.signature)
 	//log.Println(pubkey, " pubkey\n", ObjectHash, " ObjectHash\n", r, " r\n", s, "s")
+	if r.BitLen() == 0 || s.BitLen() == 0 {
+		return false
+	}
 	return ecdsa.Verify(&pubkey, ObjectHash, r, s)
 }
 
@@ -147,14 +146,15 @@ func (c commit) Update(listHash HCID) commit {
 	c.version = time.Now().UnixNano()
 	//c.hkid = c.hkid
 	c.listHash = listHash
-	c.signature = commitSign(c.listHash, c.version, c.parent, c.hkid)
+	c.signature = c.commitSign(c.listHash, c.version, c.parent, c.hkid)
 	return c
 }
 
-func commitSign(listHash []byte, version int64, parent HCID, hkid []byte) (signature []byte) {
-	ObjectHash := genCommitHash(listHash, version, parent, hkid)
+func (c commit) commitSign(listHash []byte, version int64, parent HCID, hkid []byte) (signature []byte) {
+	ObjectHash := c.genCommitHash(listHash, version, parent, hkid)
 	prikey, err := getPrivateKeyForHkid(hkid)
-	r, s, err := ecdsa.Sign(rand.Reader, prikey, ObjectHash)
+	ecdsaprikey := ecdsa.PrivateKey(*prikey)
+	r, s, err := ecdsa.Sign(rand.Reader, &ecdsaprikey, ObjectHash)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -162,7 +162,7 @@ func commitSign(listHash []byte, version int64, parent HCID, hkid []byte) (signa
 	return
 }
 
-func genCommitHash(listHash []byte, version int64, parent HCID, hkid []byte) (
+func (c commit) genCommitHash(listHash []byte, version int64, parent HCID, hkid []byte) (
 	ObjectHash []byte) {
 	var h hash.Hash = sha256.New()
 	h.Write([]byte(fmt.Sprintf("%s,\n%d,\n%s,\n%s",
@@ -179,16 +179,16 @@ func NewCommit(listHash []byte, hkid HKID) (c commit) {
 	c.version = time.Now().UnixNano()
 	c.hkid = hkid
 	c.parent = sha256.New().Sum(nil)
-	c.signature = commitSign(c.listHash, c.version, c.parent, c.hkid)
+	c.signature = c.commitSign(c.listHash, c.version, c.parent, c.hkid)
 	return
 }
 
-func InitCommit() HKID {
-	privkey := KeyGen()
-	hkid := privkey.Hkid()
-	PostCommit(NewCommit(sha256.New().Sum(nil), hkid))
-	return hkid
-}
+//func InitCommit() HKID {
+//	privkey := KeyGen()
+//	hkid := privkey.Hkid()
+//	PostCommit(NewCommit(sha256.New().Sum(nil), hkid))
+//	return hkid
+//}
 
 func CommitFromBytes(bytes []byte) (c commit, err error) {
 	//build object
@@ -236,11 +236,14 @@ func (t tag) Hkid() HKID {
 	return t.hkid
 }
 
-func (t tag) Verifiy() bool {
+func (t tag) Verify() bool {
 	tPublicKey := ecdsa.PublicKey(getPiblicKeyForHkid(t.hkid))
 	r, s := elliptic.Unmarshal(elliptic.P521(), t.signature)
-	ObjectHash := genTagHash(t.HashBytes, t.TypeString, t.nameSegment,
+	ObjectHash := t.genTagHash(t.HashBytes, t.TypeString, t.nameSegment,
 		t.version, t.hkid)
+	if r.BitLen() == 0 || s.BitLen() == 0 {
+		return false
+	}
 	return ecdsa.Verify(&tPublicKey, ObjectHash, r, s)
 }
 
@@ -254,13 +257,14 @@ func (t tag) Update(hashBytes HCID) tag {
 	if err != nil {
 		log.Panic("You don't seem to own this Domain")
 	}
-	ObjectHash := genTagHash(
+	ObjectHash := t.genTagHash(
 		t.HashBytes.Bytes(),
 		t.TypeString,
 		t.nameSegment,
 		t.version,
 		t.hkid)
-	r, s, _ := ecdsa.Sign(rand.Reader, prikey, ObjectHash)
+	ecdsaprikey := ecdsa.PrivateKey(*prikey)
+	r, s, _ := ecdsa.Sign(rand.Reader, &ecdsaprikey, ObjectHash)
 	t.signature = elliptic.Marshal(elliptic.P521(), r, s)
 	return t
 }
@@ -269,8 +273,9 @@ func NewTag(HashBytes HID, TypeString string,
 	nameSegment string, hkid HKID) tag {
 	prikey, _ := getPrivateKeyForHkid(hkid)
 	version := time.Now().UnixNano()
-	ObjectHash := genTagHash(HashBytes.Bytes(), TypeString, nameSegment, version, hkid)
-	r, s, _ := ecdsa.Sign(rand.Reader, prikey, ObjectHash)
+	ObjectHash := tag{}.genTagHash(HashBytes.Bytes(), TypeString, nameSegment, version, hkid)
+	ecdsaprikey := ecdsa.PrivateKey(*prikey)
+	r, s, _ := ecdsa.Sign(rand.Reader, &ecdsaprikey, ObjectHash)
 	signature := elliptic.Marshal(elliptic.P521(), r, s)
 	t := tag{HashBytes.Bytes(),
 		TypeString,
@@ -281,7 +286,7 @@ func NewTag(HashBytes HID, TypeString string,
 	return t
 }
 
-func genTagHash(HashBytes []byte, TypeString string, nameSegment string,
+func (t tag) genTagHash(HashBytes []byte, TypeString string, nameSegment string,
 	version int64, hkid []byte) []byte {
 	var h hash.Hash = sha256.New()
 	h.Write([]byte(fmt.Sprintf("%s,\n%s,\n%s,\n%d,\n%s",
