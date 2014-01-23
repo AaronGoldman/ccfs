@@ -13,13 +13,11 @@ func main() {
 	takeActions(action, path)
 
 	if flagged == false {
-
 		go BlobServerStart()
 		go RepoServerStart()
 		//hashfindwalk()
 		in := bufio.NewReader(os.Stdin)
 		_, _ = in.ReadString('\n')
 	}
-
 	return
 }

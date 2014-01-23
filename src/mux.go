@@ -51,24 +51,28 @@ var blobgeters = []blobgeter{
 	localfileserviceInstance,
 	//googledriveserviceInstance,
 	//appsscriptserviceInstance,
+	//multicastserviceInstance,
 }
 var commitgeters = []commitgeter{
 	timeoutserviceInstance,
 	localfileserviceInstance,
 	//googledriveserviceInstance,
 	//appsscriptserviceInstance,
+	//multicastserviceInstance,
 }
 var taggeters = []taggeter{
 	timeoutserviceInstance,
 	localfileserviceInstance,
 	//googledriveserviceInstance,
 	//appsscriptserviceInstance,
+	//multicastserviceInstance,
 }
 var keygeters = []keygeter{
 	timeoutserviceInstance,
 	localfileserviceInstance,
 	//googledriveserviceInstance,
 	//appsscriptserviceInstance,
+	//multicastserviceInstance,
 }
 
 //GetBlob looks up blobs by their HCIDs.
