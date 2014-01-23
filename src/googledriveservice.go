@@ -243,7 +243,7 @@ func googledriveserviceFactory() googledriveservice {
 
 var googledriveserviceInstance googledriveservice
 
-func init() {
+func dont_init() {
 	googledriveserviceInstance = googledriveserviceFactory()
 	log.Printf(
 		"\n\tblobsFolderId: %v\n\t"+
