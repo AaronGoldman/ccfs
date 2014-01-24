@@ -7,6 +7,7 @@ import (
 
 //checks if I have the blob, it returns yes or no
 func blobAvailable(hash HCID) bool {
+	localfileserviceInstance.getBlob(hash)
 	return false
 }
 
@@ -16,65 +17,71 @@ func keyAvailable(hash HKID) bool {
 }
 
 //checks if I have the tag, it returns yes or no and the latest version
-func tagAvailable(hash HKID, name string) (bool, int) {
+func tagAvailable(hash HKID, name string) (bool, int64) {
 	return false, 0
 }
 
 //checks if I have the commit, it returns yes or no and the latest version
-func commitAvailable(hash HKID) (bool, int) {
+func commitAvailable(hash HKID) (bool, int64) {
 	return false, 0
 }
-func parseMessage(message string) {
+func parseMessage(message string) (HKID, HCID, string, string) {
 	var Message map[string]interface{}
-	//dec :=json.NewDecoder(strings.NewReader(message))
+
 	err := json.Unmarshal([]byte(message), &Message)
 	if err != nil {
 		log.Printf("Error %s\n", err)
 	}
-	log.Println(Message["type"], Message["hkid"], Message["hcid"], Message["namesegment"])
-	log.Printf("Derp %s", Message)
+	hcid, err := HcidFromHex(Message["hcid"].(string))
+	if err != nil {
+		log.Printf("Error with hex to string %s", err)
+	}
+	hkid, err := HkidFromHex(Message["hkid"].(string))
+	if err != nil {
+		log.Printf("Error with hex to string %s", err)
+	}
+	typeString := Message["type"].(string)
+	nameSegment := Message["namesegment"].(string)
+	return hkid, hcid, typeString, nameSegment
+}
 
-	if Message["type"] == "blob" {
-		if Message["hcid"] == nil {
+func responseAvaiable(hkid HKID, hcid HCID, typeString string, nameSegment string) (available bool, version int64) {
+
+	if typeString == "blob" {
+		if hcid == nil {
 			log.Printf("Malformed json")
 			return
 		}
-		h, err := HcidFromHex(Message["hcid"].(string))
-		if err != nil {
-			log.Printf("Error with hex to string %s", err)
-		}
-		localfileserviceInstance.getBlob(h)
-		//Might wanna validate date laterrrr
-	} else if Message["type"] == "commit" {
-		if Message["hkid"] == nil {
+		available = blobAvailable(hcid)
+		version = 0
+		return
+
+		//Might wanna validate laterrrr
+	} else if typeString == "commit" {
+		if hkid == nil {
 			log.Printf("Malformed json")
 			return
 		}
-		h, err := HkidFromHex(Message["hkid"].(string))
-		if err != nil {
-			log.Printf("Error with hex to string %s", err)
-		}
-		localfileserviceInstance.getCommit(h)
-	} else if Message["type"] == "tag" {
-		if Message["hkid"] == nil || Message["namesegment"] == nil {
+		available, version = commitAvailable(hkid)
+		return
+		//localfileserviceInstance.getCommit(h)
+	} else if typeString == "tag" {
+		if hkid == nil || nameSegment == "" {
 			log.Printf("Malformed json")
 			return
 		}
-		h, err := HkidFromHex(Message["hkid"].(string))
-		if err != nil {
-			log.Printf("Error with hex to string %s", err)
-		}
-		localfileserviceInstance.getTag(h, Message["namesegment"].(string))
-	} else if Message["type"] == "key" {
-		if Message["hkid"] == nil {
+		available, version = tagAvailable(hkid, nameSegment)
+		return
+		//localfileserviceInstance.getTag(h, nameSegment.(string))
+	} else if typeString == "key" {
+		if hkid == nil {
 			log.Printf("Malformed json")
 			return
 		}
-		h, err := HkidFromHex(Message["hkid"].(string))
-		if err != nil {
-			log.Printf("Error with hex to string %s", err)
-		}
-		localfileserviceInstance.getKey(h)
+		available = keyAvailable(hkid)
+		version = 0
+		return
+		//localfileserviceInstance.getKey(h)
 	} else {
 		log.Printf("Malformed json")
 		return
