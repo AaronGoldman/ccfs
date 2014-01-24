@@ -62,7 +62,7 @@ func startFSintegration() {
 		log.Printf("Exit-kill program")
 		os.Exit(0)
 	}() //end func
-	fs.Serve(c,  FS_from_HKID_string("c09b2765c6fd4b999d47c82f9cdf7f4b659bf7c29487cc0b357b8fc92ac8ad02" ) )
+	fs.Serve(c, FS_from_HKID_string("c09b2765c6fd4b999d47c82f9cdf7f4b659bf7c29487cc0b357b8fc92ac8ad02"))
 
 }
 
@@ -83,24 +83,38 @@ func FS_from_HKID_string(s string) FS {
 	return FS{h}
 }
 
-func (fs_obj FS) Root() (fs.Node, fuse.Error) {
+func (fs_obj FS) Root() (fs.Node, fuse.Error) { //returns a directory
 	log.Println("Root func")
+	_, err := GetKey(fs_obj.hkid)
+	perm := os.FileMode(0555)
+	if err != nil {
+		perm = 0777
+	}
+
 	return Dir{path: "/",
-		 trunc: fs_obj.hkid,
-		 branch: fs_obj.hkid,
-			}, nil
+		trunc:        fs_obj.hkid,
+		branch:       fs_obj.hkid,
+		permission:   perm,
+		content_type: "commit",
+		hash:         fs_obj.hkid,
+	}, nil
+
 }
 
 // Dir implements both Node and Handle for the root directory.
 type Dir struct {
-	path string
-	trunc HKID
-        branch HKID
+	path         string
+	trunc        HKID
+	branch       HKID
+	permission   os.FileMode
+	content_type string
+	hash         HID
+	//add type field ?
 }
 
-func (Dir) Attr() fuse.Attr {
+func (d Dir) Attr() fuse.Attr {
 	log.Println("Attr func")
-	return fuse.Attr{Inode: 1, Mode: os.ModeDir | 0555}
+	return fuse.Attr{Inode: 1, Mode: os.ModeDir | d.permission}
 }
 
 func (Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
@@ -115,8 +129,36 @@ var dirDirs = []fuse.Dirent{
 	{Inode: 2, Name: "hello", Type: fuse.DT_File},
 }
 
-func (Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
+func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	log.Println("ReadDir func")
+	var l list
+	var err error
+	if d.content_type == "tag" {
+		return []fuse.Dirent{}, nil
+	} else if d.content_type == "commit" {
+		c, err := GetCommit(d.hash.(HKID))
+		if err != nil {
+			return nil, nil
+		}
+		l, err = GetList(c.listHash)
+		if err == nil {
+			return nil, nil
+		}
+
+	} else if d.content_type == "list" {
+		l, err = GetList(d.hash.(HCID))
+		if err == nil {
+			return nil, nil
+		}
+	} else {
+		return nil, nil
+	}
+	for name, entry := range l {
+		if entry.TypeString == "blob" {
+			append_to_list := fuse.Dirent{Inode: 2, Name: name, Type: fuse.DT_File}
+		} // we need to append this to list + work on the next if(commit/list/tag? )
+		// Type for the other one will be fuse.DT_DIR
+	} // end if range
 	return dirDirs, nil
 }
 
