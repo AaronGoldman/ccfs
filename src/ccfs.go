@@ -15,6 +15,7 @@ func main() {
 
 		go BlobServerStart()
 		go RepoServerStart()
+		go startFSintegration()
 		//hashfindwalk()
 		in := bufio.NewReader(os.Stdin)
 		_, _ = in.ReadString('\n')
