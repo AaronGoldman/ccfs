@@ -2,20 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 )
 
-type BlobServer struct{}
-
-func (h BlobServer) ServeHTTP(
-	w http.ResponseWriter,
-	r *http.Request) {
-	fmt.Fprint(w, "Hello")
-	log.Println(r)
-}
-
+//BlobServerStart starts a server for the content services
 func BlobServerStart() {
 	http.Handle("/b/", http.StripPrefix("/blob/",
 		http.FileServer(http.Dir("../blobs"))))
@@ -26,6 +17,7 @@ func BlobServerStart() {
 	http.ListenAndServe(":8080", nil)
 }
 
+//RepoServerStart start a server for full CCFS queries HKID/path
 func RepoServerStart() {
 	http.HandleFunc("/r/", func(w http.ResponseWriter, r *http.Request) {
 		parts := strings.SplitN(r.RequestURI[3:], "/", 2)
@@ -52,4 +44,33 @@ func RepoServerStart() {
 		w.Write([]byte(fmt.Sprintf("Invalid HKID\nerr: %v", err)))
 		return
 	})
+}
+
+func composeQuery(typestring string, hash HKID, namesegment string) (message string) {
+	message = fmt.Sprintf("%s,%s", typestring, hash.String())
+	if namesegment != "" {
+		message = fmt.Sprintf("%s,%s", message, namesegment)
+	}
+	return message
+
+}
+
+func parseQuery(message string) (typestring string, hash HKID, namesegment string) {
+	arr_message := strings.SplitN(message, ",", 3)
+	if len(arr_message) < 2 {
+		panic("error: malformed parseQuery")
+	}
+	typestring = arr_message[0]
+
+	hash, err := HkidFromHex(arr_message[1])
+	if err != nil {
+		panic("error: malformed hexadecimal")
+	}
+	if len(arr_message) > 2 {
+		namesegment = arr_message[2]
+	} else {
+		namesegment = ""
+	}
+	fmt.Println("Error")
+	return typestring, hash, namesegment
 }

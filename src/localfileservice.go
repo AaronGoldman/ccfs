@@ -1,9 +1,6 @@
 package main
 
 import (
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -11,9 +8,42 @@ import (
 	"path/filepath"
 )
 
-func localfileservice_GetBlob(hash HCID) (b blob, err error) {
+//localfileservice is an
+type localfileservice struct{}
+
+func (lfs localfileservice) postBlob(b blob) (err error) {
+	filepath := fmt.Sprintf("../blobs/%s", b.Hash().Hex())
+	err = os.MkdirAll("../blobs", 0764)
+	err = ioutil.WriteFile(filepath, b.Bytes(), 0664)
+	return
+}
+func (lfs localfileservice) postTag(t tag) (err error) {
+	filepath := fmt.Sprintf("../tags/%s/%s/%d", t.hkid.Hex(),
+		t.nameSegment, t.version)
+	dirpath := fmt.Sprintf("../tags/%s/%s", t.hkid.Hex(),
+		t.nameSegment)
+	err = os.MkdirAll(dirpath, 0764)
+	err = ioutil.WriteFile(filepath, t.Bytes(), 0664)
+	return
+}
+func (lfs localfileservice) postCommit(c commit) (err error) {
+	filepath := fmt.Sprintf("../commits/%s/%d", c.hkid.Hex(),
+		c.version)
+	dirpath := fmt.Sprintf("../commits/%s", c.hkid.Hex())
+	err = os.MkdirAll(dirpath, 0764)
+	err = ioutil.WriteFile(filepath, c.Bytes(), 0664)
+	return
+}
+func (lfs localfileservice) postKey(p *PrivateKey) (err error) {
+	err = os.MkdirAll("../keys", 0700)
+	filepath := fmt.Sprintf("../keys/%s", p.Hkid().Hex())
+	err = ioutil.WriteFile(filepath, PrivateKey(*p).Bytes(), 0600)
+	return
+}
+
+func (lfs localfileservice) getBlob(h HCID) (b blob, err error) {
 	//ToDo Validate input
-	filepath := fmt.Sprintf("../blobs/%s", hash.Hex())
+	filepath := fmt.Sprintf("../blobs/%s", h.Hex())
 	data, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		log.Printf("\n\t%v\n", err)
@@ -21,64 +51,33 @@ func localfileservice_GetBlob(hash HCID) (b blob, err error) {
 	//build object
 	b = blob(data)
 	//log.Printf("\n\t%v\n", string(b))
-	return
+	return b, err
 }
-
-func PostBlob(b blob) (err error) {
-	filepath := fmt.Sprintf("../blobs/%s", b.Hash().Hex())
-	err = os.MkdirAll("../blobs", 0764)
-	err = ioutil.WriteFile(filepath, b.Bytes(), 0664)
-	return
-}
-
-func localfileservice_GetTag(hkid HKID, nameSegment string) (t Tag, err error) {
-	//ToDo Validate input
-	matches, err := filepath.Glob(fmt.Sprintf("../tags/%s/%s/*",
-		hex.EncodeToString(hkid), nameSegment))
-	filepath := latestVersion(matches)
-	data, err := ioutil.ReadFile(filepath)
-	if err == nil {
-		t, _ = TagFromBytes(data)
-	}
-	return
-}
-
-func PostTag(t Tag) (err error) {
-	filepath := fmt.Sprintf("../tags/%s/%s/%d", hex.EncodeToString(t.hkid),
-		t.nameSegment, t.version)
-	dirpath := fmt.Sprintf("../tags/%s/%s", hex.EncodeToString(t.hkid),
-		t.nameSegment)
-	err = os.MkdirAll(dirpath, 0764)
-	err = ioutil.WriteFile(filepath, t.Bytes(), 0664)
-	return
-}
-
-func localfileservice_GetCommit(hkid HKID) (c commit, err error) {
+func (lfs localfileservice) getCommit(h HKID) (c commit, err error) {
 	//Validate input
-	matches, err := filepath.Glob(fmt.Sprintf("../commits/%s/*",
-		hex.EncodeToString(hkid)))
-	filepath := latestVersion(matches)
+	matches, err := filepath.Glob(fmt.Sprintf("../commits/%s/*", h.Hex()))
+	filepath := lfs.latestVersion(matches)
 
 	data, err := ioutil.ReadFile(filepath)
 	//log.Printf("%v\n", err)
 	if err == nil {
 		c, _ = CommitFromBytes(data)
 	}
-
-	return
+	return c, err
 }
-
-func PostCommit(c commit) (err error) {
-	filepath := fmt.Sprintf("../commits/%s/%d", hex.EncodeToString(c.hkid),
-		c.version)
-	dirpath := fmt.Sprintf("../commits/%s", hex.EncodeToString(c.hkid))
-	err = os.MkdirAll(dirpath, 0764)
-	err = ioutil.WriteFile(filepath, c.Bytes(), 0664)
-	return
+func (lfs localfileservice) getTag(h HKID, namesegment string) (t tag, err error) {
+	//ToDo Validate input
+	matches, err := filepath.Glob(fmt.Sprintf("../tags/%s/%s/*",
+		h.Hex(), namesegment))
+	filepath := lfs.latestVersion(matches)
+	data, err := ioutil.ReadFile(filepath)
+	if err == nil {
+		t, _ = TagFromBytes(data)
+	}
+	return t, err
 }
-
-func localfileservice_GetKey(hkid []byte) (data blob, err error) {
-	filepath := fmt.Sprintf("../keys/%s", hex.EncodeToString(hkid))
+func (lfs localfileservice) getKey(h HKID) (blob, error) {
+	filepath := fmt.Sprintf("../keys/%s", h.Hex())
 	filedata, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		log.Println(err)
@@ -86,16 +85,7 @@ func localfileservice_GetKey(hkid []byte) (data blob, err error) {
 	return filedata, err
 }
 
-func PostKey(p *ecdsa.PrivateKey) (err error) {
-	hkid := blob(elliptic.Marshal(p.PublicKey.Curve,
-		p.PublicKey.X, p.PublicKey.Y)).Hash()
-	err = os.MkdirAll("../keys", 0700)
-	filepath := fmt.Sprintf("../keys/%s", hex.EncodeToString(hkid))
-	err = ioutil.WriteFile(filepath, PrivateKey(*p).Bytes(), 0600)
-	return
-}
-
-func latestVersion(matches []string) string {
+func (lfs localfileservice) latestVersion(matches []string) string {
 	match := ""
 	for _, element := range matches {
 		if match < element {
@@ -104,3 +94,5 @@ func latestVersion(matches []string) string {
 	}
 	return match
 }
+
+var localfileserviceInstance localfileservice = localfileservice{}

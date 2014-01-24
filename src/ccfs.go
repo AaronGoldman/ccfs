@@ -1,3 +1,4 @@
+//CCFS a Cryptographically Curated File System binds a cryptographic chain of trust into content names.
 package main
 
 import (
@@ -12,7 +13,6 @@ func main() {
 	takeActions(action, path)
 
 	if flagged == false {
-
 		go BlobServerStart()
 		go RepoServerStart()
 		go startFSintegration()
@@ -20,6 +20,5 @@ func main() {
 		in := bufio.NewReader(os.Stdin)
 		_, _ = in.ReadString('\n')
 	}
-
 	return
 }

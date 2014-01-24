@@ -9,9 +9,16 @@ import (
 )
 
 func parseFlags() (*string, *string, bool) {
-	var action = flag.String("action", "",
-		"createDomain, createRepository, insertDomain, insertRepository")
-	var path = flag.String("newPath", "/", "path where inserting happens")
+	var action = flag.String(
+		"action",
+		"",
+		"createDomain, createRepository, insertDomain, insertRepository",
+	)
+	var path = flag.String(
+		"newPath",
+		"/",
+		"path where inserting happens",
+	)
 	flag.Parse()
 	flagged := true
 	if flag.NFlag() == 0 {
@@ -21,7 +28,6 @@ func parseFlags() (*string, *string, bool) {
 }
 
 func fileSystemPath2CollectionPath(fileSystemPath *string) (h HKID, collectionPath string) {
-
 	return HKID{}, ""
 }
 

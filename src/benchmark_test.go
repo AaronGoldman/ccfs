@@ -93,14 +93,6 @@ func BenchmarkLowLevelPath(b *testing.B) {
 			log.Println(err)
 		}
 
-		//print
-		//log.Printf("%s\n%s\n%s\n%s\n",
-		//	hex.EncodeToString(testBlob.Hash()),
-		//	hex.EncodeToString(testTagPointingToTestBlob.Hash()),
-		//	hex.EncodeToString(testListPiontingToTestTag.Hash()),
-		//	hex.EncodeToString(testCommitPointingToTestList.Hash()))
-		//commit -> list -> tag -> blob
-
 		//get commit
 		hkid, _ := hex.DecodeString("1312ac161875b270da2ae4e1471ba94a" +
 			"9883419250caa4c2f1fd80a91b37907e")
@@ -110,7 +102,7 @@ func BenchmarkLowLevelPath(b *testing.B) {
 		}
 
 		//log.Printf("authentic commit:%v\n", testcommit.Verifiy())
-		if !testcommit.Verifiy() {
+		if !testcommit.Verify() {
 			b.FailNow()
 		}
 		//get list
@@ -129,7 +121,7 @@ func BenchmarkLowLevelPath(b *testing.B) {
 		_, testTagHash := testlist.hash_for_namesegment("testTag")
 		testTag, err := GetTag(testTagHash.Bytes(), "testBlob")
 		//log.Printf("authentic tag:%v\n", testTag.Verifiy())
-		if !testTag.Verifiy() {
+		if !testTag.Verify() {
 			b.FailNow()
 		}
 		//get blob
@@ -160,6 +152,7 @@ func BenchmarkHighLevelPath(b *testing.B) {
 	}
 }
 
+//BenchmarkBlobFound times the retreval of a blob that is found
 func BenchmarkBlobFound(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -170,6 +163,7 @@ func BenchmarkBlobFound(b *testing.B) {
 	}
 }
 
+//BenchmarkBlobNotFound times the retreval of a blob that is not found
 func BenchmarkBlobNotFound(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -181,6 +175,7 @@ func BenchmarkBlobNotFound(b *testing.B) {
 	}
 }
 
+//BenchmarkBlobInsert times the posting of a blob to a repository.
 func BenchmarkBlobInsert(b *testing.B) {
 	log.SetFlags(log.Lshortfile)
 	b.ResetTimer()

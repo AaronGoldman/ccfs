@@ -2,9 +2,7 @@ package main
 
 import (
 	"bytes"
-	"crypto/ecdsa"
 	"crypto/elliptic"
-	"crypto/rand"
 	"encoding/hex"
 	"log"
 	"testing"
@@ -247,14 +245,10 @@ func TestGetTag(t *testing.T) {
 func TestKeyGen(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
 	t.SkipNow()
-	c := elliptic.P521()
-	priv, err := ecdsa.GenerateKey(c, rand.Reader)
-	if err != nil {
-		t.Errorf("Error %v", err)
-	}
+	priv := KeyGen()
 	log.Printf("TestKeyGen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X,
 		priv.PublicKey.Y, priv.D)
-	err = PostKey(priv)
+	err := PostKey(priv)
 	if err != nil {
 		t.Errorf("Error %v", err)
 	}
