@@ -8,8 +8,10 @@ import (
 )
 
 type multicastservice struct {
-	conn   *net.UDPConn
-	mcaddr *net.UDPAddr
+	conn            *net.UDPConn
+	mcaddr          *net.UDPAddr
+	responsechannel chan response
+	waiting         map[hid]chan response
 }
 
 func (m multicastservice) getBlob(h HCID) (b blob, err error) {
@@ -35,6 +37,8 @@ func (m multicastservice) getTag(h HKID, namesegment string) (t tag, err error) 
 func (m multicastservice) getKey(h HKID) (b blob, err error) {
 	message := fmt.Sprintf("{\"type\":\"key\",\"hkid\": \"%s\"}", h.Hex())
 	m.sendmessage(message)
+	//add channel to waiting map
+	//wait on channel
 	return b, err
 }
 
@@ -68,6 +72,9 @@ func (m multicastservice) sendmessage(message string) (err error) {
 
 func (m multicastservice) receivemessage(message string) (err error) {
 	log.Printf("Received message, %s,\n", message)
+	//parse message
+	//if in waiting map send on channel
+
 	return err
 }
 
@@ -81,16 +88,43 @@ func multicastservicefactory() (m multicastservice) {
 	if err != nil {
 		return multicastservice{}
 	}
-	return multicastservice{conn, mcaddr}
 
+	responsechannel := make(chan response)
+
+	return multicastservice{conn, mcaddr}
 }
 
 func init() {
 	multicastserviceInstance := multicastservicefactory()
 	multicastserviceInstance.listenmessage()
-	multicastserviceInstance.getBlob(HCID{})
-	multicastserviceInstance.getCommit(HKID{})
-	multicastserviceInstance.getTag(HKID{}, "Hey")
-	multicastserviceInstance.getKey(HKID{})
 
+}
+
+type response struct {
+	typestring  string
+	hkid        HKID
+	hcid        HCID
+	namesegment string
+	url         string
+}
+
+type responseblob struct {
+	hcid HCID
+	url  string
+}
+
+type responsecommit struct {
+	hkid HKID
+	url  string
+}
+
+type responsetag struct {
+	hkid        HKID
+	namesegment string
+	url         string
+}
+
+type responsekey struct {
+	hkid HKID
+	url  string
 }
