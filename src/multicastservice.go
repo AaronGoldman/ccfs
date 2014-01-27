@@ -15,27 +15,27 @@ type multicastservice struct {
 }
 
 func (m multicastservice) getBlob(h HCID) (b blob, err error) {
-	message := fmt.Sprintf("{\"type\":\"blob\", \"HCID\": \"%s\"}", h.Hex())
+	message := fmt.Sprintf("{\"type\":\"blob\", \"hcid\": \"%s\"}", h.Hex())
 	m.sendmessage(message)
 	return b, err
 
 }
 
 func (m multicastservice) getCommit(h HKID) (c commit, err error) {
-	message := fmt.Sprintf("{\"type\":\"commit\",\"HKID\": \"%s\"}", h.Hex())
+	message := fmt.Sprintf("{\"type\":\"commit\",\"hkid\": \"%s\"}", h.Hex())
 	m.sendmessage(message)
 	return c, err
 }
 
 func (m multicastservice) getTag(h HKID, namesegment string) (t tag, err error) {
-	message := fmt.Sprintf("{\"type\":\"tag\", \"HKID\": \"%s\", \"namesegment\": \"%s\"}", h.Hex(), namesegment)
+	message := fmt.Sprintf("{\"type\":\"tag\", \"hkid\": \"%s\", \"namesegment\": \"%s\"}", h.Hex(), namesegment)
 	m.sendmessage(message)
 	return t, err
 
 }
 
 func (m multicastservice) getKey(h HKID) (b blob, err error) {
-	message := fmt.Sprintf("{\"type\":\"key\",\"HKID\": \"%s\"}", h.Hex())
+	message := fmt.Sprintf("{\"type\":\"key\",\"hkid\": \"%s\"}", h.Hex())
 	m.sendmessage(message)
 	//add channel to waiting map
 	//wait on channel

@@ -238,13 +238,7 @@ func googledriveserviceFactory() googledriveservice {
 	gds.commitsFolderId, err = gds.getChildWithTitle(ccfsFolderId, "commits")
 	gds.tagsFolderId, err = gds.getChildWithTitle(ccfsFolderId, "tags")
 	gds.keysFolderId, err = gds.getChildWithTitle(ccfsFolderId, "keys")
-	return gds
-}
 
-var googledriveserviceInstance googledriveservice
-
-func dont_init() {
-	googledriveserviceInstance = googledriveserviceFactory()
 	log.Printf(
 		"\n\tblobsFolderId: %v"+
 			"\n\tcommitsFolderId: %v"+
@@ -252,11 +246,19 @@ func dont_init() {
 			"\n\tkeysFolderId: %v"+
 			"\n\tdriveService: %v"+
 			"\n\ttransport: %v\n",
-		googledriveserviceInstance.blobsFolderId,
-		googledriveserviceInstance.commitsFolderId,
-		googledriveserviceInstance.tagsFolderId,
-		googledriveserviceInstance.keysFolderId,
-		googledriveserviceInstance.driveService,
-		googledriveserviceInstance.transport,
+		gds.blobsFolderId,
+		gds.commitsFolderId,
+		gds.tagsFolderId,
+		gds.keysFolderId,
+		gds.driveService,
+		gds.transport,
 	)
+
+	return gds
+}
+
+var googledriveserviceInstance googledriveservice
+
+func init() {
+	//googledriveserviceInstance = googledriveserviceFactory()
 }

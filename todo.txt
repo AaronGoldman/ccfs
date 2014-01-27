@@ -3,15 +3,21 @@
  |_| lookup
   |_| lookup service
    |_| object discovery (Priya)
-   |_| object retrieval (Holly)
+    |_| send messages
+    |_| listen for messages
+    |_| route messages to the waiting multicastservice contentgeters
+   |_| object retrieval, integration testing (Holly)
+    |_| parse received messages
+    |_| respond to received messages with URL of Content Object 
+    |_| test mount from command line
   |_| Interface
    |_| virtual file system (Mallika)
-   |_| collection management, explorer integration (Thomas)
-  |_| fix tests for ragid lists
+    |_| directory
+    |_| file
+    |_| lookup
+   |_| command line interface, nautilus integration (Thomas)
+    |_| mount flag take in HKID in Hex
+    |_| newPath re-name path name at witch to mount new collection
+    |_| hkid flag take in HKID in Hex
+  |_| fix tests for ragged lists
   |_| on verify fail log/cleanup
-
- _
-|_|things to wrap
-	|X| local fs
-	|_| mdns
-	|X| Drive
