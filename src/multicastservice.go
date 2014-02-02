@@ -7,34 +7,35 @@ import (
 	"net"
 )
 
+//multicastservice is a contentservice that retreves data from the local network
 type multicastservice struct {
 	conn            *net.UDPConn
 	mcaddr          *net.UDPAddr
 	responsechannel chan response
-	waiting         map[hid]chan response
+	//waiting         map[hid]chan response
 }
 
-func (m multicastservice) getBlob(h HCID) (b blob, err error) {
+func (m multicastservice) GetBlob(h HCID) (b blob, err error) {
 	message := fmt.Sprintf("{\"type\":\"blob\", \"hcid\": \"%s\"}", h.Hex())
 	m.sendmessage(message)
 	return b, err
 
 }
 
-func (m multicastservice) getCommit(h HKID) (c commit, err error) {
+func (m multicastservice) GetCommit(h HKID) (c commit, err error) {
 	message := fmt.Sprintf("{\"type\":\"commit\",\"hkid\": \"%s\"}", h.Hex())
 	m.sendmessage(message)
 	return c, err
 }
 
-func (m multicastservice) getTag(h HKID, namesegment string) (t tag, err error) {
+func (m multicastservice) GetTag(h HKID, namesegment string) (t tag, err error) {
 	message := fmt.Sprintf("{\"type\":\"tag\", \"hkid\": \"%s\", \"namesegment\": \"%s\"}", h.Hex(), namesegment)
 	m.sendmessage(message)
 	return t, err
 
 }
 
-func (m multicastservice) getKey(h HKID) (b blob, err error) {
+func (m multicastservice) GetKey(h HKID) (b blob, err error) {
 	message := fmt.Sprintf("{\"type\":\"key\",\"hkid\": \"%s\"}", h.Hex())
 	m.sendmessage(message)
 	//add channel to waiting map
@@ -90,8 +91,9 @@ func multicastservicefactory() (m multicastservice) {
 	}
 
 	responsechannel := make(chan response)
+	_ = responsechannel
 
-	return multicastservice{conn, mcaddr}
+	return multicastservice{conn: conn, mcaddr: mcaddr}
 }
 
 func init() {

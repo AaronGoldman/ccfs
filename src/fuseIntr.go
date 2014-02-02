@@ -1,40 +1,21 @@
+// Modified from Go Authors
 // Copyright 2012 The Go Authors.  All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-
-// Hellofs implements a simple "hello world" file system.
 
 package main
 
 import (
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
-	"flag"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
 )
 
-var Usage = func() {
-	fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
-	fmt.Fprintf(os.Stderr, "  %s MOUNTPOINT\n", os.Args[0])
-	flag.PrintDefaults()
-}
-
 func startFSintegration() {
 	log.SetFlags(log.Lshortfile) //gives filename for every log statement
-	/*	log.Println("In main")
-		flag.Usage = Usage
-		flag.Parse()
-
-		if flag.NArg() != 1 {
-			Usage()
-			os.Exit(2)
-		}
-		mountpoint := flag.Arg(0)
-	*/
 	mountpoint := "../mountpoint"
 	err := os.MkdirAll(mountpoint, 0777)
 	if err != nil {
@@ -156,6 +137,7 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	for name, entry := range l {
 		if entry.TypeString == "blob" {
 			append_to_list := fuse.Dirent{Inode: 2, Name: name, Type: fuse.DT_File}
+			_ = append_to_list
 		} // we need to append this to list + work on the next if(commit/list/tag? )
 		// Type for the other one will be fuse.DT_DIR
 	} // end if range

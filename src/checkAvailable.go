@@ -7,7 +7,7 @@ import (
 
 //checks if I have the blob, it returns yes or no
 func blobAvailable(hash HCID) bool {
-	localfileserviceInstance.getBlob(hash)
+	localfileserviceInstance.GetBlob(hash)
 	return false
 }
 
