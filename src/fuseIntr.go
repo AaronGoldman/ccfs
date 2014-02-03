@@ -156,6 +156,7 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	for name, entry := range l {
 		if entry.TypeString == "blob" {
 			append_to_list := fuse.Dirent{Inode: 2, Name: name, Type: fuse.DT_File}
+			_ = append_to_list
 		} // we need to append this to list + work on the next if(commit/list/tag? )
 		// Type for the other one will be fuse.DT_DIR
 	} // end if range
