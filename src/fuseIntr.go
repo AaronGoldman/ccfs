@@ -1,40 +1,21 @@
+// Modified from Go Authors
 // Copyright 2012 The Go Authors.  All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-
-// Hellofs implements a simple "hello world" file system.
 
 package main
 
 import (
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
-	"flag"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
 )
 
-var Usage = func() {
-	fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
-	fmt.Fprintf(os.Stderr, "  %s MOUNTPOINT\n", os.Args[0])
-	flag.PrintDefaults()
-}
-
 func startFSintegration() {
 	log.SetFlags(log.Lshortfile) //gives filename for every log statement
-	/*	log.Println("In main")
-		flag.Usage = Usage
-		flag.Parse()
-
-		if flag.NArg() != 1 {
-			Usage()
-			os.Exit(2)
-		}
-		mountpoint := flag.Arg(0)
-	*/
 	mountpoint := "../mountpoint"
 	err := os.MkdirAll(mountpoint, 0777)
 	if err != nil {

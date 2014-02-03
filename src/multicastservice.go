@@ -22,7 +22,7 @@ type multicastservice struct {
 	waitingforkey    map[string]chan blob
 }
 
-func (m multicastservice) getBlob(h HCID) (b blob, err error) {
+func (m multicastservice) GetBlob(h HCID) (b blob, err error) {
 	message := fmt.Sprintf("{\"type\":\"blob\", \"hcid\": \"%s\"}", h.Hex())
 	m.sendmessage(message)
 	blobchannel := make(chan blob)
@@ -32,7 +32,7 @@ func (m multicastservice) getBlob(h HCID) (b blob, err error) {
 
 }
 
-func (m multicastservice) getCommit(h HKID) (c commit, err error) {
+func (m multicastservice) GetCommit(h HKID) (c commit, err error) {
 	message := fmt.Sprintf("{\"type\":\"commit\",\"hkid\": \"%s\"}", h.Hex())
 	m.sendmessage(message)
 	commitchannel := make(chan commit)
@@ -41,7 +41,7 @@ func (m multicastservice) getCommit(h HKID) (c commit, err error) {
 	return c, err
 }
 
-func (m multicastservice) getTag(h HKID, namesegment string) (t tag, err error) {
+func (m multicastservice) GetTag(h HKID, namesegment string) (t tag, err error) {
 	message := fmt.Sprintf("{\"type\":\"tag\", \"hkid\": \"%s\", \"namesegment\": \"%s\"}", h.Hex(), namesegment)
 	m.sendmessage(message)
 	tagchannel := make(chan tag)
@@ -51,7 +51,7 @@ func (m multicastservice) getTag(h HKID, namesegment string) (t tag, err error) 
 
 }
 
-func (m multicastservice) getKey(h HKID) (b blob, err error) {
+func (m multicastservice) GetKey(h HKID) (b blob, err error) {
 	message := fmt.Sprintf("{\"type\":\"key\",\"hkid\": \"%s\"}", h.Hex())
 	m.sendmessage(message)
 	keychannel := make(chan blob)

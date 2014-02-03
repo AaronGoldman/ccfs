@@ -10,7 +10,7 @@ import (
 
 type appsscriptservice struct{}
 
-func (a appsscriptservice) getBlob(h HCID) (b blob, err error) {
+func (a appsscriptservice) GetBlob(h HCID) (b blob, err error) {
 	quarryurl := fmt.Sprintf(
 		"%s%s%s%s%s%s",
 		"https://",
@@ -39,7 +39,7 @@ func (a appsscriptservice) getBlob(h HCID) (b blob, err error) {
 	return data, err
 }
 
-func (a appsscriptservice) getCommit(h HKID) (c commit, err error) {
+func (a appsscriptservice) GetCommit(h HKID) (c commit, err error) {
 	quarryurl := fmt.Sprintf(
 		"%s%s%s%s%s%s",
 		"https://",
@@ -68,7 +68,7 @@ func (a appsscriptservice) getCommit(h HKID) (c commit, err error) {
 	return c, err
 }
 
-func (a appsscriptservice) getTag(h HKID, namesegment string) (t tag, err error) {
+func (a appsscriptservice) GetTag(h HKID, namesegment string) (t tag, err error) {
 	quarryurl := fmt.Sprintf(
 		"%s%s%s%s%s%s%s",
 		"https://",
@@ -98,7 +98,7 @@ func (a appsscriptservice) getTag(h HKID, namesegment string) (t tag, err error)
 	return t, err
 }
 
-func (a appsscriptservice) getKey(h HKID) (blob, error) {
+func (a appsscriptservice) GetKey(h HKID) (blob, error) {
 	quarryurl := fmt.Sprintf(
 		"%s%s%s%s%s",
 		"https://",

@@ -5,3 +5,35 @@ go test -bench=".*" -cpuprofile=../bin/prof.out
 go build -o ../bin/ccfs.exe
 
 go fmt
+
+src
+    content services
+        appsscript service
+        googledrive service
+		kademlia dht service
+        leveldb service
+        localfile service
+        multicast service
+    interfaces
+		fuse interface
+        web service
+    core
+
+import (
+	"github.com/AaronGoldman/ccfs/src"
+	"github.com/AaronGoldman/ccfs/src/contentservices"
+	"github.com/AaronGoldman/ccfs/src/contentservices/appsscriptservice"
+	"github.com/AaronGoldman/ccfs/src/contentservices/googledriveservice"
+	"github.com/AaronGoldman/ccfs/src/contentservices/kademliadhtservice"
+	"github.com/AaronGoldman/ccfs/src/contentservices/leveldbservice"
+	"github.com/AaronGoldman/ccfs/src/contentservices/localfileservice"
+	"github.com/AaronGoldman/ccfs/src/contentservices/multicastservice"
+	"github.com/AaronGoldman/ccfs/src/interfaces"
+	"github.com/AaronGoldman/ccfs/src/interfaces/fuseinterface"
+	"github.com/AaronGoldman/ccfs/src/interfaces/webservice"
+	"github.com/AaronGoldman/ccfs/src/core"
+)
+
+main imports interfaces, content services
+interfaces import core
+content services import core

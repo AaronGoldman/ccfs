@@ -5,83 +5,13 @@ import (
 	"log"
 )
 
-type contentservice interface {
-	contentgeter
-	contentposter
-}
-type contentgeter interface {
-	blobgeter
-	commitgeter
-	taggeter
-	keygeter
-}
-type blobgeter interface {
-	getBlob(HCID) (blob, error)
-}
-type commitgeter interface {
-	getCommit(HKID) (commit, error)
-}
-type taggeter interface {
-	getTag(h HKID, namesegment string) (tag, error)
-}
-type keygeter interface {
-	getKey(HKID) (blob, error)
-}
-type contentposter interface {
-	blobpostter
-	commitposter
-	tagposter
-	keyposter
-}
-type blobpostter interface {
-	postBlob(b blob) error
-}
-type commitposter interface {
-	postCommit(c commit) error
-}
-type tagposter interface {
-	postTag(t tag) error
-}
-type keyposter interface {
-	postKey(p PrivateKey) error
-}
-
-var blobgeters = []blobgeter{
-	timeoutserviceInstance,
-	localfileserviceInstance,
-	//googledriveserviceInstance,
-	//appsscriptserviceInstance,
-	//multicastserviceInstance,
-}
-var commitgeters = []commitgeter{
-	timeoutserviceInstance,
-	localfileserviceInstance,
-	//googledriveserviceInstance,
-	//appsscriptserviceInstance,
-	//multicastserviceInstance,
-}
-var taggeters = []taggeter{
-	timeoutserviceInstance,
-	localfileserviceInstance,
-	//googledriveserviceInstance,
-	//appsscriptserviceInstance,
-	//multicastserviceInstance,
-}
-var keygeters = []keygeter{
-	timeoutserviceInstance,
-	localfileserviceInstance,
-	//googledriveserviceInstance,
-	//appsscriptserviceInstance,
-	//multicastserviceInstance,
-}
-
 //GetBlob looks up blobs by their HCIDs.
 func GetBlob(h HCID) (blob, error) {
 	datach := make(chan blob, len(blobgeters))
 	errorch := make(chan error, len(blobgeters))
 	for _, rangeblobgeterInstance := range blobgeters {
 		go func(blobgeterInstance blobgeter, datach chan blob, errorch chan error, h HCID) {
-			b, err := blobgeterInstance.getBlob(h)
+			b, err := blobgeterInstance.GetBlob(h)
 			if err == nil {
 				datach <- b
 				return
@@ -112,12 +42,13 @@ func PostList(l list) (err error) {
 	return PostBlob(blob(l.Bytes()))
 }
 
+//GetCommit retreves the newest commit for a given HKID
 func GetCommit(h HKID) (commit, error) {
 	datach := make(chan commit, len(commitgeters))
 	errorch := make(chan error, len(commitgeters))
 	for _, rangecommitgeterInstance := range commitgeters {
 		go func(commitgeterInstance commitgeter, datach chan commit, errorch chan error, h HKID) {
-			c, err := commitgeterInstance.getCommit(h)
+			c, err := commitgeterInstance.GetCommit(h)
 			if err == nil {
 				datach <- c
 				return
@@ -144,12 +75,13 @@ func GetCommit(h HKID) (commit, error) {
 	}
 }
 
+//GetTag retreves the newest tag for a given HKID and name segment
 func GetTag(h HKID, namesegment string) (tag, error) {
 	datach := make(chan tag, len(taggeters))
 	errorch := make(chan error, len(taggeters))
 	for _, rangetaggeterInstance := range taggeters {
 		go func(taggeterInstance taggeter, datach chan tag, errorch chan error, h HKID, namesegment string) {
-			t, err := taggeterInstance.getTag(h, namesegment)
+			t, err := taggeterInstance.GetTag(h, namesegment)
 			if err == nil {
 				datach <- t
 				return
@@ -182,7 +114,7 @@ func GetKey(h HKID) (*PrivateKey, error) {
 	errorch := make(chan error, len(keygeters))
 	for _, rangekeygeterInstance := range keygeters {
 		go func(keygeterInstance keygeter, datach chan blob, errorch chan error, h HKID) {
-			k, err := keygeterInstance.getKey(h)
+			k, err := keygeterInstance.GetKey(h)
 			if err == nil {
 				datach <- k
 				return
@@ -213,20 +145,52 @@ func GetKey(h HKID) (*PrivateKey, error) {
 
 //release blob to storage
 func PostBlob(b blob) (err error) {
-	return localfileserviceInstance.postBlob(b)
+	var firsterr error
+	for _, service := range blobposters {
+		err := service.PostBlob(b)
+		if err != nil {
+			firsterr = err
+		}
+	}
+	return firsterr
+	//return localfileserviceInstance.PostBlob(b)
 }
 
 //release commit to storage
 func PostCommit(c commit) (err error) {
-	return localfileserviceInstance.postCommit(c)
+	var firsterr error
+	for _, service := range commitposters {
+		err := service.PostCommit(c)
+		if err != nil {
+			firsterr = err
+		}
+	}
+	return firsterr
+	//return localfileserviceInstance.PostCommit(c)
 }
 
 //release key to storage
 func PostKey(p *PrivateKey) (err error) {
-	return localfileserviceInstance.postKey(p)
+	var firsterr error
+	for _, service := range keyposters {
+		err := service.PostKey(p)
+		if err != nil {
+			firsterr = err
+		}
+	}
+	return firsterr
+	//return localfileserviceInstance.PostKey(p)
 }
 
 //release tag to storage
 func PostTag(t tag) (err error) {
-	return localfileserviceInstance.postTag(t)
+	var firsterr error
+	for _, service := range tagposters {
+		err := service.PostTag(t)
+		if err != nil {
+			firsterr = err
+		}
+	}
+	return firsterr
+	//return localfileserviceInstance.PostTag(t)
 }
