@@ -3,8 +3,10 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
+	"net/http"
 )
 
 type tagfields struct {
@@ -45,7 +47,7 @@ func (m multicastservice) GetTag(h HKID, namesegment string) (t tag, err error) 
 	message := fmt.Sprintf("{\"type\":\"tag\", \"hkid\": \"%s\", \"namesegment\": \"%s\"}", h.Hex(), namesegment)
 	m.sendmessage(message)
 	tagchannel := make(chan tag)
-	m.waitingfortag[h.Hex()] = tagchannel
+	m.waitingfortag[h.Hex()+namesegment] = tagchannel
 	t = <-tagchannel
 	return t, err
 
@@ -91,7 +93,46 @@ func (m multicastservice) sendmessage(message string) (err error) {
 func (m multicastservice) receivemessage(message string) (err error) {
 	log.Printf("Received message, %s,\n", message)
 	hkid, hcid, typestring, namesegment := parseMessage(message)
+	url := "www.google.com"
+	if typestring == "blob" {
+		blobchannel, present := m.waitingforblob[hcid.String()]
+		if present {
 
+			data, err := m.geturl(url)
+			if err == nil {
+				blobchannel <- data
+			}
+		}
+	}
+	if typestring == "tag" {
+		tagchannel, present := m.waitingfortag[hkid.String()+namesegment]
+		if present {
+			data, err := m.geturl(url)
+			t, err := TagFromBytes(data)
+			if err == nil {
+				tagchannel <- t
+			}
+		}
+	}
+	if typestring == "commit" {
+		commitchannel, present := m.waitingforcommit[hkid.String()]
+		if present {
+			data, err := m.geturl(url)
+			c, err := CommitFromBytes(data)
+			if err == nil {
+				commitchannel <- c
+			}
+		}
+	}
+	if typestring == "key" {
+		keychannel, present := m.waitingforkey[hcid.String()]
+		if present {
+			data, err := m.geturl(url)
+			if err == nil {
+				keychannel <- data
+			}
+		}
+	}
 	log.Printf("HCID message, %s,\n", hcid.String())
 	log.Printf("HKID message, %s,\n", hkid.String())
 	log.Printf("typestring message, %s,\n", typestring)
@@ -100,6 +141,21 @@ func (m multicastservice) receivemessage(message string) (err error) {
 	//if in waiting map send on channel
 
 	return err
+}
+
+func (m multicastservice) geturl(url string) (data []byte, err error) {
+	resp, err := http.Get(url) //Takes the http channel and makes it a channel object
+	if err != nil {
+		return data, err
+	}
+	defer resp.Body.Close() //Do this after return is called
+	data, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return data, err
+	} else {
+		return data, nil
+	}
+
 }
 
 func multicastservicefactory() (m multicastservice) {
