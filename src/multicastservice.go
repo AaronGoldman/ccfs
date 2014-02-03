@@ -48,7 +48,8 @@ func (m multicastservice) listenmessage() (err error) {
 				log.Printf("multicasterror, %s, \n", err)
 				return
 			}
-			m.receivemessage(string(b))
+			//log.Printf("%s", m.conn.LocalAddr())
+			m.receivemessage(string(b), m.conn.LocalAddr())
 		}
 	}()
 	return
@@ -66,8 +67,8 @@ func (m multicastservice) sendmessage(message string) (err error) {
 	return err
 }
 
-func (m multicastservice) receivemessage(message string) (err error) {
-	log.Printf("Received message, %s,\n", message)
+func (m multicastservice) receivemessage(message string, addr net.Addr) (err error) {
+	log.Printf("Received message, %s,\n On Address %s", message, addr)
 	return err
 }
 
