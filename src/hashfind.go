@@ -10,8 +10,10 @@ import (
 	"path/filepath"
 )
 
-func hashfindwalk() {
-	err := filepath.Walk("./", visit)
+type hashfinder struct{}
+
+func (hashfinder) walk() {
+	err := filepath.Walk("./", hashfinder{}.visit)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -19,15 +21,15 @@ func hashfindwalk() {
 
 //fromchannaltofile()
 
-func visit(path string, f os.FileInfo, err error) error {
+func (hashfinder) visit(path string, f os.FileInfo, err error) error {
 	if f.IsDir() == false {
-		hbuf := hashfile(path)
+		hbuf := hashfinder{}.hashfile(path)
 		log.Printf("%v %s\n", hex.EncodeToString(hbuf), path)
 	}
 	return nil
 }
 
-func hashfile(filepath string) []byte {
+func (hashfinder) hashfile(filepath string) []byte {
 	fi, err := os.Open(filepath)
 
 	if err != nil {

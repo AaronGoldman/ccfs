@@ -126,3 +126,9 @@ func (a appsscriptservice) GetKey(h HKID) (blob, error) {
 }
 
 var appsscriptserviceInstance appsscriptservice = appsscriptservice{}
+
+func init() {
+	//Registerblobgeter(appsscriptserviceInstance)
+	//Registercommitgeter(appsscriptserviceInstance)
+	//Registertaggeter(appsscriptserviceInstance)
+}
