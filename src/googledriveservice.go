@@ -89,7 +89,7 @@ type googledriveservice struct {
 	driveService    *drive.Service
 }
 
-func (gds googledriveservice) getBlob(h HCID) (blob, error) {
+func (gds googledriveservice) GetBlob(h HCID) (blob, error) {
 	if gds.driveService == nil {
 		return nil, fmt.Errorf("Drive Service not initialized")
 	}
@@ -102,7 +102,7 @@ func (gds googledriveservice) getBlob(h HCID) (blob, error) {
 	}
 	return blob(fileString), err
 }
-func (gds googledriveservice) getCommit(h HKID) (c commit, err error) {
+func (gds googledriveservice) GetCommit(h HKID) (c commit, err error) {
 	if gds.driveService == nil {
 		return commit{}, fmt.Errorf("Drive Service not initialized")
 	}
@@ -130,7 +130,7 @@ func (gds googledriveservice) getCommit(h HKID) (c commit, err error) {
 	c, err = CommitFromBytes(commitBytes)
 	return c, err
 }
-func (gds googledriveservice) getTag(h HKID, namesegment string) (t tag, err error) {
+func (gds googledriveservice) GetTag(h HKID, namesegment string) (t tag, err error) {
 	if gds.driveService == nil {
 		return tag{}, fmt.Errorf("Drive Service not initialized")
 	}
@@ -161,7 +161,7 @@ func (gds googledriveservice) getTag(h HKID, namesegment string) (t tag, err err
 	t, err = TagFromBytes(tagBytes)
 	return t, nil
 }
-func (gds googledriveservice) getKey(h HKID) (b blob, err error) {
+func (gds googledriveservice) GetKey(h HKID) (b blob, err error) {
 	if gds.driveService == nil {
 		return nil, fmt.Errorf("Drive Service not initialized")
 	}
@@ -238,13 +238,7 @@ func googledriveserviceFactory() googledriveservice {
 	gds.commitsFolderId, err = gds.getChildWithTitle(ccfsFolderId, "commits")
 	gds.tagsFolderId, err = gds.getChildWithTitle(ccfsFolderId, "tags")
 	gds.keysFolderId, err = gds.getChildWithTitle(ccfsFolderId, "keys")
-	return gds
-}
 
-var googledriveserviceInstance googledriveservice
-
-func dont_init() {
-	googledriveserviceInstance = googledriveserviceFactory()
 	log.Printf(
 		"\n\tblobsFolderId: %v"+
 			"\n\tcommitsFolderId: %v"+
@@ -252,11 +246,19 @@ func dont_init() {
 			"\n\tkeysFolderId: %v"+
 			"\n\tdriveService: %v"+
 			"\n\ttransport: %v\n",
-		googledriveserviceInstance.blobsFolderId,
-		googledriveserviceInstance.commitsFolderId,
-		googledriveserviceInstance.tagsFolderId,
-		googledriveserviceInstance.keysFolderId,
-		googledriveserviceInstance.driveService,
-		googledriveserviceInstance.transport,
+		gds.blobsFolderId,
+		gds.commitsFolderId,
+		gds.tagsFolderId,
+		gds.keysFolderId,
+		gds.driveService,
+		gds.transport,
 	)
+
+	return gds
+}
+
+var googledriveserviceInstance googledriveservice
+
+func init() {
+	//googledriveserviceInstance = googledriveserviceFactory()
 }
