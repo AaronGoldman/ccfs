@@ -9,6 +9,15 @@ import (
 )
 
 func parseFlags() (*string, *string, bool) {
+	//mount
+	//sevre
+	//createDomain
+	//createRepository
+	//insertDomain
+	//insertRepository
+
+	//path
+	//hkid
 	var action = flag.String(
 		"action",
 		"",
@@ -32,12 +41,12 @@ func fileSystemPath2CollectionPath(fileSystemPath *string) (h HKID, collectionPa
 }
 
 func takeActions(action *string, fileSystemPath *string) {
-	if *action != "" {
-		log.Println("action", *action)
-	}
-	if *fileSystemPath != "/" {
-		log.Println("path", *fileSystemPath)
-	}
+	//if *action != "" {
+	//	log.Println("action", *action)
+	//}
+	//if *fileSystemPath != "/" {
+	//	log.Println("path", *fileSystemPath)
+	//}
 
 	in := bufio.NewReader(os.Stdin)
 	var err error
