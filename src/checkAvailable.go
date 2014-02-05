@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"net"
 )
 
 //checks if I have the blob, it returns yes or no
@@ -86,4 +88,54 @@ func responseAvaiable(hkid HKID, hcid HCID, typeString string, nameSegment strin
 		log.Printf("Malformed json")
 		return
 	}
+}
+func buildResponse(hkid HKID, hcid HCID, typeString string, nameSegment string, version int64) (response string) {
+	if typeString == "blob" {
+		response = fmt.Sprintf("{\"type\": \"blob\", \"HCID\": \"%s\", \"URL\": \"%s\"}", hcid.Hex(),
+			makeURL(hkid, hcid, typeString, nameSegment, version))
+	} else if typeString == "commit" {
+		response = fmt.Sprintf("{\"type\": \"commit\",\"HKID\": \"%s\", \"URL\": \"%s\"}", hkid.Hex(),
+			makeURL(hkid, hcid, typeString, nameSegment, version))
+	} else if typeString == "tag" {
+		response = fmt.Sprintf("{\"type\": \"tag\", \"HKID\": \"%s\", \"namesegment\": \"%s\", \"URL\": \"%s\"}", hkid.Hex(), nameSegment,
+			makeURL(hkid, hcid, typeString, nameSegment, version))
+	} else if typeString == "key" {
+		response = fmt.Sprintf("{\"type\": \"key\",\"HKID\": \"%s\", \"URL\": \"%s\"}", hkid.Hex(),
+			makeURL(hkid, hcid, typeString, nameSegment, version))
+	} else {
+		return ""
+	}
+	return response
+
+}
+func getHostName() string {
+	//ToDo
+	return "localhost:8080"
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		log.Printf("Something meaningful... %s\n", err)
+		return "localhost:8080"
+	}
+	for _, addr := range addrs {
+		log.Printf("Network:%s  \nString:%s\n", addr.Network(), addr.String())
+	}
+	return "LAME"
+
+}
+func makeURL(hkid HKID, hcid HCID, typeString string, nameSegment string, version int64) (response string) {
+	//Host Name
+	host := getHostName()
+	//Path
+	if typeString == "blob" {
+		response = fmt.Sprintf("%s/b/%s", host, hcid.Hex())
+	} else if typeString == "commit" {
+		response = fmt.Sprintf("%s/c/%s/%d", host, hkid.Hex(), version)
+	} else if typeString == "tag" {
+		response = fmt.Sprintf("%s/t/%s/%s/%d", host, hkid.Hex(), nameSegment, version)
+	} else if typeString == "key" {
+		response = fmt.Sprintf("%s/k/%s", host, hkid.Hex())
+	} else {
+		response = ""
+	}
+	return response
 }
