@@ -34,16 +34,30 @@ func parseMessage(message string) (HKID, HCID, string, string) {
 	if err != nil {
 		log.Printf("Error %s\n", err)
 	}
-	hcid, err := HcidFromHex(Message["hcid"].(string))
+
+	hcid := HCID{}
+	if Message["hcid"] != nil {
+		hcid, err = HcidFromHex(Message["hcid"].(string))
+	}
 	if err != nil {
 		log.Printf("Error with hex to string %s", err)
 	}
-	hkid, err := HkidFromHex(Message["hkid"].(string))
+
+	hkid := HKID{}
+	if Message["hkid"] != nil {
+		hkid, err = HkidFromHex(Message["hkid"].(string))
+	}
 	if err != nil {
 		log.Printf("Error with hex to string %s", err)
 	}
-	typeString := Message["type"].(string)
-	nameSegment := Message["namesegment"].(string)
+	typeString := ""
+	if Message["type"] != nil {
+		typeString = Message["type"].(string)
+	}
+	nameSegment := ""
+	if Message["nameSegment"] != nil {
+		nameSegment = Message["nameSegment"].(string)
+	}
 	return hkid, hcid, typeString, nameSegment
 }
 
