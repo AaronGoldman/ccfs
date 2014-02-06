@@ -9,7 +9,7 @@ import (
 
 //checks if I have the blob, it returns yes or no
 func blobAvailable(hash HCID) bool {
-	localfileserviceInstance.GetBlob(hash)
+	localfileserviceInstance.getBlob(hash)
 	return false
 }
 
@@ -27,24 +27,25 @@ func tagAvailable(hash HKID, name string) (bool, int64) {
 func commitAvailable(hash HKID) (bool, int64) {
 	return false, 0
 }
-func parseMessage(message string) (HKID, HCID, string, string) {
+func parseMessage(message string) (hkid HKID, hcid HCID, typeString string, nameSegment string, url string) {
 	var Message map[string]interface{}
 
 	err := json.Unmarshal([]byte(message), &Message)
 	if err != nil {
 		log.Printf("Error %s\n", err)
 	}
-	hcid, err := HcidFromHex(Message["hcid"].(string))
+	hcid, err = HcidFromHex(Message["hcid"].(string))
 	if err != nil {
 		log.Printf("Error with hex to string %s", err)
 	}
-	hkid, err := HkidFromHex(Message["hkid"].(string))
+	hkid, err = HkidFromHex(Message["hkid"].(string))
 	if err != nil {
 		log.Printf("Error with hex to string %s", err)
 	}
-	typeString := Message["type"].(string)
-	nameSegment := Message["namesegment"].(string)
-	return hkid, hcid, typeString, nameSegment
+	typeString = Message["type"].(string)
+	nameSegment = Message["namesegment"].(string)
+	url = Message["URL"].(string)
+	return hkid, hcid, typeString, nameSegment, url
 }
 
 func responseAvaiable(hkid HKID, hcid HCID, typeString string, nameSegment string) (available bool, version int64) {
