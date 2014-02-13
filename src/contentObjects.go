@@ -126,7 +126,7 @@ func (c commit) String() string {
 		hex.EncodeToString(c.signature))
 }
 
-func (c commit) Hkid() []byte {
+func (c commit) Hkid() HKID {
 	return c.hkid
 }
 
