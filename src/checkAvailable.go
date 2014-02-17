@@ -9,7 +9,7 @@ import (
 
 //checks if I have the blob, it returns yes or no
 func blobAvailable(hash HCID) bool {
-	localfileserviceInstance.getBlob(hash)
+	localfileserviceInstance.GetBlob(hash)
 	return false
 }
 
@@ -34,18 +34,33 @@ func parseMessage(message string) (hkid HKID, hcid HCID, typeString string, name
 	if err != nil {
 		log.Printf("Error %s\n", err)
 	}
-	hcid, err = HcidFromHex(Message["hcid"].(string))
+
+	if Message["hcid"] != nil {
+		hcid, err = HcidFromHex(Message["hcid"].(string))
+	}
 	if err != nil {
 		log.Printf("Error with hex to string %s", err)
 	}
-	hkid, err = HkidFromHex(Message["hkid"].(string))
+
+	if Message["hkid"] != nil {
+		hkid, err = HkidFromHex(Message["hkid"].(string))
+	}
 	if err != nil {
 		log.Printf("Error with hex to string %s", err)
 	}
-	typeString = Message["type"].(string)
-	nameSegment = Message["namesegment"].(string)
-	url = Message["URL"].(string)
+
+	if Message["type"] != nil {
+		typeString = Message["type"].(string)
+	}
+
+	if Message["nameSegment"] != nil {
+		nameSegment = Message["nameSegment"].(string)
+	}
+	if Message["URL"] != nil {
+		url = Message["URL"].(string)
+	}
 	return hkid, hcid, typeString, nameSegment, url
+
 }
 
 func responseAvaiable(hkid HKID, hcid HCID, typeString string, nameSegment string) (available bool, version int64) {
@@ -90,51 +105,51 @@ func responseAvaiable(hkid HKID, hcid HCID, typeString string, nameSegment strin
 		return
 	}
 }
-func buildResponse(hkid HKID, hcid HCID, typeString string, nameSegment string, version int64) (response string) {
+func buildResponse(hkid HKID, hcid HCID, typeString string, nameSegment string, version int64, addr net.Addr) (response string) {
 	if typeString == "blob" {
 		response = fmt.Sprintf("{\"type\": \"blob\", \"HCID\": \"%s\", \"URL\": \"%s\"}", hcid.Hex(),
-			makeURL(hkid, hcid, typeString, nameSegment, version))
+			makeURL(hkid, hcid, typeString, nameSegment, version, addr))
 	} else if typeString == "commit" {
 		response = fmt.Sprintf("{\"type\": \"commit\",\"HKID\": \"%s\", \"URL\": \"%s\"}", hkid.Hex(),
-			makeURL(hkid, hcid, typeString, nameSegment, version))
+			makeURL(hkid, hcid, typeString, nameSegment, version, addr))
 	} else if typeString == "tag" {
 		response = fmt.Sprintf("{\"type\": \"tag\", \"HKID\": \"%s\", \"namesegment\": \"%s\", \"URL\": \"%s\"}", hkid.Hex(), nameSegment,
-			makeURL(hkid, hcid, typeString, nameSegment, version))
+			makeURL(hkid, hcid, typeString, nameSegment, version, addr))
 	} else if typeString == "key" {
 		response = fmt.Sprintf("{\"type\": \"key\",\"HKID\": \"%s\", \"URL\": \"%s\"}", hkid.Hex(),
-			makeURL(hkid, hcid, typeString, nameSegment, version))
+			makeURL(hkid, hcid, typeString, nameSegment, version, addr))
 	} else {
 		return ""
 	}
 	return response
 
 }
-func getHostName() string {
+func getHostName(addr net.Addr) string {
 	//ToDo
-	return "localhost:8080"
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		log.Printf("Something meaningful... %s\n", err)
-		return "localhost:8080"
-	}
-	for _, addr := range addrs {
-		log.Printf("Network:%s  \nString:%s\n", addr.Network(), addr.String())
-	}
-	return "LAME"
+	//addr.
+	//addrs, err := net.InterfaceAddrs()
+	//if err != nil {
+	//	log.Printf("Something meaningful... %s\n", err)
+	//	return "localhost:8080"
+	//}
+	///for _, addr := range addrs {
+	//	log.Printf("Network:%s  \nString:%s\n", addr.Network(), addr.String())
+	//}
+	return addr.String()
 
 }
-func makeURL(hkid HKID, hcid HCID, typeString string, nameSegment string, version int64) (response string) {
+func makeURL(hkid HKID, hcid HCID, typeString string, nameSegment string, version int64, addr net.Addr) (response string) {
 	//Host Name
-	host := getHostName()
+	//host := getHostName(addr)
 	//Path
 	if typeString == "blob" {
-		response = fmt.Sprintf("%s/b/%s", host, hcid.Hex())
+		response = fmt.Sprintf("/b/%s" /*host,*/, hcid.Hex())
 	} else if typeString == "commit" {
-		response = fmt.Sprintf("%s/c/%s/%d", host, hkid.Hex(), version)
+		response = fmt.Sprintf("/c/%s/%d" /*host,*/, hkid.Hex(), version)
 	} else if typeString == "tag" {
-		response = fmt.Sprintf("%s/t/%s/%s/%d", host, hkid.Hex(), nameSegment, version)
+		response = fmt.Sprintf("/t/%s/%s/%d" /*host,*/, hkid.Hex(), nameSegment, version)
 	} else if typeString == "key" {
-		response = fmt.Sprintf("%s/k/%s", host, hkid.Hex())
+		response = fmt.Sprintf("/k/%s" /*host,*/, hkid.Hex())
 	} else {
 		response = ""
 	}

@@ -7,8 +7,8 @@
     |_| listen for messages
     |_| route messages to the waiting multicastservice contentgeters
    |_| object retrieval, integration testing (Holly)
-    |_| parse received messages
-    |_| respond to received messages with URL of Content Object 
+    |X| parse received messages
+    |X| respond to received messages with URL of Content Object 
     |_| test mount from command line
   |_| Interface
    |_| virtual file system (Mallika)

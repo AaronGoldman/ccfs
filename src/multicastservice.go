@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"time"
 )
 
 type tagfields struct {
@@ -17,7 +18,6 @@ type tagfields struct {
 type multicastservice struct {
 	conn             *net.UDPConn
 	mcaddr           *net.UDPAddr
-	responsechannel  chan response
 	waitingforblob   map[string]chan blob
 	waitingfortag    map[string]chan tag
 	waitingforcommit map[string]chan commit
@@ -29,8 +29,13 @@ func (m multicastservice) GetBlob(h HCID) (b blob, err error) {
 	m.sendmessage(message)
 	blobchannel := make(chan blob)
 	m.waitingforblob[h.Hex()] = blobchannel
-	b = <-blobchannel
-	return b, err
+	select {
+	case b = <-blobchannel:
+		return b, err
+
+	case <-time.After(150 * time.Millisecond):
+		return b, fmt.Errorf("GetBlob on Multicast service timed out")
+	}
 
 }
 
@@ -82,6 +87,7 @@ func (m multicastservice) listenmessage() (err error) {
 func (m multicastservice) sendmessage(message string) (err error) {
 	b := make([]byte, 256)
 	copy(b, message)
+	log.Printf(message)
 	_, err = m.conn.WriteToUDP(b, m.mcaddr)
 	if err != nil {
 		log.Printf("multicasterror, %s, \n", err)
@@ -91,14 +97,13 @@ func (m multicastservice) sendmessage(message string) (err error) {
 	return err
 }
 
-func (m multicastservice) receivemessage(message string,, addr net.Addr) (err error) {
+func (m multicastservice) receivemessage(message string, addr net.Addr) (err error) {
 	log.Printf("Received message, %s,\n", message)
-	hkid, hcid, typestring, namesegment := parseMessage(message)
-	url := "www.google.com"
+	hkid, hcid, typestring, namesegment, url := parseMessage(message)
+	//url := "www.google.com"
 	if typestring == "blob" {
 		blobchannel, present := m.waitingforblob[hcid.String()]
 		if present {
-
 			data, err := m.geturl(url)
 			if err == nil {
 				blobchannel <- data
@@ -170,11 +175,20 @@ func multicastservicefactory() (m multicastservice) {
 		return multicastservice{}
 	}
 
-	return multicastservice{conn: conn, mcaddr: mcaddr}
+	return multicastservice{
+		conn:             conn,
+		mcaddr:           mcaddr,
+		waitingforblob:   map[string]chan blob{},
+		waitingfortag:    map[string]chan tag{},
+		waitingforcommit: map[string]chan commit{},
+		waitingforkey:    map[string]chan blob{},
+	}
 }
 
+var multicastserviceInstance multicastservice
+
 func init() {
-	multicastserviceInstance := multicastservicefactory()
+	multicastserviceInstance = multicastservicefactory()
 	multicastserviceInstance.listenmessage()
 
 }
