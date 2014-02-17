@@ -100,6 +100,12 @@ func (m multicastservice) sendmessage(message string) (err error) {
 func (m multicastservice) receivemessage(message string, addr net.Addr) (err error) {
 	log.Printf("Received message, %s,\n", message)
 	hkid, hcid, typestring, namesegment, url := parseMessage(message)
+	if url == "" {
+		checkAndRespond(hkid, hcid, typestring, namesegment)
+		return nil
+	}
+
+	url = fmt.Sprintf("http://%s:%d%s", addr, 8080, url)
 	//url := "www.google.com"
 	if typestring == "blob" {
 		blobchannel, present := m.waitingforblob[hcid.String()]

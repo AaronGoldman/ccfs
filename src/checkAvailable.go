@@ -9,23 +9,38 @@ import (
 
 //checks if I have the blob, it returns yes or no
 func blobAvailable(hash HCID) bool {
-	localfileserviceInstance.GetBlob(hash)
-	return false
+	_, err := localfileserviceInstance.GetBlob(hash)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 ////checks if I have the key, it returns yes or no
 func keyAvailable(hash HKID) bool {
-	return false
+	_, err := localfileserviceInstance.GetKey(hash)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 //checks if I have the tag, it returns yes or no and the latest version
 func tagAvailable(hash HKID, name string) (bool, int64) {
-	return false, 0
+	t, err := localfileserviceInstance.GetTag(hash, name)
+	if err != nil {
+		return false, 0
+	}
+	return true, t.version
 }
 
 //checks if I have the commit, it returns yes or no and the latest version
 func commitAvailable(hash HKID) (bool, int64) {
-	return false, 0
+	c, err := localfileserviceInstance.GetCommit(hash)
+	if err != nil {
+		return false, 0
+	}
+	return true, c.version
 }
 func parseMessage(message string) (hkid HKID, hcid HCID, typeString string, nameSegment string, url string) {
 	var Message map[string]interface{}
@@ -105,19 +120,19 @@ func responseAvaiable(hkid HKID, hcid HCID, typeString string, nameSegment strin
 		return
 	}
 }
-func buildResponse(hkid HKID, hcid HCID, typeString string, nameSegment string, version int64, addr net.Addr) (response string) {
+func buildResponse(hkid HKID, hcid HCID, typeString string, nameSegment string, version int64) (response string) {
 	if typeString == "blob" {
 		response = fmt.Sprintf("{\"type\": \"blob\", \"HCID\": \"%s\", \"URL\": \"%s\"}", hcid.Hex(),
-			makeURL(hkid, hcid, typeString, nameSegment, version, addr))
+			makeURL(hkid, hcid, typeString, nameSegment, version))
 	} else if typeString == "commit" {
 		response = fmt.Sprintf("{\"type\": \"commit\",\"HKID\": \"%s\", \"URL\": \"%s\"}", hkid.Hex(),
-			makeURL(hkid, hcid, typeString, nameSegment, version, addr))
+			makeURL(hkid, hcid, typeString, nameSegment, version))
 	} else if typeString == "tag" {
 		response = fmt.Sprintf("{\"type\": \"tag\", \"HKID\": \"%s\", \"namesegment\": \"%s\", \"URL\": \"%s\"}", hkid.Hex(), nameSegment,
-			makeURL(hkid, hcid, typeString, nameSegment, version, addr))
+			makeURL(hkid, hcid, typeString, nameSegment, version))
 	} else if typeString == "key" {
 		response = fmt.Sprintf("{\"type\": \"key\",\"HKID\": \"%s\", \"URL\": \"%s\"}", hkid.Hex(),
-			makeURL(hkid, hcid, typeString, nameSegment, version, addr))
+			makeURL(hkid, hcid, typeString, nameSegment, version))
 	} else {
 		return ""
 	}
@@ -138,7 +153,7 @@ func getHostName(addr net.Addr) string {
 	return addr.String()
 
 }
-func makeURL(hkid HKID, hcid HCID, typeString string, nameSegment string, version int64, addr net.Addr) (response string) {
+func makeURL(hkid HKID, hcid HCID, typeString string, nameSegment string, version int64) (response string) {
 	//Host Name
 	//host := getHostName(addr)
 	//Path
@@ -154,4 +169,29 @@ func makeURL(hkid HKID, hcid HCID, typeString string, nameSegment string, versio
 		response = ""
 	}
 	return response
+}
+func checkAndRespond(hkid HKID, hcid HCID, typeString string, nameSegment string) {
+	response := ""
+	if typeString == "blob" && blobAvailable(hcid) {
+		response = buildResponse(hkid, hcid, typeString, nameSegment, 0)
+	} else if typeString == "commit" {
+		isAvailable, version := commitAvailable(hkid)
+		if isAvailable {
+			response = buildResponse(hkid, hcid, typeString, nameSegment, version)
+		}
+	} else if typeString == "tag" {
+		isAvailable, version := tagAvailable(hkid, nameSegment)
+		if isAvailable {
+			response = buildResponse(hkid, hcid, typeString, nameSegment, version)
+		}
+	} else if typeString == "key" && keyAvailable(hkid) {
+		response = buildResponse(hkid, hcid, typeString, nameSegment, 0)
+	} else {
+		return
+	}
+	err := multicastserviceInstance.sendmessage(response)
+	if err != nil {
+		log.Printf("check and responde failed to send message %s", err)
+	}
+	return
 }

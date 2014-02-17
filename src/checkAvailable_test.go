@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net"
 	"testing"
 )
 
@@ -19,13 +18,9 @@ func TestMakeURL(t *testing.T) {
 		{nil, blob{}.Hash(), "blob", "", 0, "/b/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
 		{benchmarkRepo, nil, "key", "", 0, "/k/549baa6497db3615332aae859680b511117e299879ee311fbac4d1a40f93b8d0"},
 	}
-	mcaddr, err := net.ResolveUDPAddr("udp", "localhost:8080")
-	if err != nil {
-		t.Errorf("I hate errors")
-	}
 
 	for _, answer := range AnswerKey {
-		output := makeURL(answer.hkid, answer.hcid, answer.typeString, answer.nameSegment, answer.version, mcaddr)
+		output := makeURL(answer.hkid, answer.hcid, answer.typeString, answer.nameSegment, answer.version)
 		if output != answer.response {
 			t.Errorf("Make URL Failled \nExpected:%s \nGot: %s", answer.response, output)
 		}
@@ -45,12 +40,9 @@ func TestBuildResponse(t *testing.T) {
 		{nil, blob{}.Hash(), "blob", "", 0, "{\"type\": \"blob\", \"HCID\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\", \"URL\": \"/b/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"}"},
 		{benchmarkRepo, nil, "key", "", 0, "{\"type\": \"key\",\"HKID\": \"549baa6497db3615332aae859680b511117e299879ee311fbac4d1a40f93b8d0\", \"URL\": \"/k/549baa6497db3615332aae859680b511117e299879ee311fbac4d1a40f93b8d0\"}"},
 	}
-	mcaddr, err := net.ResolveUDPAddr("udp", "localhost:8080")
-	if err != nil {
-		t.Errorf("I hate errors")
-	}
+
 	for _, answer := range AnswerKey {
-		output := buildResponse(answer.hkid, answer.hcid, answer.typeString, answer.nameSegment, answer.version, mcaddr)
+		output := buildResponse(answer.hkid, answer.hcid, answer.typeString, answer.nameSegment, answer.version)
 		if output != answer.response {
 			t.Errorf("Build Response Failled \nExpected:%s \nGot:        %s", answer.response, output)
 		}
