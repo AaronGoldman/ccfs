@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bytes"
 	"log"
 	"testing"
 )
@@ -15,7 +16,7 @@ func TestGoogledriveservice_GetBlob(t *testing.T) {
 		t.Fail()
 	}
 	b, err := googledriveserviceInstance.GetBlob(hb)
-	if err != nil || b.Hash().String() != hb.Hex() {
+	if err != nil || !bytes.Equal(b.Hash(), hb) {
 		t.Fail()
 	}
 }

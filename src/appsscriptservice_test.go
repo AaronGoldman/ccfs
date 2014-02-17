@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"log"
 	"testing"
 )
@@ -13,7 +14,7 @@ func TestAppsscriptservice_getBlob(t *testing.T) {
 		"ca4c4244cee2bd8b8a35feddcd0ba36d775d68637b7f0b4d2558728d0752a2a2",
 	)
 	b, err := appsscriptserviceInstance.GetBlob(h)
-	if err != nil || b.Hash().String() != h.Hex() {
+	if err != nil || !bytes.Equal(b.Hash(), h) {
 		log.Println(string(b))
 		t.FailNow()
 	}

@@ -14,7 +14,7 @@ func TestLowLevel(t *testing.T) {
 		"ca4c4244cee2bd8b8a35feddcd0ba36d775d68637b7f0b4d2558728d0752a2a2",
 	)
 	b, err := GetBlob(blobhcid)
-	if b.Hash().Hex() != blobhcid.Hex() {
+	if !bytes.Equal(b.Hash(), blobhcid) {
 		t.Logf("GetBlob Fail:%s", b.Hash())
 		t.Fail()
 	}
@@ -25,7 +25,7 @@ func TestLowLevel(t *testing.T) {
 			"0722414168936112160694238047304378604753005642729767620850685191"+
 			"88612732562106886379081213385", 10)
 	c, err := GetCommit(testhkid)
-	if err != nil || c.hkid.Hex() != testhkid.Hex() || !c.Verify() {
+	if err != nil || !bytes.Equal(c.hkid, testhkid) || !c.Verify() {
 		t.Logf("GetCommit Fail")
 		t.Fail()
 	}
@@ -36,13 +36,13 @@ func TestLowLevel(t *testing.T) {
 			"7256947679650787426167575073363006751150073195493002048627629373"+
 			"76227751462258339344895829332", 10)
 	testtag, err := GetTag(taghkid, "TestPostBlob")
-	if err != nil || testtag.hkid.Hex() != taghkid.Hex() || !testtag.Verify() {
+	if err != nil || !bytes.Equal(testtag.hkid, taghkid) || !testtag.Verify() {
 		t.Logf("GetTag Fail")
 		t.Fail()
 	}
 
 	prikey, err := GetKey(taghkid)
-	if err != nil || prikey.Hkid().Hex() != taghkid.Hex() || !prikey.Verify() {
+	if err != nil || !bytes.Equal(prikey.Hkid(), taghkid) || !prikey.Verify() {
 		t.Logf("GetKey Fail")
 		t.Fail()
 	}
