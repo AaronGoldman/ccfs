@@ -72,13 +72,13 @@ func (m multicastservice) listenmessage() (err error) {
 	go func() {
 		for {
 			b := make([]byte, 256)
-			_, _, err := m.conn.ReadFromUDP(b)
+			n, addr, err := m.conn.ReadFromUDP(b)
 			if err != nil {
 				log.Printf("multicasterror, %s, \n", err)
 				return
 			}
 			//log.Printf("%s", m.conn.LocalAddr())
-			m.receivemessage(string(b), m.conn.LocalAddr())
+			m.receivemessage(string(b[0:n]), addr)
 		}
 	}()
 	return
