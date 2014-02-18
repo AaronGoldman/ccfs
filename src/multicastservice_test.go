@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bytes"
 	"testing"
 	"time"
 )
@@ -22,11 +23,14 @@ func TestMulticastservice_GetBlob(t *testing.T) {
 		}()
 
 		output, err := multicastserviceInstance.GetBlob(answer.hcid)
+
 		if err != nil {
 			t.Errorf("Get Blob Failed \nError:%t", err)
 		}
-		if output.Hash().Hex() != answer.hcid.Hex() {
-			t.Errorf("GetBlob failed \nExpected:%t \nGot: %t", answer.response, output)
+
+		multicastserviceInstance.receivemessage("{\"type\":\"blob\", \"hcid\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\", \"URL\": \"localhost:8080/b/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"}", multicastserviceInstance.mcaddr)
+		if !bytes.Equal(output.Hash(), answer.hcid) || err != nil {
+			t.Errorf("Make URL Failled \nExpected:%s \nGot: %s", answer.response, output)
 		}
 
 	}

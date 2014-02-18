@@ -74,13 +74,13 @@ func (m multicastservice) listenmessage() (err error) {
 	go func() {
 		for {
 			b := make([]byte, 256)
-			_, _, err := m.conn.ReadFromUDP(b)
+			n, addr, err := m.conn.ReadFromUDP(b)
 			if err != nil {
 				log.Printf("multicasterror, %s, \n", err)
 				return
 			}
 			//log.Printf("%s", m.conn.LocalAddr())
-			m.receivemessage(string(b), m.conn.LocalAddr())
+			m.receivemessage(string(b[0:n]), addr)
 		}
 	}()
 	return
@@ -101,8 +101,15 @@ func (m multicastservice) sendmessage(message string) (err error) {
 
 func (m multicastservice) receivemessage(message string, addr net.Addr) (err error) {
 	log.Printf("Received message, %s,\n", message)
-	hkid, hcid, typestring, namesegment := parseMessage(message)
-	url := "http://localhost:8080/b/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+
+	hkid, hcid, typestring, namesegment, url := parseMessage(message)
+	if url == "" {
+		checkAndRespond(hkid, hcid, typestring, namesegment)
+		return nil
+	}
+
+	url = fmt.Sprintf("http://%s:%d%s", addr, 8080, url)
+
 	if typestring == "blob" {
 		blobchannel, present := m.waitingforblob[hcid.String()]
 		data, err := m.geturl(url)
