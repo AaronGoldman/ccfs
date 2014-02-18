@@ -27,13 +27,15 @@ type multicastservice struct {
 func (m multicastservice) GetBlob(h HCID) (b blob, err error) {
 	message := fmt.Sprintf("{\"type\":\"blob\", \"hcid\": \"%s\"}", h.Hex())
 	m.sendmessage(message)
-	blobchannel := make(chan blob)
+	blobchannel := make(chan blob, 1)
 	m.waitingforblob[h.Hex()] = blobchannel
 	select {
 	case b = <-blobchannel:
+		log.Printf("Received from blobchannel")
 		return b, err
 
-	case <-time.After(150 * time.Millisecond):
+	case <-time.After(12000 * time.Millisecond):
+		log.Printf("Are we in a infinite loop? ")
 		return b, fmt.Errorf("GetBlob on Multicast service timed out")
 	}
 
@@ -42,7 +44,7 @@ func (m multicastservice) GetBlob(h HCID) (b blob, err error) {
 func (m multicastservice) GetCommit(h HKID) (c commit, err error) {
 	message := fmt.Sprintf("{\"type\":\"commit\",\"hkid\": \"%s\"}", h.Hex())
 	m.sendmessage(message)
-	commitchannel := make(chan commit)
+	commitchannel := make(chan commit, 1)
 	m.waitingforcommit[h.Hex()] = commitchannel
 	c = <-commitchannel
 	return c, err
@@ -51,7 +53,7 @@ func (m multicastservice) GetCommit(h HKID) (c commit, err error) {
 func (m multicastservice) GetTag(h HKID, namesegment string) (t tag, err error) {
 	message := fmt.Sprintf("{\"type\":\"tag\", \"hkid\": \"%s\", \"namesegment\": \"%s\"}", h.Hex(), namesegment)
 	m.sendmessage(message)
-	tagchannel := make(chan tag)
+	tagchannel := make(chan tag, 1)
 	m.waitingfortag[h.Hex()+namesegment] = tagchannel
 	t = <-tagchannel
 	return t, err
@@ -100,43 +102,65 @@ func (m multicastservice) sendmessage(message string) (err error) {
 func (m multicastservice) receivemessage(message string, addr net.Addr) (err error) {
 	log.Printf("Received message, %s,\n", message)
 	hkid, hcid, typestring, namesegment := parseMessage(message)
-	url := "www.google.com"
+	url := "http://localhost:8080/b/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 	if typestring == "blob" {
 		blobchannel, present := m.waitingforblob[hcid.String()]
-		if present {
-			data, err := m.geturl(url)
-			if err == nil {
+		data, err := m.geturl(url)
+		if err == nil {
+
+			log.Printf("There is no error in getting url ")
+			if present {
+				log.Printf("It is present")
 				blobchannel <- data
+				log.Printf("It is sent to blobchannel")
 			}
+			if blob(data).Hash().Hex() == hcid.Hex() {
+				localfileserviceInstance.PostBlob(data)
+			}
+		} else {
+			log.Printf("error: %s", err)
 		}
 	}
 	if typestring == "tag" {
 		tagchannel, present := m.waitingfortag[hkid.String()+namesegment]
-		if present {
-			data, err := m.geturl(url)
-			t, err := TagFromBytes(data)
-			if err == nil {
+		data, err := m.geturl(url)
+		t, err := TagFromBytes(data)
+		if err == nil {
+			if present {
 				tagchannel <- t
+			}
+			if t.Verify() {
+				localfileserviceInstance.PostTag(t)
 			}
 		}
 	}
+
 	if typestring == "commit" {
 		commitchannel, present := m.waitingforcommit[hkid.String()]
-		if present {
-			data, err := m.geturl(url)
-			c, err := CommitFromBytes(data)
-			if err == nil {
+		data, err := m.geturl(url)
+		c, err := CommitFromBytes(data)
+		if err == nil {
+			if present {
 				commitchannel <- c
 			}
+			if c.Verify() {
+				localfileserviceInstance.PostCommit(c)
+			}
 		}
+
 	}
 	if typestring == "key" {
 		keychannel, present := m.waitingforkey[hcid.String()]
-		if present {
-			data, err := m.geturl(url)
-			if err == nil {
+		data, err := m.geturl(url)
+		if err == nil {
+			if present {
 				keychannel <- data
 			}
+			p := PrivteKeyFromBytes(data)
+			if p.Verify() && p.Hkid().Hex() == hkid.Hex() {
+				localfileserviceInstance.PostKey(p)
+			}
+
 		}
 	}
 	log.Printf("HCID message, %s,\n", hcid.String())
@@ -152,11 +176,14 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 func (m multicastservice) geturl(url string) (data []byte, err error) {
 	resp, err := http.Get(url) //Takes the http channel and makes it a channel object
 	if err != nil {
+		log.Printf("The HTTP Get error is %s", err)
 		return data, err
+
 	}
 	defer resp.Body.Close() //Do this after return is called
 	data, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
+		log.Printf("The ReadAll error is %s", err)
 		return data, err
 	} else {
 		return data, nil
@@ -191,33 +218,4 @@ func init() {
 	multicastserviceInstance = multicastservicefactory()
 	multicastserviceInstance.listenmessage()
 
-}
-
-type response struct {
-	typestring  string
-	hkid        HKID
-	hcid        HCID
-	namesegment string
-	url         string
-}
-
-type responseblob struct {
-	hcid HCID
-	url  string
-}
-
-type responsecommit struct {
-	hkid HKID
-	url  string
-}
-
-type responsetag struct {
-	hkid        HKID
-	namesegment string
-	url         string
-}
-
-type responsekey struct {
-	hkid HKID
-	url  string
 }

@@ -5,6 +5,8 @@ import (
 )
 
 func TestMakeURL(t *testing.T) {
+
+	t.Skip("Skipping checkAvailable_test.go - TestMakeURL")
 	AnswerKey := []struct {
 		hkid        HKID
 		hcid        HCID
@@ -22,11 +24,12 @@ func TestMakeURL(t *testing.T) {
 	for _, answer := range AnswerKey {
 		output := makeURL(answer.hkid, answer.hcid, answer.typeString, answer.nameSegment, answer.version)
 		if output != answer.response {
-			t.Errorf("Make URL Failled \nExpected:%s \nGot: %s", answer.response, output)
+			t.Errorf("Make URL Failed \nExpected:%s \nGot: %s", answer.response, output)
 		}
 	}
 }
 func TestBuildResponse(t *testing.T) {
+	t.Skip("Skipping checkAvailable_test.go - TestBUildResponse")
 	AnswerKey := []struct {
 		hkid        HKID
 		hcid        HCID
