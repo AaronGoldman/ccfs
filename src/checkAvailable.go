@@ -43,7 +43,6 @@ func commitAvailable(hash HKID) (bool, int64) {
 	return true, c.version
 }
 
-
 func parseMessage(message string) (hkid HKID, hcid HCID, typeString string, nameSegment string, url string) {
 	var Message map[string]interface{}
 
@@ -141,35 +140,8 @@ func buildResponse(hkid HKID, hcid HCID, typeString string, nameSegment string, 
 	return response
 
 }
-func getHostName(addr net.Addr) string {
-	//ToDo
-<<<<<<< HEAD
-	//return "224.0.1.20:5354"
-	return "localhost:8080"
-=======
-	//addr.
->>>>>>> c657c6d0e97ba9e7a816134baaa9435a3a45fc74
-	//addrs, err := net.InterfaceAddrs()
-	//if err != nil {
-	//	log.Printf("Something meaningful... %s\n", err)
-	//	return "localhost:8080"
-	//}
-<<<<<<< HEAD
-	//for _, addr := range addrs {
-	//	log.Printf("Network:%s  \nString:%s\n", addr.Network(), addr.String())
-	//}
-	//return "LAME"
-=======
-	///for _, addr := range addrs {
-	//	log.Printf("Network:%s  \nString:%s\n", addr.Network(), addr.String())
-	//}
-	return addr.String()
->>>>>>> c657c6d0e97ba9e7a816134baaa9435a3a45fc74
 
-}
 func makeURL(hkid HKID, hcid HCID, typeString string, nameSegment string, version int64) (response string) {
-	//Host Name
-	//host := getHostName(addr)
 	//Path
 	if typeString == "blob" {
 		response = fmt.Sprintf("/b/%s" /*host,*/, hcid.Hex())
