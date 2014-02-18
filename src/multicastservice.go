@@ -107,8 +107,11 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 		checkAndRespond(hkid, hcid, typestring, namesegment)
 		return nil
 	}
-
-	url = fmt.Sprintf("http://%s:%d%s", addr, 8080, url)
+	host, _, err := net.SplitHostPort(addr.String())
+	if err != nil {
+		return err
+	}
+	url = fmt.Sprintf("http://%s:%d%s", host, 8080, url)
 
 	if typestring == "blob" {
 		blobchannel, present := m.waitingforblob[hcid.String()]
