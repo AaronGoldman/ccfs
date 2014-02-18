@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net"
+	//"net"
 )
 
 //checks if I have the blob, it returns yes or no
@@ -27,7 +27,7 @@ func tagAvailable(hash HKID, name string) (bool, int64) {
 func commitAvailable(hash HKID) (bool, int64) {
 	return false, 0
 }
-func parseMessage(message string) (HKID, HCID, string, string) {
+func parseMessage(message string) (hkid HKID, hcid HCID, typestring string, namesegment string) {
 	var Message map[string]interface{}
 
 	err := json.Unmarshal([]byte(message), &Message)
@@ -35,7 +35,6 @@ func parseMessage(message string) (HKID, HCID, string, string) {
 		log.Printf("Error %s\n", err)
 	}
 
-	hcid := HCID{}
 	if Message["hcid"] != nil {
 		hcid, err = HcidFromHex(Message["hcid"].(string))
 	}
@@ -43,7 +42,6 @@ func parseMessage(message string) (HKID, HCID, string, string) {
 		log.Printf("Error with hex to string %s", err)
 	}
 
-	hkid := HKID{}
 	if Message["hkid"] != nil {
 		hkid, err = HkidFromHex(Message["hkid"].(string))
 	}
@@ -124,16 +122,17 @@ func buildResponse(hkid HKID, hcid HCID, typeString string, nameSegment string, 
 }
 func getHostName() string {
 	//ToDo
+	//return "224.0.1.20:5354"
 	return "localhost:8080"
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		log.Printf("Something meaningful... %s\n", err)
-		return "localhost:8080"
-	}
-	for _, addr := range addrs {
-		log.Printf("Network:%s  \nString:%s\n", addr.Network(), addr.String())
-	}
-	return "LAME"
+	//addrs, err := net.InterfaceAddrs()
+	//if err != nil {
+	//	log.Printf("Something meaningful... %s\n", err)
+	//	return "localhost:8080"
+	//}
+	//for _, addr := range addrs {
+	//	log.Printf("Network:%s  \nString:%s\n", addr.Network(), addr.String())
+	//}
+	//return "LAME"
 
 }
 func makeURL(hkid HKID, hcid HCID, typeString string, nameSegment string, version int64) (response string) {
