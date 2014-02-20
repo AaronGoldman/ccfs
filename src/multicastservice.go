@@ -35,7 +35,7 @@ func (m multicastservice) GetBlob(h HCID) (b blob, err error) {
 		return b, err
 
 	case <-time.After(12000 * time.Millisecond):
-		log.Printf("Are we in a infinite loop? ")
+		log.Printf("Timing out now")
 		return b, fmt.Errorf("GetBlob on Multicast service timed out")
 	}
 
@@ -46,8 +46,18 @@ func (m multicastservice) GetCommit(h HKID) (c commit, err error) {
 	m.sendmessage(message)
 	commitchannel := make(chan commit, 1)
 	m.waitingforcommit[h.Hex()] = commitchannel
-	c = <-commitchannel
-	return c, err
+
+	select {
+	case c = <-commitchannel:
+		log.Printf("Received from commitchannel")
+
+		return c, err
+
+	case <-time.After(12000 * time.Millisecond):
+		log.Printf("Timing out now")
+		return c, fmt.Errorf("GetCommit on Multicast service timed out")
+	}
+
 }
 
 func (m multicastservice) GetTag(h HKID, namesegment string) (t tag, err error) {
@@ -55,8 +65,16 @@ func (m multicastservice) GetTag(h HKID, namesegment string) (t tag, err error) 
 	m.sendmessage(message)
 	tagchannel := make(chan tag, 1)
 	m.waitingfortag[h.Hex()+namesegment] = tagchannel
-	t = <-tagchannel
-	return t, err
+
+	select {
+	case t = <-tagchannel:
+		log.Printf("Received from tagchannel")
+		return t, err
+
+	case <-time.After(12000 * time.Millisecond):
+		log.Printf("Timing out now")
+		return t, fmt.Errorf("GetTag on Multicast service timed out")
+	}
 
 }
 
@@ -65,8 +83,16 @@ func (m multicastservice) GetKey(h HKID) (b blob, err error) {
 	m.sendmessage(message)
 	keychannel := make(chan blob)
 	m.waitingforkey[h.Hex()] = keychannel
-	b = <-keychannel
-	return b, err
+	select {
+	case b = <-keychannel:
+		log.Printf("Received from Keychannel")
+		return b, err
+
+	case <-time.After(12000 * time.Millisecond):
+		log.Printf("Timing out now")
+		return b, fmt.Errorf("GetKey on Multicast service timed out")
+	}
+
 }
 
 func (m multicastservice) listenmessage() (err error) {
@@ -148,16 +174,20 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 	if typestring == "commit" {
 		commitchannel, present := m.waitingforcommit[hkid.String()]
 		data, err := m.geturl(url)
-		c, err := CommitFromBytes(data)
-		if err == nil {
-			if present {
-				commitchannel <- c
-			}
-			if c.Verify() {
-				localfileserviceInstance.PostCommit(c)
+		if err != nil {
+			log.Printf("Error for geturl in commitchannel is, %s", err)
+		} else {
+			c, err := CommitFromBytes(data)
+
+			if err == nil {
+				if present {
+					commitchannel <- c
+				}
+				if c.Verify() {
+					localfileserviceInstance.PostCommit(c)
+				}
 			}
 		}
-
 	}
 	if typestring == "key" {
 		keychannel, present := m.waitingforkey[hcid.String()]
