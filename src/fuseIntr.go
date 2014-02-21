@@ -100,7 +100,7 @@ func (d Dir) Attr() fuse.Attr {
 func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 	log.Printf("string=%s\n", name)
 	if name == "hello" {
-		return File{}, nil
+		return File{permission: os.FileMode(0444)}, nil
 	}
 
 	log.Printf("d.leaf is %s", d.leaf.Hex())	
@@ -160,7 +160,10 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 		   return nil, fuse.ENOENT
 		}
                 if list_entry.TypeString== "blob" {
-                        return File{}, nil
+                        return File{
+                                contentHash: list_entry.Hash.(HCID),
+				permission: d.permission, 
+					}, nil
                                         }
 		return Dir{path: d.path + "/" + name,
                 trunc:        d.trunc,
@@ -185,7 +188,10 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
                         perm =  os.FileMode(0755)
                         }
                 if t.TypeString== "blob" {
-                        return File{}, nil
+                        return File{
+				contentHash: t.HashBytes.(HCID), 
+				 permission: perm,
+					}, nil
                                         }
                 return Dir{path: d.path + "/" + name,
                 trunc:        d.trunc,
@@ -244,19 +250,30 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 			dirDirs = append(dirDirs, append_to_list)
 		}
 	} // end if range
-	log.Printf("return dirDirs: %s", dirDirs)
+//	log.Printf("return dirDirs: %s", dirDirs)
 	return dirDirs, nil
 }
 
 // File implements both Node and Handle for the hello file.
-type File struct{}
-
-func (File) Attr() fuse.Attr {
-	log.Println("Attr 0444")
-	return fuse.Attr{Mode: 0444}
+type File struct{
+	contentHash  HCID
+        permission   os.FileMode
 }
 
-func (File) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
-	log.Println("ReadAll func")
-	return []byte("hello, world\n"), nil
+func (f File) Attr() fuse.Attr {
+        log.Println("File: Attr func")
+        return fuse.Attr{Inode: 1, Mode: f.permission}
+	//log.Println("Attr 0444")
+	//return fuse.Attr{Mode: 0444}
+}
+
+func (f File) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
+	log.Println("File: ReadAll func")
+	if (f.contentHash==nil){ 	// default file 
+	return []byte("hello, world\n"), nil} 
+	b, err := GetBlob(f.contentHash) //
+	if err!=nil {
+		return nil, fuse.ENOENT
+			}
+	return b, nil
 }
