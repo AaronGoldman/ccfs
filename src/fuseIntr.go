@@ -10,7 +10,6 @@ import (
 	"bazil.org/fuse/fs"
 	"log"
 	"os"
-	"os/exec"
 	"os/signal"
 )
 
@@ -35,8 +34,9 @@ func startFSintegration() {
 		log.Printf("Got signal: %s", sig)
 
 		log.Printf("Exit unmount")
-		cmd := exec.Command("fusermount", "-u", mountpoint)
-		err = cmd.Run()
+		//cmd := exec.Command("fusermount", "-u", mountpoint)
+		//err := fuse.Unmount("../mountpoint")
+		err := fuse.Unmount("../mountpoint") 
 		if err != nil {
 			log.Printf("Could not unmount: %s", err)
 		}
@@ -77,9 +77,8 @@ func (fs_obj FS) Root() (fs.Node, fuse.Error) { //returns a directory
 		branch:       fs_obj.hkid,
 		permission:   perm,
 		content_type: "commit",
-		hash:         fs_obj.hkid,
-	}, nil
-
+		leaf:	      fs_obj.hkid,
+		}, nil 
 }
 
 // Dir implements both Node and Handle for the root directory.
@@ -87,10 +86,10 @@ type Dir struct {
 	path         string
 	trunc        HKID
 	branch       HKID
+	leaf	     HID
 	permission   os.FileMode
 	content_type string
-	hash         HID
-	//add type field ?
+
 }
 
 func (d Dir) Attr() fuse.Attr {
@@ -98,49 +97,154 @@ func (d Dir) Attr() fuse.Attr {
 	return fuse.Attr{Inode: 1, Mode: os.ModeDir | d.permission}
 }
 
-func (Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
+func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 	log.Printf("string=%s\n", name)
 	if name == "hello" {
 		return File{}, nil
 	}
-	return nil, fuse.ENOENT
-}
 
-var dirDirs = []fuse.Dirent{
-	{Inode: 2, Name: "hello", Type: fuse.DT_File},
+	log.Printf("d.leaf is %s", d.leaf.Hex())	
+
+	//in each case, call 
+	switch d.content_type {
+	default:
+		log.Printf("Unknown type: %")
+		return nil, nil
+	case "commit":		// a commit has a list hash
+		c, err := GetCommit(d.leaf.(HKID))
+		if err != nil {
+                        log.Printf("commit %s:", err)
+                        return nil, nil
+			}
+				//get list hash
+		l, err := GetList(c.listHash)//l is the list object
+		if err != nil {
+                        log.Printf("commit list retieval error %s:", err)
+                        return nil, nil
+                }
+
+		list_entry, present := l[name]//go through list entries and is it maps to the string you passed in present == 1 
+                if (!present){
+                   return nil, fuse.ENOENT
+                        }
+		//getKey to figure out permissions of the child
+		_ , err = GetKey(c.hkid)
+		//perm := fuse.Attr{Mode: 0555}//default read permissions
+		perm := os.FileMode(0555) 
+		if err == nil {
+                        log.Printf("no private key %s:", err)
+                        //perm =  fuse.Attr{Mode: 0755}
+			perm = os.FileMode(0755)
+                        }
+		if list_entry.TypeString== "blob" {
+			return File{}, nil
+					}
+
+                return Dir{
+		path:         d.path + "/" + name,
+                trunc:        d.trunc,
+                branch:       d.leaf.(HKID),
+                leaf:         list_entry.Hash,
+                permission:   perm,
+                content_type: list_entry.TypeString,
+        }, nil
+
+	case "list":
+		l, err := GetList(d.leaf.(HCID))
+                if err != nil {
+                        log.Printf("commit list %s:", err)
+                        return nil, nil
+                }
+	list_entry, present := l[name]//go through list entries and is it maps to the string you passed in present == 1 
+		if (!present){
+		   return nil, fuse.ENOENT
+		}
+                if list_entry.TypeString== "blob" {
+                        return File{}, nil
+                                        }
+		return Dir{path: d.path + "/" + name,
+                trunc:        d.trunc,
+                branch:       d.branch,
+		leaf:	      list_entry.Hash,
+                permission:   d.permission,
+                content_type: list_entry.TypeString,
+	}, nil
+	case "tag":
+		t, err := GetTag(d.leaf.(HKID), name)//leaf is HID
+	// no blobs because blobs are for file structure		
+	
+		 if err != nil {
+                                log.Printf("not a tag %s", err)
+                                return nil, fuse.ENOENT
+                        }
+		//getKey to figure out permissions of the child
+                _ , err = GetKey(t.hkid)
+                perm := os.FileMode(0555)//default read permissions
+                if err == nil {
+                        log.Printf("no private key %s:", err)
+                        perm =  os.FileMode(0755)
+                        }
+                if t.TypeString== "blob" {
+                        return File{}, nil
+                                        }
+                return Dir{path: d.path + "/" + name,
+                trunc:        d.trunc,
+                branch:       t.hkid,
+                leaf:         t.HashBytes,
+                permission:   perm,
+                content_type: t.TypeString,
+        	}, nil
+
+	}
+
+	return nil, fuse.ENOENT
 }
 
 func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	log.Println("ReadDir func")
 	var l list
 	var err error
+	var dirDirs = []fuse.Dirent{
+		{Inode: 2, Name: "hello", Type: fuse.DT_File},
+	}
+
 	if d.content_type == "tag" {
-		return []fuse.Dirent{}, nil
+		return dirDirs, nil
 	} else if d.content_type == "commit" {
-		c, err := GetCommit(d.hash.(HKID))
+		c, err := GetCommit(d.leaf.(HKID))
+		log.Printf("hash is: %s", d.leaf)
 		if err != nil {
+			log.Printf("commit %s:", err)
 			return nil, nil
 		}
 		l, err = GetList(c.listHash)
-		if err == nil {
+		if err != nil {
+			log.Printf("commit list %s:", err)
 			return nil, nil
 		}
 
 	} else if d.content_type == "list" {
-		l, err = GetList(d.hash.(HCID))
-		if err == nil {
+		l, err = GetList(d.leaf.(HCID))
+		if err != nil {
+			log.Printf("list %s:", err)
 			return nil, nil
 		}
 	} else {
 		return nil, nil
 	}
+	log.Printf("list map: %s", l)
 	for name, entry := range l {
 		if entry.TypeString == "blob" {
 			append_to_list := fuse.Dirent{Inode: 2, Name: name, Type: fuse.DT_File}
-			_ = append_to_list
-		} // we need to append this to list + work on the next if(commit/list/tag? )
-		// Type for the other one will be fuse.DT_DIR
+			dirDirs = append(dirDirs, append_to_list)
+			// we need to append this to list + work on the next if(commit/list/tag? )
+			// Type for the other one will be fuse.DT_DIR
+		} else {
+			append_to_list := fuse.Dirent{Inode: 2, Name: name, Type: fuse.DT_Dir}
+			dirDirs = append(dirDirs, append_to_list)
+		}
 	} // end if range
+	log.Printf("return dirDirs: %s", dirDirs)
 	return dirDirs, nil
 }
 
