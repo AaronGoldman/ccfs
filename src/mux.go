@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 )
@@ -24,7 +25,7 @@ func GetBlob(h HCID) (blob, error) {
 	for {
 		select {
 		case b := <-datach:
-			if b != nil && b.Hash().Hex() == h.Hex() {
+			if b != nil && bytes.Equal(b.Hash(), h) {
 				return b, nil
 			}
 			return nil, fmt.Errorf("Blob Verifiy Failed")
@@ -127,9 +128,9 @@ func GetKey(h HKID) (*PrivateKey, error) {
 	for {
 		select {
 		case b := <-datach:
-			privkey := PrivteKeyFromBytes(b)
-			if privkey.Hkid().String() == h.String() && privkey.Verify() {
-				return PrivteKeyFromBytes(b), nil
+			privkey, err := PrivteKeyFromBytes(b)
+			if bytes.Equal(privkey.Hkid(), h) && privkey.Verify() {
+				return privkey, err
 			} else {
 				log.Println("Key Verifiy Failed")
 			}

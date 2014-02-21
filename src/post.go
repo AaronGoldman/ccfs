@@ -154,7 +154,7 @@ func tag_helper(h HID, next_path_segment string, rest_of_path string,
 			hash_of_posted, posterr = post(next_hash, next_path,
 				next_typeString, post_bytes, post_type)
 		}
-		t = t.Update(hash_of_posted.Bytes())
+		t = t.Update(hash_of_posted, t.TypeString)
 	} else {
 		//no tag exists with that nameSegment
 		_, err := getPrivateKeyForHkid(h.Bytes())

@@ -8,6 +8,46 @@ import (
 	"testing"
 )
 
+func TestLowLevel(t *testing.T) {
+	log.SetFlags(log.Lshortfile)
+	blobhcid, err := HcidFromHex(
+		"ca4c4244cee2bd8b8a35feddcd0ba36d775d68637b7f0b4d2558728d0752a2a2",
+	)
+	b, err := GetBlob(blobhcid)
+	if !bytes.Equal(b.Hash(), blobhcid) {
+		t.Logf("GetBlob Fail:%s", b.Hash())
+		t.Fail()
+	}
+
+	//6dedf7e580671bd90bc9d1f735c75a4f3692b697f8979a147e8edd64fab56e85
+	testhkid := hkidFromDString(
+		"6523237356270560228617783789728329416595512649112249373497830592"+
+			"0722414168936112160694238047304378604753005642729767620850685191"+
+			"88612732562106886379081213385", 10)
+	c, err := GetCommit(testhkid)
+	if err != nil || !bytes.Equal(c.hkid, testhkid) || !c.Verify() {
+		t.Logf("GetCommit Fail")
+		t.Fail()
+	}
+
+	//ede7bec713c93929751f18b1db46d4be3c95286bd5f2d92b9759ff02115dc312
+	taghkid := hkidFromDString(
+		"4813315537186321970719165779488475377688633084782731170482174374"+
+			"7256947679650787426167575073363006751150073195493002048627629373"+
+			"76227751462258339344895829332", 10)
+	testtag, err := GetTag(taghkid, "TestPostBlob")
+	if err != nil || !bytes.Equal(testtag.hkid, taghkid) || !testtag.Verify() {
+		t.Logf("GetTag Fail")
+		t.Fail()
+	}
+
+	prikey, err := GetKey(taghkid)
+	if err != nil || !bytes.Equal(prikey.Hkid(), taghkid) || !prikey.Verify() {
+		t.Logf("GetKey Fail")
+		t.Fail()
+	}
+}
+
 func TestPostBlob(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
 	testhkid := hkidFromDString("65232373562705602286177837897283294165955126"+
@@ -234,7 +274,7 @@ func TestGetTag(t *testing.T) {
 	testhkid := hkidFromDString("65232373562705602286177837897283294165955126"+
 		"49112249373497830592072241416893611216069423804730437860475300564272"+
 		"976762085068519188612732562106886379081213385", 10)
-	outdata, err := Get(testhkid, "TestPostTag/")
+	outdata, err := Get(testhkid, "TestPostTag")
 	truthdata := []byte("")
 	if !bytes.Equal(truthdata, outdata) {
 		log.Printf("\n\tTestGetList:\n\t%s\n\terror: %s\n", outdata, err)
@@ -254,6 +294,26 @@ func TestKeyGen(t *testing.T) {
 	}
 	PostBlob(elliptic.Marshal(priv.PublicKey.Curve,
 		priv.PublicKey.X, priv.PublicKey.Y))
+}
+
+func Testbadfrombytes(t *testing.T) {
+	var err error
+	_, err = ListFromBytes([]byte{})
+	if err.Error() != "Could not parse list bytes" {
+		t.Errorf("[] should not parse")
+	}
+	_, err = CommitFromBytes([]byte{})
+	if err.Error() != "Could not parse commit bytes" {
+		t.Errorf("[] should not parse")
+	}
+	_, err = TagFromBytes([]byte{})
+	if err.Error() != "Could not parse tag bytes" {
+		t.Errorf("[] should not parse")
+	}
+	_, err = PrivteKeyFromBytes([]byte{})
+	if err.Error() != "Could not parse commit bytes" {
+		t.Errorf("[] should not parse")
+	}
 }
 
 func setup_for_gets() {

@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"time"
 )
 
 type tagfields struct {
@@ -17,7 +18,6 @@ type tagfields struct {
 type multicastservice struct {
 	conn             *net.UDPConn
 	mcaddr           *net.UDPAddr
-	responsechannel  chan response
 	waitingforblob   map[string]chan blob
 	waitingfortag    map[string]chan tag
 	waitingforcommit map[string]chan commit
@@ -27,29 +27,54 @@ type multicastservice struct {
 func (m multicastservice) GetBlob(h HCID) (b blob, err error) {
 	message := fmt.Sprintf("{\"type\":\"blob\", \"hcid\": \"%s\"}", h.Hex())
 	m.sendmessage(message)
-	blobchannel := make(chan blob)
+	blobchannel := make(chan blob, 1)
 	m.waitingforblob[h.Hex()] = blobchannel
-	b = <-blobchannel
-	return b, err
+	select {
+	case b = <-blobchannel:
+		log.Printf("Received from blobchannel")
+		return b, err
+
+	case <-time.After(12000 * time.Millisecond):
+		log.Printf("Timing out now")
+		return b, fmt.Errorf("GetBlob on Multicast service timed out")
+	}
 
 }
 
 func (m multicastservice) GetCommit(h HKID) (c commit, err error) {
 	message := fmt.Sprintf("{\"type\":\"commit\",\"hkid\": \"%s\"}", h.Hex())
 	m.sendmessage(message)
-	commitchannel := make(chan commit)
+	commitchannel := make(chan commit, 1)
 	m.waitingforcommit[h.Hex()] = commitchannel
-	c = <-commitchannel
-	return c, err
+
+	select {
+	case c = <-commitchannel:
+		log.Printf("Received from commitchannel")
+
+		return c, err
+
+	case <-time.After(12000 * time.Millisecond):
+		log.Printf("Timing out now")
+		return c, fmt.Errorf("GetCommit on Multicast service timed out")
+	}
+
 }
 
 func (m multicastservice) GetTag(h HKID, namesegment string) (t tag, err error) {
 	message := fmt.Sprintf("{\"type\":\"tag\", \"hkid\": \"%s\", \"namesegment\": \"%s\"}", h.Hex(), namesegment)
 	m.sendmessage(message)
-	tagchannel := make(chan tag)
+	tagchannel := make(chan tag, 1)
 	m.waitingfortag[h.Hex()+namesegment] = tagchannel
-	t = <-tagchannel
-	return t, err
+
+	select {
+	case t = <-tagchannel:
+		log.Printf("Received from tagchannel")
+		return t, err
+
+	case <-time.After(12000 * time.Millisecond):
+		log.Printf("Timing out now")
+		return t, fmt.Errorf("GetTag on Multicast service timed out")
+	}
 
 }
 
@@ -58,8 +83,16 @@ func (m multicastservice) GetKey(h HKID) (b blob, err error) {
 	m.sendmessage(message)
 	keychannel := make(chan blob)
 	m.waitingforkey[h.Hex()] = keychannel
-	b = <-keychannel
-	return b, err
+	select {
+	case b = <-keychannel:
+		log.Printf("Received from Keychannel")
+		return b, err
+
+	case <-time.After(12000 * time.Millisecond):
+		log.Printf("Timing out now")
+		return b, fmt.Errorf("GetKey on Multicast service timed out")
+	}
+
 }
 
 func (m multicastservice) listenmessage() (err error) {
@@ -67,12 +100,13 @@ func (m multicastservice) listenmessage() (err error) {
 	go func() {
 		for {
 			b := make([]byte, 256)
-			_, _, err := m.conn.ReadFromUDP(b)
+			n, addr, err := m.conn.ReadFromUDP(b)
 			if err != nil {
 				log.Printf("multicasterror, %s, \n", err)
 				return
 			}
-			m.receivemessage(string(b))
+			//log.Printf("%s", m.conn.LocalAddr())
+			m.receivemessage(string(b[0:n]), addr)
 		}
 	}()
 	return
@@ -81,6 +115,7 @@ func (m multicastservice) listenmessage() (err error) {
 func (m multicastservice) sendmessage(message string) (err error) {
 	b := make([]byte, 256)
 	copy(b, message)
+	log.Printf("Sent message, %s", message)
 	_, err = m.conn.WriteToUDP(b, m.mcaddr)
 	if err != nil {
 		log.Printf("multicasterror, %s, \n", err)
@@ -90,47 +125,82 @@ func (m multicastservice) sendmessage(message string) (err error) {
 	return err
 }
 
-func (m multicastservice) receivemessage(message string) (err error) {
+func (m multicastservice) receivemessage(message string, addr net.Addr) (err error) {
 	log.Printf("Received message, %s,\n", message)
-	hkid, hcid, typestring, namesegment := parseMessage(message)
-	url := "www.google.com"
+
+	hkid, hcid, typestring, namesegment, url := parseMessage(message)
+	if url == "" {
+		checkAndRespond(hkid, hcid, typestring, namesegment)
+		return nil
+	}
+	host, _, err := net.SplitHostPort(addr.String())
+	if err != nil {
+		return err
+	}
+	url = fmt.Sprintf("http://%s:%d%s", host, 8080, url)
+
 	if typestring == "blob" {
 		blobchannel, present := m.waitingforblob[hcid.String()]
-		if present {
+		data, err := m.geturl(url)
+		if err == nil {
 
-			data, err := m.geturl(url)
-			if err == nil {
+			log.Printf("There is no error in getting url ")
+			if present {
+				log.Printf("It is present")
 				blobchannel <- data
+				log.Printf("It is sent to blobchannel")
 			}
+			if blob(data).Hash().Hex() == hcid.Hex() {
+				localfileserviceInstance.PostBlob(data)
+			}
+		} else {
+			log.Printf("error: %s", err)
 		}
 	}
 	if typestring == "tag" {
 		tagchannel, present := m.waitingfortag[hkid.String()+namesegment]
-		if present {
-			data, err := m.geturl(url)
-			t, err := TagFromBytes(data)
-			if err == nil {
+		data, err := m.geturl(url)
+		t, err := TagFromBytes(data)
+		if err == nil {
+			if present {
 				tagchannel <- t
+			}
+			if t.Verify() {
+				localfileserviceInstance.PostTag(t)
 			}
 		}
 	}
+
 	if typestring == "commit" {
 		commitchannel, present := m.waitingforcommit[hkid.String()]
-		if present {
-			data, err := m.geturl(url)
+		data, err := m.geturl(url)
+		if err != nil {
+			log.Printf("Error for geturl in commitchannel is, %s", err)
+		} else {
 			c, err := CommitFromBytes(data)
+
 			if err == nil {
-				commitchannel <- c
+				if present {
+					commitchannel <- c
+				}
+				if c.Verify() {
+					localfileserviceInstance.PostCommit(c)
+				}
 			}
 		}
 	}
 	if typestring == "key" {
 		keychannel, present := m.waitingforkey[hcid.String()]
-		if present {
-			data, err := m.geturl(url)
-			if err == nil {
+		data, err := m.geturl(url)
+		if err == nil {
+			if present {
 				keychannel <- data
 			}
+			p, err := PrivteKeyFromBytes(data)
+			if err != nil && p.Verify() && p.Hkid().Hex() == hkid.Hex() {
+				localfileserviceInstance.PostKey(p)
+			}
+
 		}
 	}
 	log.Printf("HCID message, %s,\n", hcid.String())
@@ -146,11 +216,14 @@ func (m multicastservice) receivemessage(message string) (err error) {
 func (m multicastservice) geturl(url string) (data []byte, err error) {
 	resp, err := http.Get(url) //Takes the http channel and makes it a channel object
 	if err != nil {
+		log.Printf("The HTTP Get error is %s", err)
 		return data, err
+
 	}
 	defer resp.Body.Close() //Do this after return is called
 	data, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
+		log.Printf("The ReadAll error is %s", err)
 		return data, err
 	} else {
 		return data, nil
@@ -169,40 +242,20 @@ func multicastservicefactory() (m multicastservice) {
 		return multicastservice{}
 	}
 
-	return multicastservice{conn: conn, mcaddr: mcaddr}
+	return multicastservice{
+		conn:             conn,
+		mcaddr:           mcaddr,
+		waitingforblob:   map[string]chan blob{},
+		waitingfortag:    map[string]chan tag{},
+		waitingforcommit: map[string]chan commit{},
+		waitingforkey:    map[string]chan blob{},
+	}
 }
+
+var multicastserviceInstance multicastservice
 
 func init() {
-	multicastserviceInstance := multicastservicefactory()
+	multicastserviceInstance = multicastservicefactory()
 	multicastserviceInstance.listenmessage()
 
-}
-
-type response struct {
-	typestring  string
-	hkid        HKID
-	hcid        HCID
-	namesegment string
-	url         string
-}
-
-type responseblob struct {
-	hcid HCID
-	url  string
-}
-
-type responsecommit struct {
-	hkid HKID
-	url  string
-}
-
-type responsetag struct {
-	hkid        HKID
-	namesegment string
-	url         string
-}
-
-type responsekey struct {
-	hkid HKID
-	url  string
 }
