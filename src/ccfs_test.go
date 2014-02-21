@@ -274,7 +274,7 @@ func TestGetTag(t *testing.T) {
 	testhkid := hkidFromDString("65232373562705602286177837897283294165955126"+
 		"49112249373497830592072241416893611216069423804730437860475300564272"+
 		"976762085068519188612732562106886379081213385", 10)
-	outdata, err := Get(testhkid, "TestPostTag/")
+	outdata, err := Get(testhkid, "TestPostTag")
 	truthdata := []byte("")
 	if !bytes.Equal(truthdata, outdata) {
 		log.Printf("\n\tTestGetList:\n\t%s\n\terror: %s\n", outdata, err)
@@ -294,6 +294,26 @@ func TestKeyGen(t *testing.T) {
 	}
 	PostBlob(elliptic.Marshal(priv.PublicKey.Curve,
 		priv.PublicKey.X, priv.PublicKey.Y))
+}
+
+func Testbadfrombytes(t *testing.T) {
+	var err error
+	_, err = ListFromBytes([]byte{})
+	if err.Error() != "Could not parse list bytes" {
+		t.Errorf("[] should not parse")
+	}
+	_, err = CommitFromBytes([]byte{})
+	if err.Error() != "Could not parse commit bytes" {
+		t.Errorf("[] should not parse")
+	}
+	_, err = TagFromBytes([]byte{})
+	if err.Error() != "Could not parse tag bytes" {
+		t.Errorf("[] should not parse")
+	}
+	_, err = PrivteKeyFromBytes([]byte{})
+	if err.Error() != "Could not parse commit bytes" {
+		t.Errorf("[] should not parse")
+	}
 }
 
 func setup_for_gets() {

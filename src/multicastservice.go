@@ -115,7 +115,7 @@ func (m multicastservice) listenmessage() (err error) {
 func (m multicastservice) sendmessage(message string) (err error) {
 	b := make([]byte, 256)
 	copy(b, message)
-	log.Printf(message)
+	log.Printf("Sent message, %s", message)
 	_, err = m.conn.WriteToUDP(b, m.mcaddr)
 	if err != nil {
 		log.Printf("multicasterror, %s, \n", err)
@@ -196,8 +196,8 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 			if present {
 				keychannel <- data
 			}
-			p := PrivteKeyFromBytes(data)
-			if p.Verify() && p.Hkid().Hex() == hkid.Hex() {
+			p, err := PrivteKeyFromBytes(data)
+			if err != nil && p.Verify() && p.Hkid().Hex() == hkid.Hex() {
 				localfileserviceInstance.PostKey(p)
 			}
 

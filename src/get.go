@@ -42,7 +42,7 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			if nameSegments[0] == "" {
 				log.Printf("\n\tNo Path\n")
 			}
-			t, err = GetTag(objecthash.Bytes(), nameSegments[0])
+			t, err = GetTag(objecthash.(HKID), nameSegments[0])
 			if err != nil {
 				//log.Printf("\n\t%v\n", err)
 				return nil, err
@@ -51,7 +51,7 @@ func Get(objecthash HID, path string) (b blob, err error) {
 				return nil, fmt.Errorf("Tag Verifiy Failed")
 			}
 			typeString = t.TypeString
-			objecthash = HCID(t.HashBytes)
+			objecthash = t.HashBytes
 			b = t.Bytes()
 		case "commit":
 			var c commit

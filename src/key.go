@@ -83,17 +83,21 @@ func getPrivateKeyForHkid(hkid HKID) (k *PrivateKey, err error) {
 }
 
 //PrivteKeyFromBytes makes a private key from a slice of bytes and reterns it.
-func PrivteKeyFromBytes(b []byte) *PrivateKey {
+func PrivteKeyFromBytes(b []byte) (priv *PrivateKey, err error) {
+	if len(b) < 64 {
+		return nil, fmt.Errorf("Could not parse commit bytes")
+	}
 	D := new(big.Int).SetBytes(b)
-	priv := new(PrivateKey)
+	priv = new(PrivateKey)
 	priv.PublicKey.Curve = elliptic.P521()
 	priv.PublicKey.X, priv.PublicKey.Y = elliptic.P521().ScalarBaseMult(b)
 	priv.D = D
-	return priv
+	return priv, nil
 }
 
-func PrivteKeyFromD(D big.Int) *PrivateKey {
-	return PrivteKeyFromBytes(D.Bytes())
+func PrivteKeyFromD(D big.Int) (*PrivateKey, error) {
+	priv, err := PrivteKeyFromBytes(D.Bytes())
+	return priv, err
 	//priv := new(PrivateKey)
 	//priv.PublicKey.Curve = elliptic.P521()
 	//priv.PublicKey.X, priv.PublicKey.Y = elliptic.P521().ScalarBaseMult(D.Bytes())
@@ -102,11 +106,11 @@ func PrivteKeyFromD(D big.Int) *PrivateKey {
 }
 
 func HkidFromD(D big.Int) HKID {
-	priv := PrivteKeyFromD(D)
+	priv, err := PrivteKeyFromD(D)
 	key := elliptic.Marshal(priv.PublicKey.Curve,
 		priv.PublicKey.X, priv.PublicKey.Y)
 	hkid := priv.Hkid()
-	err := PostKey(priv) //store privet key
+	err = PostKey(priv) //store privet key
 	if err != nil {
 		log.Panic(err)
 	}
