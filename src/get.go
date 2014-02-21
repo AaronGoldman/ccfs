@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-//Get retreves the
+//Get retrieves the content objects using HID and path
 func Get(objecthash HID, path string) (b blob, err error) {
 	typeString := "commit"
 	err = nil
