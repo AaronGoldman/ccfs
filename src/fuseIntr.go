@@ -35,33 +35,38 @@ func startFSintegration() {
 
 		log.Printf("Exit unmount")
 		//cmd := exec.Command("fusermount", "-u", mountpoint)
-		//err := fuse.Unmount("../mountpoint")
-		err := fuse.Unmount("../mountpoint") 
-		if err != nil {
-			log.Printf("Could not unmount: %s", err)
-		}
-		log.Printf("Exit-kill program")
-		os.Exit(0)
+		ccfsUnmount(mountpoint)
+
 	}() //end func
-	fs.Serve(c, FS_from_HKID_string("c09b2765c6fd4b999d47c82f9cdf7f4b659bf7c29487cc0b357b8fc92ac8ad02"))
+	fs.Serve(c, FS_from_HKID_string("c09b2765c6fd4b999d47c82f9cdf7f4b659bf7c29487cc0b357b8fc92ac8ad02", mountpoint))
 
 }
+
+func  ccfsUnmount(mountpoint string){
+		err := fuse.Unmount(mountpoint) 
+                if err != nil {
+                        log.Printf("Could not unmount: %s", err)
+                }
+                log.Printf("Exit-kill program")
+                os.Exit(0)
+			}
 
 // FS implements the hello world file system.
 type FS struct {
 	hkid HKID
+	mountpoint string 	//fs object needs to know its mountpoint
 }
 
-func FS_from_HKID_string(s string) FS {
+func FS_from_HKID_string(HKIDstring string, mountpoint string) FS {
 	//get hkid from hex
-	h, err := HkidFromHex(s)
+	h, err := HkidFromHex(HKIDstring)
 	//check if err is not nil else return h = NULL
 	if err != nil {
 		log.Printf("Invalid initilizing filesystem FS: %s", err)
 		return FS{}
 	}
 	//return filesystem
-	return FS{h}
+	return FS{h, mountpoint}
 }
 
 func (fs_obj FS) Root() (fs.Node, fuse.Error) { //returns a directory
@@ -80,6 +85,12 @@ func (fs_obj FS) Root() (fs.Node, fuse.Error) { //returns a directory
 		leaf:	      fs_obj.hkid,
 		}, nil 
 }
+// function to save writes before ejecting mountpoint
+func (fs_obj FS) Destroy(){
+
+	ccfsUnmount(fs_obj.mountpoint)
+
+		}
 
 // Dir implements both Node and Handle for the root directory.
 type Dir struct {
@@ -137,7 +148,10 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			perm = os.FileMode(0755)
                         }
 		if list_entry.TypeString== "blob" {
-			return File{}, nil
+			return File{
+        contentHash:  list_entry.Hash.(HCID),
+        permission :  perm,
+				}, nil
 					}
 
                 return Dir{
@@ -254,6 +268,14 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	return dirDirs, nil
 }
 
+//2 types of nodes for files and directories. So call rename twice?
+//For directory node
+
+func (f File) Rename(r *fuse.RenameRequest, newDir fs.Node, intr fs.Intr) fuse.Error{
+
+		log.Println("print request: %s", r)
+		return nil
+		}
 // File implements both Node and Handle for the hello file.
 type File struct{
 	contentHash  HCID
