@@ -70,9 +70,9 @@ func getPiblicKeyForHkid(hkid HKID) PublicKey {
 	curve := elliptic.P521()
 	x, y := elliptic.Unmarshal(elliptic.P521(), marshaledKey)
 	pubKey := ecdsa.PublicKey{
-		curve, //elliptic.Curve
-		x,     //X *big.Int
-		y}     //Y *big.Int
+		Curve: curve, //elliptic.Curve
+		X:     x,     //X *big.Int
+		Y:     y}     //Y *big.Int
 	return PublicKey(pubKey)
 }
 

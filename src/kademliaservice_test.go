@@ -11,56 +11,66 @@ func TestKademliaServiceIsContentService(t *testing.T) {
 	func(contentservice) {}(kademliaserviceInstance)
 }
 
-func TestKademliaservicePostBlob(t *testing.T) {
-	t.Skipf("")
-	b := blob("TestPostData")
-	kademliaserviceInstance.PostBlob(b)
-}
-func TestKademliaservicePostTag(t *testing.T) {
-	t.Skipf("")
-	b := blob("TestPostData")
-	domainHkid := hkidFromDString("36353776900433612923412235249557"+
-		"5547801975514185453610009798109590341135752484880821676711220739"+
-		"4029990114056594565164287698180880449563881968956877896844137", 10)
-	tt := NewTag(
-		b.Hash(),
-		"blob",
-		"TestPostBlob",
-		domainHkid,
-	)
-	kademliaserviceInstance.PostTag(tt)
-}
-func TestKademliaservicePostCommit(t *testing.T) {
-	t.Skipf("")
-	//kademliaserviceInstance.PostCommit()
-}
-func TestKademliaservicePostKey(t *testing.T) {
-	t.Skipf("")
-	//kademliaserviceInstance.PostKey()
-}
-func TestKademliaserviceGetBlob(t *testing.T) {
-	t.Skipf("")
+func TestKademliaserviceBlob(t *testing.T) {
+	//t.Skipf("")
 	indata := blob("TestPostData")
+	kademliaserviceInstance.PostBlob(indata)
 	outdata, err := kademliaserviceInstance.GetBlob(indata.Hash())
 	if !bytes.Equal(indata, outdata) || err == nil {
 		t.Errorf("Expected:%s\nGot:%s", string(indata), string(outdata))
 	}
 }
-func TestKademliaserviceGetCommit(t *testing.T) {
+
+func TestKademliaserviceTag(t *testing.T) {
 	t.Skipf("")
+	b := blob("TestPostData")
 	domainHkid := hkidFromDString("36353776900433612923412235249557"+
 		"5547801975514185453610009798109590341135752484880821676711220739"+
 		"4029990114056594565164287698180880449563881968956877896844137", 10)
-	c, err := kademliaserviceInstance.GetCommit(domainHkid)
-	if err != nil || !c.Verify() {
+	intag := NewTag(
+		b.Hash(),
+		"blob",
+		"TestPostBlob",
+		domainHkid,
+	)
+	kademliaserviceInstance.PostTag(intag)
+	outtag, err := kademliaserviceInstance.GetTag(
+		domainHkid,
+		"TestPostBlob",
+	)
+	if err != nil || outtag.Verify() || !bytes.Equal(outtag.Hkid(), domainHkid) {
 		t.Errorf("fail")
 	}
 }
-func TestKademliaserviceGetTag(t *testing.T) {
+
+func TestKademliaserviceCommit(t *testing.T) {
 	t.Skipf("")
-	//kademliaserviceInstance.GetTag()
+	b := blob("TestPostData")
+	l := NewList(
+		b.Hash(),
+		"blob",
+		"TestPostBlob",
+	)
+	repoHkid := hkidFromDString("64171129167204289916774847858432"+
+		"1039643124642934014944704416438487015947986633802511102841255411"+
+		"2620702113155684804978643917650455537680636225253952875765474", 10)
+	incommit := NewCommit(l.Hash(), repoHkid)
+	kademliaserviceInstance.PostCommit(incommit)
+	outcommit, err := kademliaserviceInstance.GetCommit(repoHkid)
+	if err != nil || !outcommit.Verify() {
+		t.Errorf("fail")
+	}
 }
-func TestKademliaserviceGetKey(t *testing.T) {
+
+func TestKademliaserviceKey(t *testing.T) {
 	t.Skipf("")
-	//kademliaserviceInstance.GetKey()
+	repoHkid := hkidFromDString("64171129167204289916774847858432"+
+		"1039643124642934014944704416438487015947986633802511102841255411"+
+		"2620702113155684804978643917650455537680636225253952875765474", 10)
+	inkey, _ := GetKey(repoHkid)
+	kademliaserviceInstance.PostKey(inkey)
+	outkey, err := kademliaserviceInstance.GetKey(repoHkid)
+	if err != nil || !bytes.Equal(repoHkid, outkey.Hash()) {
+		t.Errorf("fail")
+	}
 }
