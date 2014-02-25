@@ -19,21 +19,6 @@ func parseFlagsAndTakeAction() {
 	var path = flag.String("path", "", "The path to inserted collection")
 	var hkid = flag.String("hkid", "", "HKID of collection to insert")
 
-<<<<<<< HEAD
-=======
-	//path
-	//hkid
-	var action = flag.String(
-		"action",
-		"",
-		"createDomain, createRepository, insertDomain, insertRepository",
-	)
-	//var createDomain = flag.Bool("createDomain", false, "requires path")
-	//var createRepository = flag.Bool("createRepository", false, "requires path")
-	//var insertDomain = flag.Bool("insertDomain", false, "requires path and hkid")
-	//var insertRepository = flag.Bool("insertRepository", false, "requires path and hkid")
-	var path = flag.String("newPath", "/", "path to colecton")
->>>>>>> 6455cc61e75c70bfd804e835165569133a39f75f
 	flag.Parse()
 
 	if flag.NFlag() == 0 {

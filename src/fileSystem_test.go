@@ -26,7 +26,7 @@ func TestMountRepo(t *testing.T) {
 }
 
 func TestCLCreateDomain(t *testing.T) {
-	cmd := exec.Command("./src", "-action=\"createDomain\"", "-newPath=\"TestPostNewTag\"")
+	cmd := exec.Command("./src", "-createDomain=true", "-path=\"TestPostNewTag\"")
 	b, err := cmd.CombinedOutput()
 	fmt.Printf("%s", b)
 	if err != nil {
@@ -34,7 +34,7 @@ func TestCLCreateDomain(t *testing.T) {
 	}
 }
 func TestCLCreateRepo(t *testing.T) {
-	cmd := exec.Command("./src", "-action=\"createRepository\"", "-newPath=\"TestPostNewCommit\"")
+	cmd := exec.Command("./src", "-createRepository=true", "-path=\"TestPostNewCommit\"")
 	b, err := cmd.CombinedOutput()
 	fmt.Printf("%s", b)
 	if err != nil {
@@ -42,7 +42,7 @@ func TestCLCreateRepo(t *testing.T) {
 	}
 }
 func TestCLInsertDomain(t *testing.T) {
-	cmd := exec.Command("./src", "-action=\"insertDomain\"", "-newPath=\"TestPostTag\"")
+	cmd := exec.Command("./src", "-insertDomain=true", "-path=\"TestPostTag\"", fmt.Sprintf("-hkid=\"%s\"", benchmarkTagHkid))
 	b, err := cmd.CombinedOutput()
 	fmt.Printf("%s", b)
 	if err != nil {
@@ -50,7 +50,7 @@ func TestCLInsertDomain(t *testing.T) {
 	}
 }
 func TestCLInsertRepo(t *testing.T) {
-	cmd := exec.Command("./src", "-action=\"insertRepository\"", "-newPath=\"TestPostCommit\"")
+	cmd := exec.Command("./src", "-insertRepository=true", "-path=\"TestPostCommit\"", fmt.Sprintf("-hkid=\"%s\"", benchmarkCommitHkid))
 	b, err := cmd.CombinedOutput()
 	fmt.Printf("%s", b)
 	if err != nil {
