@@ -67,9 +67,9 @@ func (k kademliaservice) PostBlob(b blob) (err error) {
 	data, err := k.postobject(values, b)
 	if err != nil {
 		log.Println(err)
-		log.Println(data)
 		return err
 	}
+	log.Println(data)
 	return err
 }
 func (k kademliaservice) PostTag(t tag) (err error) {
@@ -80,9 +80,9 @@ func (k kademliaservice) PostTag(t tag) (err error) {
 	data, err := k.postobject(values, t.Bytes())
 	if err != nil {
 		log.Println(err)
-		log.Println(data)
 		return err
 	}
+	log.Println(data)
 	return err
 }
 func (k kademliaservice) PostCommit(c commit) (err error) {
@@ -125,6 +125,7 @@ func (k kademliaservice) getobject(values url.Values) (data []byte, err error) {
 }
 
 func (k kademliaservice) postobject(values url.Values, b []byte) (data []byte, err error) {
+	//log.Printf("post:%s%s", k.url, values.Encode())
 	resp, err := http.Post(k.url+values.Encode(), "application/octet-stream",
 		bytes.NewReader(b))
 	if err != nil {
@@ -140,9 +141,12 @@ func (k kademliaservice) postobject(values url.Values, b []byte) (data []byte, e
 }
 
 func kademliaservicefactory() kademliaservice {
-	return kademliaservice{"http://localhost:4000/?"}
+	return kademliaservice{url: "http://localhost:4000/?"}
 }
 
 func init() {
-	//kademliaserviceInstance := kademliaservicefactory()
+	kademliaserviceInstance = kademliaservicefactory()
+	_ = kademliaserviceInstance
 }
+
+var kademliaserviceInstance kademliaservice

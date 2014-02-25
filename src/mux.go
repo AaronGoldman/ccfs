@@ -128,9 +128,9 @@ func GetKey(h HKID) (*PrivateKey, error) {
 	for {
 		select {
 		case b := <-datach:
-			privkey := PrivteKeyFromBytes(b)
+			privkey, err := PrivteKeyFromBytes(b)
 			if bytes.Equal(privkey.Hkid(), h) && privkey.Verify() {
-				return PrivteKeyFromBytes(b), nil
+				return privkey, err
 			} else {
 				log.Println("Key Verifiy Failed")
 			}

@@ -29,3 +29,11 @@ commits/*
 tags/*
 keys/*
 bin/*
+mountpoint/*
+
+
+# vim stuff
+
+*.swn
+*.swo
+*.swp

@@ -111,7 +111,7 @@ func BenchmarkLowLevelPath(b *testing.B) {
 			log.Panic(err)
 		}
 
-		testlist := NewListFromBytes(listbytes)
+		testlist, err := ListFromBytes(listbytes)
 
 		//log.Printf("authentic list:%v\n", )
 		if !bytes.Equal(testcommit.listHash, testlist.Hash()) {
@@ -125,10 +125,10 @@ func BenchmarkLowLevelPath(b *testing.B) {
 			b.FailNow()
 		}
 		//get blob
-		testBlob, _ = GetBlob(HCID(testTag.HashBytes))
+		testBlob, _ = GetBlob(testTag.HashBytes.(HCID))
 		//log.Printf("authentic blob:%v\n", bytes.Equal(testTag.HashBytes,
 		//	testBlob.Hash()))
-		if !bytes.Equal(testTag.HashBytes, testBlob.Hash()) {
+		if !bytes.Equal(testTag.HashBytes.(HCID), testBlob.Hash()) {
 			b.FailNow()
 		}
 	}
