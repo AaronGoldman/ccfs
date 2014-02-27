@@ -39,9 +39,9 @@ func Get(objecthash HID, path string) (b blob, err error) {
 			b = l.Bytes()
 		case "tag":
 			var t tag
-			if nameSegments[0] == "" {
-				log.Printf("\n\tNo Path\n")
-			}
+			//if nameSegments[0] == "" {
+			//	log.Printf("\n\tNo Path\n")
+			//}
 			t, err = GetTag(objecthash.(HKID), nameSegments[0])
 			if err != nil {
 				//log.Printf("\n\t%v\n", err)
