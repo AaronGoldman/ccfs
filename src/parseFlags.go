@@ -8,51 +8,37 @@ import (
 	"os"
 )
 
-func parseFlags() (*string, *string, bool) {
-	//mount
-	//sevre
-	//createDomain
-	//createRepository
-	//insertDomain
-	//insertRepository
+func parseFlagsAndTakeAction() {
+	var mount = flag.Bool("mount", false, "Mount the fuse file system")
+	var serve = flag.Bool("serve", true, "Start content object server")
+	var createDomain = flag.Bool("createDomain", false, "Creates a new domain at path")
+	var createRepository = flag.Bool("createRepository", false, "Creates a new repository at path")
+	var insertDomain = flag.Bool("insertDomain", false, "Inserts the domain HKID at path")
+	var insertRepository = flag.Bool("insertRepository", false, "Inserts the repository HKID at path")
 
-	//path
-	//hkid
-	var action = flag.String(
-		"action",
-		"",
-		"createDomain, createRepository, insertDomain, insertRepository",
-	)
-	//var createDomain = flag.Bool("createDomain", false, "requires path")
-	//var createRepository = flag.Bool("createRepository", false, "requires path")
-	//var insertDomain = flag.Bool("insertDomain", false, "requires path and hkid")
-	//var insertRepository = flag.Bool("insertRepository", false, "requires path and hkid")
-	var path = flag.String("newPath", "/", "path to colecton")
+	var path = flag.String("path", "", "The path to inserted collection")
+	var hkid = flag.String("hkid", "", "HKID of collection to insert")
+
 	flag.Parse()
-	flagged := true
+
 	if flag.NFlag() == 0 {
-		flagged = false
+		//flagged = false
+		*serve = true
+		*mount = true
 	}
-	return action, path, flagged
-}
 
-func fileSystemPath2CollectionPath(fileSystemPath *string) (h HKID, collectionPath string) {
-	return HKID{}, ""
-}
-
-func takeActions(action *string, fileSystemPath *string) {
-	//if *action != "" {
-	//	log.Println("action", *action)
-	//}
-	//if *fileSystemPath != "/" {
-	//	log.Println("path", *fileSystemPath)
-	//}
-
+	if *serve {
+		go BlobServerStart()
+		go RepoServerStart()
+	}
+	if *mount {
+		//go startFSintegration()
+	}
 	in := bufio.NewReader(os.Stdin)
 	var err error
-	h, collectionPath := fileSystemPath2CollectionPath(fileSystemPath)
-	switch *action {
-	case "createDomain":
+	h, collectionPath := fileSystemPath2CollectionPath(path)
+	switch {
+	case *createDomain:
 		fmt.Println("Type in domain name:")
 		domainName, _ := in.ReadString('\n')
 		fmt.Printf("Name of Domain: %s", domainName)
@@ -62,7 +48,7 @@ func takeActions(action *string, fileSystemPath *string) {
 			return
 		}
 
-	case "createRepository":
+	case *createRepository:
 		fmt.Println("Type in repository name:")
 		repositoryName, _ := in.ReadString('\n')
 		fmt.Printf("Name of Repository: %s", repositoryName)
@@ -71,11 +57,14 @@ func takeActions(action *string, fileSystemPath *string) {
 			log.Println(err)
 			return
 		}
-	case "insertDomain":
+	case *insertDomain:
 		fmt.Println("Type in domain name:")
 		domainName, _ := in.ReadString('\n')
 		fmt.Println("Insert HKID as a hexadecimal number:")
-		hex, _ := in.ReadString('\n')
+		var hex string = *hkid
+		if *hkid == "" {
+			hex, _ = in.ReadString('\n')
+		}
 		foreign_hkid, err := HkidFromHex(hex)
 		if err != nil {
 			log.Println(err)
@@ -87,11 +76,14 @@ func takeActions(action *string, fileSystemPath *string) {
 			log.Println(err)
 			return
 		}
-	case "insertRepository":
+	case *insertRepository:
 		fmt.Println("Type in repository name:")
 		repositoryName, _ := in.ReadString('\n')
 		fmt.Println("Insert HKID as a hexadecimal number:")
-		hex, _ := in.ReadString('\n')
+		var hex string = *hkid
+		if *hkid == "" {
+			hex, _ = in.ReadString('\n')
+		}
 		foreign_hkid, err := HkidFromHex(hex)
 		if err != nil {
 			log.Println(err)
@@ -104,4 +96,9 @@ func takeActions(action *string, fileSystemPath *string) {
 			return
 		}
 	}
+
+}
+
+func fileSystemPath2CollectionPath(fileSystemPath *string) (h HKID, collectionPath string) {
+	return HKID{}, ""
 }
