@@ -69,12 +69,16 @@ func parseMessage(message string) (hkid HKID, hcid HCID, typeString string, name
 		typeString = Message["type"].(string)
 	}
 
-	if Message["nameSegment"] != nil {
-		nameSegment = Message["nameSegment"].(string)
+	if Message["namesegment"] != nil {
+		nameSegment = Message["namesegment"].(string)
 	}
 	if Message["URL"] != nil {
 		url = Message["URL"].(string)
 	}
+	log.Printf("HCID message, %s,\n", hcid.String())
+	log.Printf("HKID message, %s,\n", hkid.String())
+	log.Printf("typestring message, %s,\n", typeString)
+	log.Printf("namesegment message, %s,\n", nameSegment)
 	return hkid, hcid, typeString, nameSegment, url
 
 }

@@ -157,8 +157,11 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 			log.Printf("error: %s", err)
 		}
 	}
+
+	//m.waitingfortag[h.Hex()+namesegment] = tagchannel
+
 	if typestring == "tag" {
-		tagchannel, present := m.waitingfortag[hkid.String()+namesegment]
+		tagchannel, present := m.waitingfortag[hkid.Hex()+namesegment]
 		data, err := m.geturl(url)
 		t, err := TagFromBytes(data)
 		if err == nil {
@@ -168,6 +171,9 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 			if t.Verify() {
 				localfileserviceInstance.PostTag(t)
 			}
+		} else {
+			log.Printf("error, %s", err)
+			log.Printf("Data, %s", data)
 		}
 	}
 
@@ -203,12 +209,6 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 
 		}
 	}
-	log.Printf("HCID message, %s,\n", hcid.String())
-	log.Printf("HKID message, %s,\n", hkid.String())
-	log.Printf("typestring message, %s,\n", typestring)
-	log.Printf("namesegment message, %s,\n", namesegment)
-	//parse message
-	//if in waiting map send on channel
 
 	return err
 }
