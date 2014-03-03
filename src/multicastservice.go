@@ -31,7 +31,6 @@ func (m multicastservice) GetBlob(h HCID) (b blob, err error) {
 	m.waitingforblob[h.Hex()] = blobchannel
 	select {
 	case b = <-blobchannel:
-		log.Printf("Received from blobchannel")
 		return b, err
 
 	case <-time.After(12000 * time.Millisecond):
@@ -49,8 +48,6 @@ func (m multicastservice) GetCommit(h HKID) (c commit, err error) {
 
 	select {
 	case c = <-commitchannel:
-		log.Printf("Received from commitchannel")
-
 		return c, err
 
 	case <-time.After(12000 * time.Millisecond):
@@ -68,7 +65,6 @@ func (m multicastservice) GetTag(h HKID, namesegment string) (t tag, err error) 
 
 	select {
 	case t = <-tagchannel:
-		log.Printf("Received from tagchannel")
 		return t, err
 
 	case <-time.After(12000 * time.Millisecond):
@@ -85,7 +81,6 @@ func (m multicastservice) GetKey(h HKID) (b blob, err error) {
 	m.waitingforkey[h.Hex()] = keychannel
 	select {
 	case b = <-keychannel:
-		log.Printf("Received from Keychannel")
 		return b, err
 
 	case <-time.After(12000 * time.Millisecond):
@@ -115,7 +110,7 @@ func (m multicastservice) listenmessage() (err error) {
 func (m multicastservice) sendmessage(message string) (err error) {
 	b := make([]byte, 256)
 	copy(b, message)
-	log.Printf("Sent message, %s", message)
+	//log.Printf("Sent message, %s", message)
 	_, err = m.conn.WriteToUDP(b, m.mcaddr)
 	if err != nil {
 		log.Printf("multicasterror, %s, \n", err)
@@ -126,8 +121,7 @@ func (m multicastservice) sendmessage(message string) (err error) {
 }
 
 func (m multicastservice) receivemessage(message string, addr net.Addr) (err error) {
-	log.Printf("Received message, %s,\n", message)
-
+	//log.Printf("Received message, %s,\n", message)
 	hkid, hcid, typestring, namesegment, url := parseMessage(message)
 	if url == "" {
 		checkAndRespond(hkid, hcid, typestring, namesegment)
@@ -143,12 +137,8 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 		blobchannel, present := m.waitingforblob[hcid.String()]
 		data, err := m.geturl(url)
 		if err == nil {
-
-			log.Printf("There is no error in getting url ")
 			if present {
-				log.Printf("It is present")
 				blobchannel <- data
-				log.Printf("It is sent to blobchannel")
 			}
 			if blob(data).Hash().Hex() == hcid.Hex() {
 				localfileserviceInstance.PostBlob(data)
@@ -157,8 +147,6 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 			log.Printf("error: %s", err)
 		}
 	}
-
-	//m.waitingfortag[h.Hex()+namesegment] = tagchannel
 
 	if typestring == "tag" {
 		tagchannel, present := m.waitingfortag[hkid.Hex()+namesegment]
@@ -196,13 +184,14 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 		}
 	}
 	if typestring == "key" {
-		keychannel, present := m.waitingforkey[hcid.String()]
+		keychannel, present := m.waitingforkey[hkid.String()]
 		data, err := m.geturl(url)
 		if err == nil {
 			if present {
 				keychannel <- data
 			}
 			p, err := PrivteKeyFromBytes(data)
+
 			if err != nil && p.Verify() && p.Hkid().Hex() == hkid.Hex() {
 				localfileserviceInstance.PostKey(p)
 			}

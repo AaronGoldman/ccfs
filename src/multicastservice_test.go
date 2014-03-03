@@ -4,7 +4,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"net"
 	"testing"
 	"time"
@@ -42,7 +41,6 @@ func TestMulticastservice_GetBlob(t *testing.T) {
 func TestMulticastservice_GetCommit(t *testing.T) {
 	//t.Skipf("Come back to this test")
 	hkid := hkidFromDString("5198719439877464148627795433286736285873678110640040333794349799294848737858561643942881983506066042818105864129178593001327423646717446545633525002218361750", 10)
-	log.Printf("The HKID is, %s", hkid)
 
 	b := blob([]byte("blob found"))
 	l := NewList(b.Hash(), "blob", "Blobinlist")
@@ -71,9 +69,7 @@ func TestMulticastservice_GetTag(t *testing.T) {
 	//log.Printf("The key generated is, %d", KeyGen().D)
 	//hkid := HKID{}
 	hkid := hkidFromDString("6450698573071574057685373503239926609554390924514830851922442833127942726436428023022500281659846836919706975681006884631876585143520956760217923400876937896", 10)
-	log.Printf("The HKID is, %s", hkid)
 	b := blob([]byte("blob found"))
-	log.Printf("Blob is, %s", b)
 	tag_t := NewTag(b.Hash(), "blob", "BlobinTag", hkid)
 	localfileserviceInstance.PostTag(tag_t)
 	go func() {
@@ -91,3 +87,33 @@ func TestMulticastservice_GetTag(t *testing.T) {
 	}
 
 }
+
+//func TestMulticastservice_GetKey(t *testing.T) {
+//	//t.Skipf("Come back to this test")
+//	//log.Printf("The key generated is, %d", KeyGen().D)
+//	//hkid := HKID{}
+//	hkid := hkidFromDString("1404824859588041073678522358128083070212026722272843802627814234500338310965596733375766723741689655938709528394105700164973947017056140017071321292025240790", 10)
+//	log.Printf("The HKID is, %s", hkid)
+
+//	privkey, err := GetKey(hkid)
+//	if err != nil {
+//		log.Printf("Error for GetKey, %s", err)
+//	}
+
+//	go func() {
+//		time.Sleep(1 * time.Millisecond)
+//		mcaddr, _ := net.ResolveUDPAddr("udp", "127.0.0.1:8000")
+//		multicastserviceInstance.receivemessage(fmt.Sprintf("{\"type\":\"key\", \"hkid\": \"%s\", \"URL\": \"/k/%s\"}", hkid, hkid), mcaddr)
+//	}()
+
+//	output, err := multicastserviceInstance.GetKey(hkid)
+
+//	if err != nil {
+//		t.Errorf("Get Key Failed \nError:%t", err)
+//	}
+
+//	if !bytes.Equal(output.Hash(), privkey.Hash()) || err != nil {
+//		t.Errorf("Make URL Failed \nExpected:%s \nGot: %s", privkey, output)
+//	}
+
+//}
