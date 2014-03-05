@@ -26,6 +26,7 @@ func TestMountRepo(t *testing.T) {
 }
 
 func TestCLCreateDomain(t *testing.T) {
+	t.Skip("skip create domain")
 	wd, _ := os.Getwd()
 	path := filepath.Join(wd, "../mountpoint")
 	cmd := exec.Command("./src", "-createDomain=true", fmt.Sprintf("-path=%s/TestPostNewTag", path))
@@ -36,6 +37,7 @@ func TestCLCreateDomain(t *testing.T) {
 	}
 }
 func TestCLCreateRepo(t *testing.T) {
+	t.Skip("skip create repo")
 	wd, _ := os.Getwd()
 	path := filepath.Join(wd, "../mountpoint")
 	cmd := exec.Command("./src", "-createRepository=true", fmt.Sprintf("-path=%s/TestPostNewCommit", path))
@@ -46,6 +48,7 @@ func TestCLCreateRepo(t *testing.T) {
 	}
 }
 func TestCLInsertDomain(t *testing.T) {
+	t.Skip("skip insert domain")
 	wd, _ := os.Getwd()
 	path := filepath.Join(wd, "../mountpoint")
 	cmd := exec.Command("./src", "-insertDomain=true", fmt.Sprintf("-path=%s/TestPostTag", path), fmt.Sprintf("-hkid=\"%s\"", benchmarkTagHkid))
@@ -56,6 +59,7 @@ func TestCLInsertDomain(t *testing.T) {
 	}
 }
 func TestCLInsertRepo(t *testing.T) {
+	t.Skip("skip insert repo")
 	wd, _ := os.Getwd()
 	path := filepath.Join(wd, "../mountpoint")
 	cmd := exec.Command("./src", "-insertRepository=true", fmt.Sprintf("-path=%s/TestPostCommit", path), fmt.Sprintf("-hkid=\"%s\"", benchmarkCommitHkid))
