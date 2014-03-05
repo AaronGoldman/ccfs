@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 func parseFlagsAndTakeAction() {
@@ -20,7 +22,7 @@ func parseFlagsAndTakeAction() {
 	var hkid = flag.String("hkid", "", "HKID of collection to insert")
 
 	flag.Parse()
-
+	log.Printf("HKID: %s", hkid)
 	if flag.NFlag() == 0 {
 		//flagged = false
 		*serve = true
@@ -37,6 +39,7 @@ func parseFlagsAndTakeAction() {
 	in := bufio.NewReader(os.Stdin)
 	var err error
 	h, collectionPath := fileSystemPath2CollectionPath(path)
+	log.Printf("H %s", h)
 	switch {
 	case *createDomain:
 		fmt.Println("Type in domain name:")
@@ -84,6 +87,7 @@ func parseFlagsAndTakeAction() {
 		if *hkid == "" {
 			hex, _ = in.ReadString('\n')
 		}
+		fmt.Printf("%s", hex)
 		foreign_hkid, err := HkidFromHex(hex)
 		if err != nil {
 			log.Println(err)
@@ -99,6 +103,17 @@ func parseFlagsAndTakeAction() {
 
 }
 
-func fileSystemPath2CollectionPath(fileSystemPath *string) (h HKID, collectionPath string) {
-	return HKID{}, ""
+func fileSystemPath2CollectionPath(fileSystemPath *string) (HKID, string) {
+	h, err := HkidFromHex("c09b2765c6fd4b999d47c82f9cdf7f4b659bf7c29487cc0b357b8fc92ac8ad02")
+	wd, err := os.Getwd()
+	path := filepath.Join(wd, "../mountpoint")
+	//log.Printf("%s", *fileSystemPath)
+	//LEFT OFF HERE- so fileSystemPath isnt what I want it to be
+	*fileSystemPath = strings.Trim(*fileSystemPath, "\"")
+	collectionPath, err := filepath.Rel(string(path), *fileSystemPath)
+	if err != nil {
+		log.Printf("OH NO! An Error %s", err)
+	}
+
+	return h, collectionPath
 }

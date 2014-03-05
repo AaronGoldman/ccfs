@@ -2,12 +2,12 @@
 package main
 
 import (
-	"io/ioutil"
-	//"path/filename"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"testing"
 )
 
@@ -26,7 +26,9 @@ func TestMountRepo(t *testing.T) {
 }
 
 func TestCLCreateDomain(t *testing.T) {
-	cmd := exec.Command("./src", "-createDomain=true", "-path=\"TestPostNewTag\"")
+	wd, _ := os.Getwd()
+	path := filepath.Join(wd, "../mountpoint")
+	cmd := exec.Command("./src", "-createDomain=true", fmt.Sprintf("-path=%s/TestPostNewTag", path))
 	b, err := cmd.CombinedOutput()
 	fmt.Printf("%s", b)
 	if err != nil {
@@ -34,7 +36,9 @@ func TestCLCreateDomain(t *testing.T) {
 	}
 }
 func TestCLCreateRepo(t *testing.T) {
-	cmd := exec.Command("./src", "-createRepository=true", "-path=\"TestPostNewCommit\"")
+	wd, _ := os.Getwd()
+	path := filepath.Join(wd, "../mountpoint")
+	cmd := exec.Command("./src", "-createRepository=true", fmt.Sprintf("-path=%s/TestPostNewCommit", path))
 	b, err := cmd.CombinedOutput()
 	fmt.Printf("%s", b)
 	if err != nil {
@@ -42,7 +46,9 @@ func TestCLCreateRepo(t *testing.T) {
 	}
 }
 func TestCLInsertDomain(t *testing.T) {
-	cmd := exec.Command("./src", "-insertDomain=true", "-path=\"TestPostTag\"", fmt.Sprintf("-hkid=\"%s\"", benchmarkTagHkid))
+	wd, _ := os.Getwd()
+	path := filepath.Join(wd, "../mountpoint")
+	cmd := exec.Command("./src", "-insertDomain=true", fmt.Sprintf("-path=%s/TestPostTag", path), fmt.Sprintf("-hkid=\"%s\"", benchmarkTagHkid))
 	b, err := cmd.CombinedOutput()
 	fmt.Printf("%s", b)
 	if err != nil {
@@ -50,7 +56,9 @@ func TestCLInsertDomain(t *testing.T) {
 	}
 }
 func TestCLInsertRepo(t *testing.T) {
-	cmd := exec.Command("./src", "-insertRepository=true", "-path=\"TestPostCommit\"", fmt.Sprintf("-hkid=\"%s\"", benchmarkCommitHkid))
+	wd, _ := os.Getwd()
+	path := filepath.Join(wd, "../mountpoint")
+	cmd := exec.Command("./src", "-insertRepository=true", fmt.Sprintf("-path=%s/TestPostCommit", path), fmt.Sprintf("-hkid=\"%s\"", benchmarkCommitHkid))
 	b, err := cmd.CombinedOutput()
 	fmt.Printf("%s", b)
 	if err != nil {
