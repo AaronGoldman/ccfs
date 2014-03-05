@@ -9,7 +9,7 @@ import (
 func TestAppsscriptservice_getBlob(t *testing.T) {
 
 	log.SetFlags(log.Lshortfile)
-	t.Skip("Cause")
+	t.Skip()
 	h, err := HcidFromHex(
 		"ca4c4244cee2bd8b8a35feddcd0ba36d775d68637b7f0b4d2558728d0752a2a2",
 	)
@@ -35,7 +35,7 @@ func TestAppsscriptservice_getCommit(t *testing.T) {
 
 func TestAppsscriptservice_getTag(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
-	t.Skip("Cause")
+	t.Skip()
 	h, err := HkidFromHex(
 		"f65b92b9ce15e167b98fc896f0a365c87c39565642a59ba0060db3b33be6d885",
 	)
@@ -48,8 +48,7 @@ func TestAppsscriptservice_getTag(t *testing.T) {
 
 func TestAppsscriptservice_getKey(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
-	t.Skip("Cause")
-	//t.Skip()
+	t.Skip()
 	h, err := HkidFromHex(
 		"f65b92b9ce15e167b98fc896f0a365c87c39565642a59ba0060db3b33be6d885",
 	)

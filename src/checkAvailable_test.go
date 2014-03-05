@@ -5,8 +5,7 @@ import (
 )
 
 func TestMakeURL(t *testing.T) {
-
-	t.Skip("Skipping checkAvailable_test.go - TestMakeURL")
+	//t.Skip()
 	AnswerKey := []struct {
 		hkid        HKID
 		hcid        HCID
@@ -29,7 +28,7 @@ func TestMakeURL(t *testing.T) {
 	}
 }
 func TestBuildResponse(t *testing.T) {
-	t.Skip("Skipping checkAvailable_test.go - TestBUildResponse")
+	//t.Skip()
 	AnswerKey := []struct {
 		hkid        HKID
 		hcid        HCID

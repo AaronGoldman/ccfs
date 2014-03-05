@@ -69,8 +69,8 @@ func parseMessage(message string) (hkid HKID, hcid HCID, typeString string, name
 		typeString = Message["type"].(string)
 	}
 
-	if Message["nameSegment"] != nil {
-		nameSegment = Message["nameSegment"].(string)
+	if Message["namesegment"] != nil {
+		nameSegment = Message["namesegment"].(string)
 	}
 	if Message["URL"] != nil {
 		url = Message["URL"].(string)

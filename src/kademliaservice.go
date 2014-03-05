@@ -141,7 +141,7 @@ func (k kademliaservice) postobject(values url.Values, b []byte) (data []byte, e
 }
 
 func kademliaservicefactory() kademliaservice {
-	return kademliaservice{url: "http://localhost:4000/?"}
+	return kademliaservice{url: "http://128.61.17.205:8080/?"}
 }
 
 func init() {
