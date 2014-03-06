@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -22,7 +23,7 @@ func parseFlagsAndTakeAction() {
 	var hkid = flag.String("hkid", "", "HKID of collection to insert")
 
 	flag.Parse()
-	log.Printf("HKID: %s", hkid)
+
 	if flag.NFlag() == 0 {
 		//flagged = false
 		*serve = true
@@ -36,68 +37,76 @@ func parseFlagsAndTakeAction() {
 	if *mount {
 		//go startFSintegration()
 	}
-	in := bufio.NewReader(os.Stdin)
-	var err error
-	h, collectionPath := fileSystemPath2CollectionPath(path)
-	log.Printf("H %s", h)
-	switch {
-	case *createDomain:
-		fmt.Println("Type in domain name:")
-		domainName, _ := in.ReadString('\n')
-		fmt.Printf("Name of Domain: %s", domainName)
-		err = InitDomain(h, fmt.Sprintf("%s/%s", collectionPath, domainName))
+
+	if *path != "" {
+		log.Printf("HKID: %s", *hkid)
+		in := bufio.NewReader(os.Stdin)
+		var err error
+		h, collectionPath := fileSystemPath2CollectionPath(path)
+		log.Printf("systemPath %s", *path)
+		log.Printf("collectionPath %s", collectionPath)
+
+		FileInfos, err := ioutil.ReadDir(*path)
 		if err != nil {
-			log.Println(err)
+			log.Printf("Error reading directory %s", err)
 			return
 		}
 
-	case *createRepository:
-		fmt.Println("Type in repository name:")
-		repositoryName, _ := in.ReadString('\n')
-		fmt.Printf("Name of Repository: %s", repositoryName)
-		err = InitRepo(h, fmt.Sprintf("%s/%s", collectionPath, repositoryName))
-		if err != nil {
-			log.Println(err)
-			return
+		if len(FileInfos) != 0 {
+			fmt.Printf("The folder is not empty")
+			return // Ends function
 		}
-	case *insertDomain:
-		fmt.Println("Type in domain name:")
-		domainName, _ := in.ReadString('\n')
-		fmt.Println("Insert HKID as a hexadecimal number:")
-		var hex string = *hkid
-		if *hkid == "" {
-			hex, _ = in.ReadString('\n')
-		}
-		foreign_hkid, err := HkidFromHex(hex)
-		if err != nil {
-			log.Println(err)
-		}
-		fmt.Printf("Name of Domain: %s", domainName)
-		fmt.Printf("hkid: %s", h)
-		err = InsertDomain(h, fmt.Sprintf("%s/%s", collectionPath, domainName), foreign_hkid)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-	case *insertRepository:
-		fmt.Println("Type in repository name:")
-		repositoryName, _ := in.ReadString('\n')
-		fmt.Println("Insert HKID as a hexadecimal number:")
-		var hex string = *hkid
-		if *hkid == "" {
-			hex, _ = in.ReadString('\n')
-		}
-		fmt.Printf("%s", hex)
-		foreign_hkid, err := HkidFromHex(hex)
-		if err != nil {
-			log.Println(err)
-		}
-		fmt.Printf("Name of Repository: %s", repositoryName)
-		fmt.Printf("hkid: %s", h)
-		err = InsertRepo(h, fmt.Sprintf("%s/%s", collectionPath, repositoryName), foreign_hkid)
-		if err != nil {
-			log.Println(err)
-			return
+
+		collectionName := filepath.Base(*path)
+		fmt.Printf("Name of Collection: %s", collectionName)
+
+		switch {
+		case *createDomain:
+			err = InitDomain(h, fmt.Sprintf("%s/%s", collectionPath, collectionName))
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+		case *createRepository:
+			err = InitRepo(h, fmt.Sprintf("%s/%s", collectionPath, collectionName))
+			if err != nil {
+				log.Println(err)
+				return
+			}
+		case *insertDomain:
+			fmt.Println("Insert HKID as a hexadecimal number:")
+			var hex string = *hkid
+			if *hkid == "" {
+				hex, _ = in.ReadString('\n')
+			}
+			foreign_hkid, err := HkidFromHex(hex)
+			if err != nil {
+				log.Println(err)
+			}
+			fmt.Printf("hkid: %s", h)
+			err = InsertDomain(h, fmt.Sprintf("%s/%s", collectionPath, collectionName), foreign_hkid)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+		case *insertRepository:
+			fmt.Println("Insert HKID as a hexadecimal number:")
+			var hex string = *hkid
+			if *hkid == "" {
+				hex, _ = in.ReadString('\n')
+			}
+			fmt.Printf("%s", hex)
+			foreign_hkid, err := HkidFromHex(hex)
+			if err != nil {
+				log.Println(err)
+			}
+			fmt.Printf("hkid: %s", h)
+			err = InsertRepo(h, fmt.Sprintf("%s/%s", collectionPath, collectionName), foreign_hkid)
+			if err != nil {
+				log.Println(err)
+				return
+			}
 		}
 	}
 
