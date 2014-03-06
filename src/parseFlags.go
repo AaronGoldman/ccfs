@@ -49,11 +49,13 @@ func parseFlagsAndTakeAction() {
 		FileInfos, err := ioutil.ReadDir(*path)
 		if err != nil {
 			log.Printf("Error reading directory %s", err)
+			os.Exit(2)
 			return
 		}
 
 		if len(FileInfos) != 0 {
 			fmt.Printf("The folder is not empty")
+			os.Exit(2)
 			return // Ends function
 		}
 
@@ -83,6 +85,7 @@ func parseFlagsAndTakeAction() {
 			foreign_hkid, err := HkidFromHex(hex)
 			if err != nil {
 				log.Println(err)
+				os.Exit(2)
 			}
 			fmt.Printf("hkid: %s", h)
 			err = InsertDomain(h, fmt.Sprintf("%s/%s", collectionPath, collectionName), foreign_hkid)
@@ -99,6 +102,7 @@ func parseFlagsAndTakeAction() {
 			fmt.Printf("%s", hex)
 			foreign_hkid, err := HkidFromHex(hex)
 			if err != nil {
+				os.Exit(2)
 				log.Println(err)
 			}
 			fmt.Printf("hkid: %s", h)
@@ -122,6 +126,7 @@ func fileSystemPath2CollectionPath(fileSystemPath *string) (HKID, string) {
 	collectionPath, err := filepath.Rel(string(path), *fileSystemPath)
 	if err != nil {
 		log.Printf("OH NO! An Error %s", err)
+		os.Exit(2)
 	}
 
 	return h, collectionPath
