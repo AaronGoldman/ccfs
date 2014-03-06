@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -95,13 +96,14 @@ func (m multicastservice) listenmessage() (err error) {
 	go func() {
 		for {
 			b := make([]byte, 256)
-			n, addr, err := m.conn.ReadFromUDP(b)
+			_, addr, err := m.conn.ReadFromUDP(b)
 			if err != nil {
 				log.Printf("multicasterror, %s, \n", err)
 				return
 			}
+			msg := strings.Trim(string(b), "\x00")
 			//log.Printf("%s", m.conn.LocalAddr())
-			m.receivemessage(string(b[0:n]), addr)
+			m.receivemessage(msg, addr)
 		}
 	}()
 	return
@@ -135,6 +137,7 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 
 	if typestring == "blob" {
 		blobchannel, present := m.waitingforblob[hcid.String()]
+		log.Printf("url is %s", url)
 		data, err := m.geturl(url)
 		if err == nil {
 			if present {

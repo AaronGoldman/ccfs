@@ -28,11 +28,9 @@ func TestMulticastservice_GetBlob(t *testing.T) {
 		output, err := multicastserviceInstance.GetBlob(answer.hcid)
 
 		if err != nil {
-			t.Errorf("Get Blob Failed \nError:%t", err)
-		}
-
-		if !bytes.Equal(output.Hash(), answer.hcid) || err != nil {
-			t.Errorf("Make URL Failed \nExpected:%s \nGot: %s", answer.response, output)
+			t.Errorf("Get Blob Failed \nError:%s", err)
+		} else if !bytes.Equal(output.Hash(), answer.hcid) {
+			t.Errorf("Get Blob Failed \nExpected:%s \nGot: %s", answer.response, output)
 		}
 
 	}
@@ -55,11 +53,9 @@ func TestMulticastservice_GetCommit(t *testing.T) {
 	output, err := multicastserviceInstance.GetCommit(c.Hkid())
 
 	if err != nil {
-		t.Errorf("Get Commit Failed \nError:%t", err)
-	}
-
-	if !bytes.Equal(output.Hash(), c.Hash()) || err != nil {
-		t.Errorf("Make URL Failed \nExpected:%s \nGot: %s", c, output)
+		t.Errorf("Get Commit Failed \nError:%s", err)
+	} else if !bytes.Equal(output.Hash(), c.Hash()) {
+		t.Errorf("Get Commit Failed \nExpected:%s \nGot: %s", c, output)
 	}
 
 }
@@ -83,7 +79,7 @@ func TestMulticastservice_GetTag(t *testing.T) {
 	if err != nil {
 		t.Errorf("Get Tag Failed \nError:%s", err)
 	} else if !bytes.Equal(output.Hash(), tag_t.Hash()) {
-		t.Errorf("Make URL Failed \nExpected:%s \nGot: %s", tag_t, output)
+		t.Errorf("Get Tag Failed \nExpected:%s \nGot: %s", tag_t, output)
 	}
 
 }
