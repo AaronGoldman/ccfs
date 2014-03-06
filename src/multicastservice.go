@@ -137,7 +137,7 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 
 	if typestring == "blob" {
 		blobchannel, present := m.waitingforblob[hcid.String()]
-		log.Printf("url is %s", url)
+		//log.Printf("url is %s", url)
 		data, err := m.geturl(url)
 		if err == nil {
 			if present {
