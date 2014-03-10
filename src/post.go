@@ -175,7 +175,7 @@ func tag_helper(h HID, next_path_segment string, rest_of_path string,
 			}
 			t = NewTag(hash_of_posted, next_typeString, next_path_segment, h.Bytes())
 		} else {
-			log.Panic("You don't seem to own this Domain")
+			log.Printf("You don't seem to own this Domain")
 		}
 	}
 	if posterr != nil {

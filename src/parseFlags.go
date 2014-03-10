@@ -60,7 +60,7 @@ func parseFlagsAndTakeAction() {
 		}
 
 		collectionName := filepath.Base(*path)
-		fmt.Printf("Name of Collection: %s", collectionName)
+		fmt.Printf("Name of Collection: %s\n", collectionName)
 
 		switch {
 		case *createDomain:
@@ -84,10 +84,10 @@ func parseFlagsAndTakeAction() {
 			}
 			foreign_hkid, err := HkidFromHex(hex)
 			if err != nil {
-				log.Println(err)
+				log.Printf("Somethng went wrong in insertDomain %s", err)
 				os.Exit(2)
 			}
-			fmt.Printf("hkid: %s", h)
+			fmt.Printf("hkid: %s\n", h)
 			err = InsertDomain(h, fmt.Sprintf("%s/%s", collectionPath, collectionName), foreign_hkid)
 			if err != nil {
 				log.Println(err)
@@ -102,8 +102,9 @@ func parseFlagsAndTakeAction() {
 			fmt.Printf("%s", hex)
 			foreign_hkid, err := HkidFromHex(hex)
 			if err != nil {
+				log.Printf("Somethng went wrong in insertRepo %s", err)
 				os.Exit(2)
-				log.Println(err)
+
 			}
 			fmt.Printf("hkid: %s", h)
 			err = InsertRepo(h, fmt.Sprintf("%s/%s", collectionPath, collectionName), foreign_hkid)
