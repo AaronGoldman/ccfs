@@ -27,7 +27,9 @@ func TestMountRepo(t *testing.T) {
 }
 
 func TestCLCreateDomain(t *testing.T) {
-	t.Skip()
+
+	t.Skip("skip create domain")
+
 	wd, _ := os.Getwd()
 	path := filepath.Join(wd, "../mountpoint")
 	os.MkdirAll(fmt.Sprintf("%s/TestPostNewTag", path), 0777)
@@ -43,7 +45,9 @@ func TestCLCreateDomain(t *testing.T) {
 	}
 }
 func TestCLCreateRepo(t *testing.T) {
-	t.Skip()
+
+	t.Skip("skip create repo")
+
 	wd, _ := os.Getwd()
 	path := filepath.Join(wd, "../mountpoint")
 	os.MkdirAll(fmt.Sprintf("%s/TestPostNewCommit", path), 0777)
@@ -59,7 +63,9 @@ func TestCLCreateRepo(t *testing.T) {
 	}
 }
 func TestCLInsertDomain(t *testing.T) {
-	//log.Printf("%d", KeyGen().D)
+
+	t.Skip("skip insert domain")
+
 	wd, _ := os.Getwd()
 	path := filepath.Join(wd, "../mountpoint")
 	os.MkdirAll(fmt.Sprintf("%s/TestPostTag", path), 0777)
@@ -76,7 +82,9 @@ func TestCLInsertDomain(t *testing.T) {
 	}
 }
 func TestCLInsertRepo(t *testing.T) {
-	//log.Printf("%d", KeyGen().D)
+
+	t.Skip("skip insert repo")
+
 	wd, _ := os.Getwd()
 	path := filepath.Join(wd, "../mountpoint")
 	os.MkdirAll(fmt.Sprintf("%s/TestPostCommit", path), 0777)

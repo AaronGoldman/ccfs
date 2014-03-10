@@ -42,19 +42,19 @@ func startFSintegration() {
 
 }
 
-func  ccfsUnmount(mountpoint string){
-		err := fuse.Unmount(mountpoint) 
-                if err != nil {
-                        log.Printf("Could not unmount: %s", err)
-                }
-                log.Printf("Exit-kill program")
-                os.Exit(0)
-			}
+func ccfsUnmount(mountpoint string) {
+	err := fuse.Unmount(mountpoint)
+	if err != nil {
+		log.Printf("Could not unmount: %s", err)
+	}
+	log.Printf("Exit-kill program")
+	os.Exit(0)
+}
 
 // FS implements the hello world file system.
 type FS struct {
-	hkid HKID
-	mountpoint string 	//fs object needs to know its mountpoint
+	hkid       HKID
+	mountpoint string //fs object needs to know its mountpoint
 }
 
 func FS_from_HKID_string(HKIDstring string, mountpoint string) FS {
@@ -82,25 +82,25 @@ func (fs_obj FS) Root() (fs.Node, fuse.Error) { //returns a directory
 		branch:       fs_obj.hkid,
 		permission:   perm,
 		content_type: "commit",
-		leaf:	      fs_obj.hkid,
-		}, nil 
+		leaf:         fs_obj.hkid,
+	}, nil
 }
+
 // function to save writes before ejecting mountpoint
-func (fs_obj FS) Destroy(){
+func (fs_obj FS) Destroy() {
 
 	ccfsUnmount(fs_obj.mountpoint)
 
-		}
+}
 
 // Dir implements both Node and Handle for the root directory.
 type Dir struct {
 	path         string
 	trunc        HKID
 	branch       HKID
-	leaf	     HID
+	leaf         HID
 	permission   os.FileMode
 	content_type string
-
 }
 
 func (d Dir) Attr() fuse.Attr {
@@ -114,106 +114,106 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 		return File{permission: os.FileMode(0444)}, nil
 	}
 
-	log.Printf("d.leaf is %s", d.leaf.Hex())	
+	log.Printf("d.leaf is %s", d.leaf.Hex())
 
-	//in each case, call 
+	//in each case, call
 	switch d.content_type {
 	default:
 		log.Printf("Unknown type: %")
 		return nil, nil
-	case "commit":		// a commit has a list hash
+	case "commit": // a commit has a list hash
 		c, err := GetCommit(d.leaf.(HKID))
 		if err != nil {
-                        log.Printf("commit %s:", err)
-                        return nil, nil
-			}
-				//get list hash
-		l, err := GetList(c.listHash)//l is the list object
+			log.Printf("commit %s:", err)
+			return nil, nil
+		}
+		//get list hash
+		l, err := GetList(c.listHash) //l is the list object
 		if err != nil {
-                        log.Printf("commit list retieval error %s:", err)
-                        return nil, nil
-                }
+			log.Printf("commit list retieval error %s:", err)
+			return nil, nil
+		}
 
-		list_entry, present := l[name]//go through list entries and is it maps to the string you passed in present == 1 
-                if (!present){
-                   return nil, fuse.ENOENT
-                        }
+		list_entry, present := l[name] //go through list entries and is it maps to the string you passed in present == 1
+		if !present {
+			return nil, fuse.ENOENT
+		}
 		//getKey to figure out permissions of the child
-		_ , err = GetKey(c.hkid)
+		_, err = GetKey(c.hkid)
 		//perm := fuse.Attr{Mode: 0555}//default read permissions
-		perm := os.FileMode(0555) 
+		perm := os.FileMode(0555)
 		if err == nil {
-                        log.Printf("no private key %s:", err)
-                        //perm =  fuse.Attr{Mode: 0755}
+			log.Printf("no private key %s:", err)
+			//perm =  fuse.Attr{Mode: 0755}
 			perm = os.FileMode(0755)
-                        }
-		if list_entry.TypeString== "blob" {
+		}
+		if list_entry.TypeString == "blob" {
 			return File{
-        contentHash:  list_entry.Hash.(HCID),
-        permission :  perm,
-				}, nil
-					}
+				contentHash: list_entry.Hash.(HCID),
+				permission:  perm,
+			}, nil
+		}
 
-                return Dir{
-		path:         d.path + "/" + name,
-                trunc:        d.trunc,
-                branch:       d.leaf.(HKID),
-                leaf:         list_entry.Hash,
-                permission:   perm,
-                content_type: list_entry.TypeString,
-        }, nil
+		return Dir{
+			path:         d.path + "/" + name,
+			trunc:        d.trunc,
+			branch:       d.leaf.(HKID),
+			leaf:         list_entry.Hash,
+			permission:   perm,
+			content_type: list_entry.TypeString,
+		}, nil
 
 	case "list":
 		l, err := GetList(d.leaf.(HCID))
-                if err != nil {
-                        log.Printf("commit list %s:", err)
-                        return nil, nil
-                }
-	list_entry, present := l[name]//go through list entries and is it maps to the string you passed in present == 1 
-		if (!present){
-		   return nil, fuse.ENOENT
+		if err != nil {
+			log.Printf("commit list %s:", err)
+			return nil, nil
 		}
-                if list_entry.TypeString== "blob" {
-                        return File{
-                                contentHash: list_entry.Hash.(HCID),
-				permission: d.permission, 
-					}, nil
-                                        }
+		list_entry, present := l[name] //go through list entries and is it maps to the string you passed in present == 1
+		if !present {
+			return nil, fuse.ENOENT
+		}
+		if list_entry.TypeString == "blob" {
+			return File{
+				contentHash: list_entry.Hash.(HCID),
+				permission:  d.permission,
+			}, nil
+		}
 		return Dir{path: d.path + "/" + name,
-                trunc:        d.trunc,
-                branch:       d.branch,
-		leaf:	      list_entry.Hash,
-                permission:   d.permission,
-                content_type: list_entry.TypeString,
-	}, nil
+			trunc:        d.trunc,
+			branch:       d.branch,
+			leaf:         list_entry.Hash,
+			permission:   d.permission,
+			content_type: list_entry.TypeString,
+		}, nil
 	case "tag":
-		t, err := GetTag(d.leaf.(HKID), name)//leaf is HID
-	// no blobs because blobs are for file structure		
-	
-		 if err != nil {
-                                log.Printf("not a tag %s", err)
-                                return nil, fuse.ENOENT
-                        }
+		t, err := GetTag(d.leaf.(HKID), name) //leaf is HID
+		// no blobs because blobs are for file structure
+
+		if err != nil {
+			log.Printf("not a tag %s", err)
+			return nil, fuse.ENOENT
+		}
 		//getKey to figure out permissions of the child
-                _ , err = GetKey(t.hkid)
-                perm := os.FileMode(0555)//default read permissions
-                if err == nil {
-                        log.Printf("no private key %s:", err)
-                        perm =  os.FileMode(0755)
-                        }
-                if t.TypeString== "blob" {
-                        return File{
-				contentHash: t.HashBytes.(HCID), 
-				 permission: perm,
-					}, nil
-                                        }
-                return Dir{path: d.path + "/" + name,
-                trunc:        d.trunc,
-                branch:       t.hkid,
-                leaf:         t.HashBytes,
-                permission:   perm,
-                content_type: t.TypeString,
-        	}, nil
+		_, err = GetKey(t.hkid)
+		perm := os.FileMode(0555) //default read permissions
+		if err == nil {
+			log.Printf("no private key %s:", err)
+			perm = os.FileMode(0755)
+		}
+		if t.TypeString == "blob" {
+			return File{
+				contentHash: t.HashBytes.(HCID),
+				permission:  perm,
+			}, nil
+		}
+		return Dir{path: d.path + "/" + name,
+			trunc:        d.trunc,
+			branch:       t.hkid,
+			leaf:         t.HashBytes,
+			permission:   perm,
+			content_type: t.TypeString,
+		}, nil
 
 	}
 
@@ -264,38 +264,57 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 			dirDirs = append(dirDirs, append_to_list)
 		}
 	} // end if range
-//	log.Printf("return dirDirs: %s", dirDirs)
+	//	log.Printf("return dirDirs: %s", dirDirs)
 	return dirDirs, nil
 }
 
 //2 types of nodes for files and directories. So call rename twice?
 //For directory node
 
-func (f File) Rename(r *fuse.RenameRequest, newDir fs.Node, intr fs.Intr) fuse.Error{
+func (f File) Rename(r *fuse.RenameRequest, newDir fs.Node, intr fs.Intr) fuse.Error {
 
-		log.Println("print request: %s", r)
-		return nil
-		}
+	log.Println("print request: %s", r)
+	return nil
+}
+
 // File implements both Node and Handle for the hello file.
-type File struct{
-	contentHash  HCID
-        permission   os.FileMode
+type File struct {
+	contentHash HCID
+	permission  os.FileMode
 }
 
 func (f File) Attr() fuse.Attr {
-        log.Println("File: Attr func")
-        return fuse.Attr{Inode: 1, Mode: f.permission}
+	log.Println("File: Attr func")
+	return fuse.Attr{Inode: 1, Mode: f.permission}
 	//log.Println("Attr 0444")
 	//return fuse.Attr{Mode: 0444}
 }
 
 func (f File) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
 	log.Println("File: ReadAll func")
-	if (f.contentHash==nil){ 	// default file 
-	return []byte("hello, world\n"), nil} 
+	if f.contentHash == nil { // default file
+		return []byte("hello, world\n"), nil
+	}
 	b, err := GetBlob(f.contentHash) //
-	if err!=nil {
+	if err != nil {
 		return nil, fuse.ENOENT
-			}
+	}
 	return b, nil
 }
+
+func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, fs.Intr) (fs.Handle, fuse.Error){
+	b, err := GetBlob(f.contentHash) //
+        if err != nil {
+                return nil, fuse.ENOENT
+			}
+        return OpenFileHandle{buffer: b} , nil
+}
+
+type OpenFileHandle struct {
+	buffer []byte 
+}
+
+
+
+
+
