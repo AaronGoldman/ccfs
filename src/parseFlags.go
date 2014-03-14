@@ -81,13 +81,15 @@ func parseFlagsAndTakeAction() {
 			var hex string = *hkid
 			if *hkid == "" {
 				hex, _ = in.ReadString('\n')
+				hex = strings.Trim(hex, "\n")
 			}
+			log.Print(len(hex))
 			foreign_hkid, err := HkidFromHex(hex)
 			if err != nil {
 				log.Printf("Somethng went wrong in insertDomain %s", err)
 				os.Exit(2)
 			}
-			fmt.Printf("hkid: %s\n", h)
+			log.Printf("hkid: %s\n", h)
 			err = InsertDomain(h, fmt.Sprintf("%s/%s", collectionPath, collectionName), foreign_hkid)
 			if err != nil {
 				log.Println(err)
@@ -98,6 +100,7 @@ func parseFlagsAndTakeAction() {
 			var hex string = *hkid
 			if *hkid == "" {
 				hex, _ = in.ReadString('\n')
+				hex = strings.Trim(hex, "\n")
 			}
 			fmt.Printf("%s", hex)
 			foreign_hkid, err := HkidFromHex(hex)

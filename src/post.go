@@ -111,7 +111,11 @@ func commit_helper(h HCID, path string, post_bytes Byteser, post_type string) (H
 		var hash_of_posted HID
 		hash_of_posted, posterr = post(next_hash, next_path,
 			next_typeString, post_bytes, post_type)
+		if posterr != nil {
+			return nil, posterr
+		}
 		c = c.Update(hash_of_posted.Bytes())
+
 	} else {
 		_, err := getPrivateKeyForHkid(h.Bytes())
 		if err == nil {
@@ -176,6 +180,7 @@ func tag_helper(h HID, next_path_segment string, rest_of_path string,
 			t = NewTag(hash_of_posted, next_typeString, next_path_segment, h.Bytes())
 		} else {
 			log.Printf("You don't seem to own this Domain")
+			return nil, fmt.Errorf("You dont own the Domain, meanie")
 		}
 	}
 	if posterr != nil {
