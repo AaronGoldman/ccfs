@@ -27,7 +27,7 @@ func parseFlagsAndTakeAction() {
 	if flag.NFlag() == 0 {
 		//flagged = false
 		*serve = true
-		*mount = true
+		//*mount = true
 	}
 
 	if *serve {
@@ -35,7 +35,7 @@ func parseFlagsAndTakeAction() {
 		go RepoServerStart()
 	}
 	if *mount {
-		//go startFSintegration()
+		go startFSintegration()
 	}
 
 	if *path != "" {
