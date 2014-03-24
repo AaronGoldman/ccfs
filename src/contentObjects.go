@@ -141,6 +141,9 @@ func (c commit) Hkid() HKID {
 func (c commit) Verify() bool {
 	ObjectHash := c.genCommitHash(c.listHash, c.version, c.parent, c.hkid)
 	pubkey := ecdsa.PublicKey(getPiblicKeyForHkid(c.hkid))
+	if pubkey.Curve == nil || pubkey.X == nil || pubkey.Y == nil {
+		return false
+	}
 	r, s := elliptic.Unmarshal(pubkey.Curve, c.signature)
 	//log.Println(pubkey, " pubkey\n", ObjectHash, " ObjectHash\n", r, " r\n", s, "s")
 	if r.BitLen() == 0 || s.BitLen() == 0 {

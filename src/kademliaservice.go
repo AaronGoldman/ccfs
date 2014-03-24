@@ -69,7 +69,7 @@ func (k kademliaservice) PostBlob(b blob) (err error) {
 		log.Println(err)
 		return err
 	}
-	log.Println(data)
+	log.Printf("%s", data)
 	return err
 }
 func (k kademliaservice) PostTag(t tag) (err error) {
@@ -82,7 +82,7 @@ func (k kademliaservice) PostTag(t tag) (err error) {
 		log.Println(err)
 		return err
 	}
-	log.Println(data)
+	log.Printf("%s", data)
 	return err
 }
 func (k kademliaservice) PostCommit(c commit) (err error) {
@@ -92,7 +92,7 @@ func (k kademliaservice) PostCommit(c commit) (err error) {
 	data, err := k.postobject(values, c.Bytes())
 	if err != nil {
 		log.Println(err)
-		log.Println(data)
+		log.Printf("%s", data)
 		return err
 	}
 	return err
@@ -104,7 +104,7 @@ func (k kademliaservice) PostKey(p *PrivateKey) (err error) {
 	data, err := k.postobject(values, p.Bytes())
 	if err != nil {
 		log.Println(err)
-		log.Println(data)
+		log.Printf("%s", data)
 		return err
 	}
 	return err
@@ -120,6 +120,7 @@ func (k kademliaservice) getobject(values url.Values) (data []byte, err error) {
 	if err != nil {
 		return data, err
 	} else {
+		log.Printf("[msg] %s", data)
 		return data, nil
 	}
 }
@@ -141,7 +142,7 @@ func (k kademliaservice) postobject(values url.Values, b []byte) (data []byte, e
 }
 
 func kademliaservicefactory() kademliaservice {
-	return kademliaservice{url: "http://128.61.31.246:5001/?"}
+	return kademliaservice{url: "http://128.61.27.13:5000/?"}
 }
 
 func init() {

@@ -43,6 +43,9 @@ func (lfs localfileservice) PostKey(p *PrivateKey) (err error) {
 
 func (lfs localfileservice) GetBlob(h HCID) (b blob, err error) {
 	//ToDo Validate input
+	if h == nil {
+		return nil, fmt.Errorf("[localfileservice] GetBlob() HCID is nil")
+	}
 	filepath := fmt.Sprintf("../blobs/%s", h.Hex())
 	data, err := ioutil.ReadFile(filepath)
 	if err != nil {

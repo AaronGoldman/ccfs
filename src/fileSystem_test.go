@@ -122,7 +122,7 @@ func BenchmarkReadFileSystemInterface(b *testing.B) {
 		{"../mountpoint/TestPostBlob", "TestPostData"},
 		{"../mountpoint/TestPostCommit/TestPostBlob", "TestPostCommitBlobData"},
 		{"../mountpoint/TestPostTag/TestPostBlob", "TestPostTagBlobData"},
-		{"../mountpoint/TestPostList1/TestPostList2/TestPostBlob", "TestPostListListBlobData"},
+		{"../mountpoint/TestPostList/TestPostList2/TestPostBlob", "TestPostListListBlobData"},
 	}
 	for i := 0; i < b.N; i++ {
 		for _, answer := range answerKey {
