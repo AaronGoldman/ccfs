@@ -64,12 +64,12 @@ func (k kademliaservice) PostBlob(b blob) (err error) {
 	values := url.Values{}
 	values.Add("type", "blob")
 	values.Add("hcid", b.Hash().Hex())
-	data, err := k.postobject(values, b)
+	_, err = k.postobject(values, b)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-	log.Printf("%s", data)
+	//log.Printf("Responce: %s", data)
 	return err
 }
 func (k kademliaservice) PostTag(t tag) (err error) {
@@ -77,12 +77,12 @@ func (k kademliaservice) PostTag(t tag) (err error) {
 	values.Add("type", "tag")
 	values.Add("hkid", t.Hkid().Hex())
 	values.Add("namesegment", t.nameSegment)
-	data, err := k.postobject(values, t.Bytes())
+	_, err = k.postobject(values, t.Bytes())
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-	log.Printf("%s", data)
+	//log.Printf("Responce: %s", data)
 	return err
 }
 func (k kademliaservice) PostCommit(c commit) (err error) {
@@ -120,7 +120,7 @@ func (k kademliaservice) getobject(values url.Values) (data []byte, err error) {
 	if err != nil {
 		return data, err
 	} else {
-		log.Printf("[msg] %s", data)
+		//log.Printf("[msg] %s", data)
 		return data, nil
 	}
 }

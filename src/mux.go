@@ -8,6 +8,10 @@ import (
 
 //GetBlob looks up blobs by their HCIDs.
 func GetBlob(h HCID) (blob, error) {
+	if h == nil {
+		log.Printf("GetBlob(nil)")
+		return nil, fmt.Errorf("nil pased in to GetBlob")
+	}
 	datach := make(chan blob, len(blobgeters))
 	errorch := make(chan error, len(blobgeters))
 	for _, rangeblobgeterInstance := range blobgeters {

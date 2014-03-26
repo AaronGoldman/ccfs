@@ -39,12 +39,12 @@ func parseFlagsAndTakeAction() {
 	}
 
 	if *path != "" {
-		log.Printf("HKID: %s", *hkid)
+		//log.Printf("HKID: %s", *hkid)
 		in := bufio.NewReader(os.Stdin)
 		var err error
 		h, collectionPath := fileSystemPath2CollectionPath(path)
-		log.Printf("systemPath %s", *path)
-		log.Printf("collectionPath %s", collectionPath)
+		//log.Printf("systemPath %s", *path)
+		//log.Printf("collectionPath %s", collectionPath)
 
 		FileInfos, err := ioutil.ReadDir(*path)
 		if err != nil {
@@ -60,18 +60,20 @@ func parseFlagsAndTakeAction() {
 		}
 
 		collectionName := filepath.Base(*path)
-		fmt.Printf("Name of Collection: %s\n", collectionName)
+		//fmt.Printf("Name of Collection: %s\n", collectionName)
 
 		switch {
 		case *createDomain:
-			err = InitDomain(h, fmt.Sprintf("%s/%s", collectionPath, collectionName))
+			//err = InitDomain(h, fmt.Sprintf("%s/%s", collectionPath, collectionName))
+			err = InitDomain(h, collectionPath)
 			if err != nil {
 				log.Println(err)
 				return
 			}
 
 		case *createRepository:
-			err = InitRepo(h, fmt.Sprintf("%s/%s", collectionPath, collectionName))
+			//err = InitRepo(h, fmt.Sprintf("%s/%s", collectionPath, collectionName))
+			err = InitRepo(h, collectionPath)
 			if err != nil {
 				log.Println(err)
 				return

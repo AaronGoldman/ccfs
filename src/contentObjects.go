@@ -251,6 +251,9 @@ func (t tag) Hkid() HKID {
 }
 
 func (t tag) Verify() bool {
+	if t.hkid == nil {
+		return false
+	}
 	tPublicKey := ecdsa.PublicKey(getPiblicKeyForHkid(t.hkid))
 	r, s := elliptic.Unmarshal(elliptic.P521(), t.signature)
 	ObjectHash := t.genTagHash(t.HashBytes, t.TypeString, t.nameSegment,
