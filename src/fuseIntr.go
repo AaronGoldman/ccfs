@@ -8,6 +8,7 @@ package main
 import (
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -83,6 +84,9 @@ func (fs_obj FS) Root() (fs.Node, fuse.Error) { //returns a directory
 		permission:   perm,
 		content_type: "commit",
 		leaf:         fs_obj.hkid,
+		parent:       nil,
+		name:         "",
+		openHandles:  map[string]bool{},
 	}, nil
 }
 
@@ -101,6 +105,9 @@ type Dir struct {
 	leaf         HID
 	permission   os.FileMode
 	content_type string
+	parent       *Dir
+	name         string
+	openHandles  map[string]bool
 }
 
 func (d Dir) Attr() fuse.Attr {
@@ -119,7 +126,6 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 	//in each case, call
 	switch d.content_type {
 	default:
-		log.Printf("Unknown type: %")
 		return nil, nil
 	case "commit": // a commit has a list hash
 		c, err := GetCommit(d.leaf.(HKID))
@@ -142,7 +148,7 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 		_, err = GetKey(c.hkid)
 		//perm := fuse.Attr{Mode: 0555}//default read permissions
 		perm := os.FileMode(0555)
-		if err == nil {
+		if err != nil {
 			log.Printf("no private key %s:", err)
 			//perm =  fuse.Attr{Mode: 0755}
 			perm = os.FileMode(0755)
@@ -151,6 +157,8 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			return File{
 				contentHash: list_entry.Hash.(HCID),
 				permission:  perm,
+				name:        name,
+				parent:      &d,
 			}, nil
 		}
 
@@ -161,6 +169,9 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			leaf:         list_entry.Hash,
 			permission:   perm,
 			content_type: list_entry.TypeString,
+			parent:       &d,
+			name:         name,
+			openHandles:  map[string]bool{},
 		}, nil
 
 	case "list":
@@ -177,6 +188,8 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			return File{
 				contentHash: list_entry.Hash.(HCID),
 				permission:  d.permission,
+				parent:      &d,
+				name:        name,
 			}, nil
 		}
 		return Dir{path: d.path + "/" + name,
@@ -185,6 +198,8 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			leaf:         list_entry.Hash,
 			permission:   d.permission,
 			content_type: list_entry.TypeString,
+			parent:       &d,
+			openHandles:  map[string]bool{},
 		}, nil
 	case "tag":
 		t, err := GetTag(d.leaf.(HKID), name) //leaf is HID
@@ -205,6 +220,8 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			return File{
 				contentHash: t.HashBytes.(HCID),
 				permission:  perm,
+				name:        name,
+				parent:      &d,
 			}, nil
 		}
 		return Dir{path: d.path + "/" + name,
@@ -213,11 +230,12 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			leaf:         t.HashBytes,
 			permission:   perm,
 			content_type: t.TypeString,
+			parent:       &d,
+			openHandles:  map[string]bool{},
 		}, nil
 
 	}
 
-	return nil, fuse.ENOENT
 }
 
 func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
@@ -265,15 +283,50 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 		}
 	} // end if range
 	//	log.Printf("return dirDirs: %s", dirDirs)
+
+	//loop through openHandles
+	for openHandle, _ := range d.openHandles {
+		inList := false
+		for _, dir_entry := range dirDirs {
+			if openHandle == dir_entry.Name {
+				inList = true
+				break
+			}
+		}
+		if !inList {
+			dirDirs = append(dirDirs, fuse.Dirent{Inode: 2, Name: openHandle, Type: fuse.DT_Dir})
+		}
+	}
 	return dirDirs, nil
 }
 
 //2 types of nodes for files and directories. So call rename twice?
+//Create node (directory)
+
+func (d Dir) Create(request *fuse.CreateRequest, response *fuse.CreateResponse, intr fs.Intr) (fs.Node, fs.Handle, fuse.Error) {
+	log.Printf("create node")
+	log.Printf("permission: %s", request.Mode)
+	log.Printf("name: %s", request.Name)
+	log.Printf("flags: %s", request.Flags)
+	node := File{
+		contentHash: blob{}.Hash(),
+		permission:  request.Mode,
+		parent:      &d,
+		name:        request.Name,
+	}
+	handle := OpenFileHandle{
+		buffer: []byte{},
+		parent: &d,
+		name:   request.Name,
+	}
+	d.openHandles[handle.name] = true
+	return node, handle, nil
+}
+
 //For directory node
 
 func (f File) Rename(r *fuse.RenameRequest, newDir fs.Node, intr fs.Intr) fuse.Error {
-
-	log.Println("print request: %s", r)
+	log.Printf("print request: %s", r)
 	return nil
 }
 
@@ -281,6 +334,8 @@ func (f File) Rename(r *fuse.RenameRequest, newDir fs.Node, intr fs.Intr) fuse.E
 type File struct {
 	contentHash HCID
 	permission  os.FileMode
+	parent      *Dir
+	name        string
 }
 
 func (f File) Attr() fuse.Attr {
@@ -302,19 +357,153 @@ func (f File) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
 	return b, nil
 }
 
-func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, fs.Intr) (fs.Handle, fuse.Error){
+//nodeopener interface contains open(). Node may be used for file or directory
+func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr fs.Intr) (fs.Handle, fuse.Error) {
 	b, err := GetBlob(f.contentHash) //
-        if err != nil {
-                return nil, fuse.ENOENT
-			}
-        return OpenFileHandle{buffer: b} , nil
+	if err != nil {
+		return nil, fuse.ENOENT
+	}
+	handle := OpenFileHandle{buffer: b, parent: f.parent, name: f.name}
+	f.parent.openHandles[handle.name] = true
+	return handle, nil
 }
 
 type OpenFileHandle struct {
-	buffer []byte 
+	buffer []byte
+	parent *Dir
+	name   string
 }
 
+//handleReader interface
+func (o OpenFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadResponse, intr fs.Intr) fuse.Error {
+	//readresponse contains a string of bytes
+	fmt.Println("file read works! ? ")
+	start := request.Offset
+	stop := start + int64(request.Size)
+	bufptr := o.buffer
 
+	if stop > int64(len(bufptr)-1) {
+		stop = int64(len(bufptr))
+	}
+	if stop == start {
+		response.Data = []byte{} //new gives you a pointer
+		return nil
+	}
 
+	log.Printf("start:%d", start)
+	log.Printf("stop:%d", stop)
+	log.Printf("length of buffer:%d", len(bufptr))
+	slice := bufptr[start:stop]
+	response.Data = slice //address of buffer goes to response
+	log.Printf("response data:%s", response.Data)
+	return nil
+}
 
+func (o OpenFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteResponse, intr fs.Intr) fuse.Error {
+	log.Println("file read works! Into write ")
+	start := request.Offset
+	writeData := request.Data
+	log.Printf("start:%d", start)
+	log.Printf("length of write data:%d", len(writeData))
+	if writeData != nil {
+		return fuse.ENOENT
+	}
+	num := copy(o.buffer[start:], writeData)
+	response.Size = num
+	return nil
+}
 
+func (o OpenFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse.Error {
+	err := o.Publish()
+	log.Printf("%s has been released!", o.name)
+	if err != nil {
+		return nil
+	}
+	delete(o.parent.openHandles, o.name)
+	return fuse.ENOENT
+}
+
+//func (o OpenfileHandle)
+
+func (o OpenFileHandle) Flush(request *fuse.FlushRequest, intr fs.Intr) fuse.Error {
+
+	//node := request.Header //header contains nodeid - how to access?????
+	// FlushRequest asks for the current state of an open file to be flushed to storage, as when a file descriptor is being closed
+	//recursion to traceback to parent tag or commit
+	//post buffer
+	err := PostBlob(o.buffer)
+	if err != nil {
+		return fuse.EIO
+	}
+	//call parent recursively
+	err = o.Publish() //get into loop on parent object
+	if err != nil {
+		return fuse.EIO
+	}
+	return nil
+}
+
+//write out file using postblob
+//func (o OpenFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse.Error {
+//	request.Handle
+//}
+func (o OpenFileHandle) Publish() error { //name=file name
+	bfrblob := blob(o.buffer)
+	err := PostBlob(bfrblob)
+	if err != nil {
+		return err
+	}
+	o.parent.Publish(bfrblob.Hash(), o.name, "blob")
+	return err
+}
+func (d Dir) Publish(h HCID, name string, typeString string) (err error) { //name=file name
+
+	switch d.content_type {
+	default:
+		log.Printf("unknown type: %s", d.content_type)
+		return fmt.Errorf("unknown type: %s", d.content_type)
+	case "commit":
+		c, err := GetCommit(d.leaf.(HKID))
+		if err != nil {
+			return err
+		}
+		l, err := GetList(c.listHash)
+		if err != nil {
+			return err
+		}
+		newList := l.add(name, h, typeString)
+		c.Update(l.Hash())
+		el := PostList(newList)
+		if el != nil {
+			return err
+		}
+		ec := PostCommit(c)
+		if ec != nil {
+			return err
+		}
+		return nil
+	case "tag":
+		t, err := GetTag(d.leaf.(HKID), name)
+		if err != nil {
+			return err
+		}
+		t.Update(h, typeString)
+		et := PostTag(t)
+		if et != nil {
+			return err
+		}
+		return nil
+	case "list":
+		l, err := GetList(d.leaf.(HCID))
+		if err != nil {
+			return err
+		}
+		newList := l.add(name, h, typeString)
+		el := PostList(newList)
+		if el != nil {
+			return err
+		}
+		d.parent.Publish(newList.Hash(), d.name, "list")
+		return nil
+	}
+}
