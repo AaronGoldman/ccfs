@@ -27,7 +27,7 @@ func parseFlagsAndTakeAction() {
 	if flag.NFlag() == 0 {
 		//flagged = false
 		*serve = true
-		*mount = true
+		//*mount = true
 	}
 
 	if *serve {
@@ -35,16 +35,16 @@ func parseFlagsAndTakeAction() {
 		go RepoServerStart()
 	}
 	if *mount {
-		//go startFSintegration()
+		go startFSintegration()
 	}
 
 	if *path != "" {
-		log.Printf("HKID: %s", *hkid)
+		//log.Printf("HKID: %s", *hkid)
 		in := bufio.NewReader(os.Stdin)
 		var err error
 		h, collectionPath := fileSystemPath2CollectionPath(path)
-		log.Printf("systemPath %s", *path)
-		log.Printf("collectionPath %s", collectionPath)
+		//log.Printf("systemPath %s", *path)
+		//log.Printf("collectionPath %s", collectionPath)
 
 		FileInfos, err := ioutil.ReadDir(*path)
 		if err != nil {
@@ -60,18 +60,20 @@ func parseFlagsAndTakeAction() {
 		}
 
 		collectionName := filepath.Base(*path)
-		fmt.Printf("Name of Collection: %s", collectionName)
+		//fmt.Printf("Name of Collection: %s\n", collectionName)
 
 		switch {
 		case *createDomain:
-			err = InitDomain(h, fmt.Sprintf("%s/%s", collectionPath, collectionName))
+			//err = InitDomain(h, fmt.Sprintf("%s/%s", collectionPath, collectionName))
+			err = InitDomain(h, collectionPath)
 			if err != nil {
 				log.Println(err)
 				return
 			}
 
 		case *createRepository:
-			err = InitRepo(h, fmt.Sprintf("%s/%s", collectionPath, collectionName))
+			//err = InitRepo(h, fmt.Sprintf("%s/%s", collectionPath, collectionName))
+			err = InitRepo(h, collectionPath)
 			if err != nil {
 				log.Println(err)
 				return
@@ -81,13 +83,15 @@ func parseFlagsAndTakeAction() {
 			var hex string = *hkid
 			if *hkid == "" {
 				hex, _ = in.ReadString('\n')
+				hex = strings.Trim(hex, "\n")
 			}
+			log.Print(len(hex))
 			foreign_hkid, err := HkidFromHex(hex)
 			if err != nil {
-				log.Println(err)
+				log.Printf("Somethng went wrong in insertDomain %s", err)
 				os.Exit(2)
 			}
-			fmt.Printf("hkid: %s", h)
+			log.Printf("hkid: %s\n", h)
 			err = InsertDomain(h, fmt.Sprintf("%s/%s", collectionPath, collectionName), foreign_hkid)
 			if err != nil {
 				log.Println(err)
@@ -98,12 +102,14 @@ func parseFlagsAndTakeAction() {
 			var hex string = *hkid
 			if *hkid == "" {
 				hex, _ = in.ReadString('\n')
+				hex = strings.Trim(hex, "\n")
 			}
 			fmt.Printf("%s", hex)
 			foreign_hkid, err := HkidFromHex(hex)
 			if err != nil {
+				log.Printf("Somethng went wrong in insertRepo %s", err)
 				os.Exit(2)
-				log.Println(err)
+
 			}
 			fmt.Printf("hkid: %s", h)
 			err = InsertRepo(h, fmt.Sprintf("%s/%s", collectionPath, collectionName), foreign_hkid)

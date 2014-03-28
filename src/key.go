@@ -140,7 +140,14 @@ func KeyGen() *PrivateKey {
 
 func GenHKID() HKID {
 	privkey := KeyGen()
-	PostBlob(elliptic.Marshal(privkey.PublicKey.Curve,
+	err := PostKey(privkey)
+	if err != nil {
+		log.Fatalf("Failed to persist Privet Key")
+	}
+	err = PostBlob(elliptic.Marshal(privkey.PublicKey.Curve,
 		privkey.PublicKey.X, privkey.PublicKey.Y))
+	if err != nil {
+		log.Fatalf("Failed to post Public Key")
+	}
 	return privkey.Hkid()
 }

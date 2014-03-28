@@ -14,9 +14,10 @@ func Post(objecthash HKID, path string, post_bytes Byteser) (hid HID, err error)
 func post(h HID, path string, next_path_segment_type string,
 	post_bytes Byteser, post_type string) (hid HID, err error) {
 	//log.Printf(
-	//	"\n\th: %v\n\tpath: %v\n\tnext_path_segment_type: %v\n\tpost_bytes: %v\n\tpost_type: %v\n",
+	//	"\n\th: %v\n\tpath: %v\n\tnext_path_segment_type: %v\n\tpost_bytes: %s\n\tpost_type: %v\n",
 	//	h, path, next_path_segment_type, post_bytes, post_type)
 	if path == "" {
+		//log.Printf("post_type: %s", post_type)
 		err := PostBlob(post_bytes.(blob))
 		return HCID(post_bytes.(blob).Hash()), err
 	}
@@ -68,7 +69,8 @@ func list_helper(h HID, next_path_segment string, rest_of_path string,
 		}
 		var hash_of_posted HID
 		if rest_of_path == "" && post_type != "blob" {
-			hash_of_posted = HKID(post_bytes.Bytes()) //insrt reference by HKID
+			hash_of_posted = post_bytes.(HKID) //insrt reference by HKID
+			//log.Printf("insrt reference by HKID\n\tnext_path_segment:%s\n\trest_of_path:%s\n", next_path_segment, rest_of_path)
 		} else {
 			hash_of_posted, posterr = post(next_hash, next_path,
 				next_typeString, post_bytes, post_type) //post Data
@@ -84,7 +86,8 @@ func list_helper(h HID, next_path_segment string, rest_of_path string,
 		}
 		var hash_of_posted HID
 		if rest_of_path == "" && post_type != "blob" {
-			hash_of_posted = HKID(post_bytes.Bytes()) //insrt reference by HKID
+			hash_of_posted = post_bytes.(HKID) //insrt reference by HKID
+			//log.Printf("insrt reference by HKID\n\tnext_path_segment:%s\n\trest_of_path:%s\n\t", next_path_segment, rest_of_path)
 		} else {
 			hash_of_posted, posterr = post(next_hash, next_path,
 				next_typeString, post_bytes, post_type)
@@ -101,19 +104,24 @@ func list_helper(h HID, next_path_segment string, rest_of_path string,
 	return nil, err
 }
 
-func commit_helper(h HCID, path string, post_bytes Byteser, post_type string) (HID, error) {
-	c, geterr := GetCommit(h.Bytes())
+func commit_helper(h HKID, path string, post_bytes Byteser, post_type string) (HID, error) {
+	c, geterr := GetCommit(h)
 	posterr := error(nil)
 	if geterr == nil {
+		//A existing vertion was found
 		next_typeString := "list"
 		next_hash := c.listHash
 		next_path := path
 		var hash_of_posted HID
 		hash_of_posted, posterr = post(next_hash, next_path,
 			next_typeString, post_bytes, post_type)
+		if posterr != nil {
+			return nil, posterr
+		}
 		c = c.Update(hash_of_posted.Bytes())
 	} else {
-		_, err := getPrivateKeyForHkid(h.Bytes())
+		//A existing vertion was NOT found
+		_, err := getPrivateKeyForHkid(h)
 		if err == nil {
 			next_hash := HID(nil)
 			next_path := path
@@ -121,9 +129,9 @@ func commit_helper(h HCID, path string, post_bytes Byteser, post_type string) (H
 			var hash_of_posted HID
 			hash_of_posted, posterr = post(next_hash, next_path,
 				next_typeString, post_bytes, post_type)
-			c = NewCommit(hash_of_posted.Bytes(), h.Bytes())
+			c = NewCommit(hash_of_posted.Bytes(), h)
 		} else {
-			log.Printf("You don't seem to own this repo\nh=%v\nerr=%v\n", h, err)
+			log.Printf("You don't seem to own this repo\n\th=%v\n\terr=%v\n", h, err)
 			return HKID{}, fmt.Errorf("You don't seem to own this repo")
 		}
 	}
@@ -175,7 +183,8 @@ func tag_helper(h HID, next_path_segment string, rest_of_path string,
 			}
 			t = NewTag(hash_of_posted, next_typeString, next_path_segment, h.Bytes())
 		} else {
-			log.Panic("You don't seem to own this Domain")
+			log.Printf("You don't seem to own this Domain")
+			return nil, fmt.Errorf("You dont own the Domain, meanie")
 		}
 	}
 	if posterr != nil {
@@ -189,8 +198,9 @@ func tag_helper(h HID, next_path_segment string, rest_of_path string,
 	return nil, err
 }
 
-//InitRepo inserts a given foreign hkid to the local HKID at the path spesified
+//InsertRepo inserts a given foreign hkid to the local HKID at the path spesified
 func InsertRepo(h HKID, path string, foreign_hkid HKID) error {
+	//log.Printf("\n\trootHKID:%s\n\tPath:%s\n\tforeignHKID:%s", h, path, foreign_hkid)
 	_, err := post(
 		h,
 		path,
@@ -200,8 +210,9 @@ func InsertRepo(h HKID, path string, foreign_hkid HKID) error {
 	return err
 }
 
-//InitDomain inserts a given foreign hkid to the local HKID at the path spesified
+//InsertDomain inserts a given foreign hkid to the local HKID at the path spesified
 func InsertDomain(h HKID, path string, foreign_hkid HKID) error {
+	//log.Printf("\n\trootHKID:%s\n\tPath:%s\n\tforeignHKID:%s", h, path, foreign_hkid)
 	_, err := post(
 		h,
 		path,

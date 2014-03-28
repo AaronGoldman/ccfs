@@ -249,5 +249,4 @@ var multicastserviceInstance multicastservice
 func init() {
 	multicastserviceInstance = multicastservicefactory()
 	multicastserviceInstance.listenmessage()
-
 }

@@ -148,10 +148,13 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 		_, err = GetKey(c.hkid)
 		//perm := fuse.Attr{Mode: 0555}//default read permissions
 		perm := os.FileMode(0555)
+
 		if err != nil {
 			log.Printf("no private key %s:", err)
 			//perm =  fuse.Attr{Mode: 0755}
 			perm = os.FileMode(0755)
+		} else {
+			log.Printf("no private key %s:", err)
 		}
 		if list_entry.TypeString == "blob" {
 			return File{
@@ -213,8 +216,9 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 		_, err = GetKey(t.hkid)
 		perm := os.FileMode(0555) //default read permissions
 		if err == nil {
-			log.Printf("no private key %s:", err)
 			perm = os.FileMode(0755)
+		} else {
+			log.Printf("no private key %s:", err)
 		}
 		if t.TypeString == "blob" {
 			return File{
