@@ -1,23 +1,7 @@
  _
 |_| ccfs
- |_| lookup
-  |_| lookup service
-   |_| object discovery (Priya)
-    |_| send messages
-    |_| listen for messages
-    |_| route messages to the waiting multicastservice contentgeters
-   |_| object retrieval, integration testing (Holly)
-    |X| parse received messages
-    |X| respond to received messages with URL of Content Object 
-    |_| test mount from command line
-  |_| Interface
-   |_| virtual file system (Mallika)
-    |_| directory
-    |_| file
-    |_| lookup
-   |_| command line interface, nautilus integration (Thomas)
-    |_| mount flag take in HKID in Hex
-    |_| newPath re-name path name at witch to mount new collection
-    |_| hkid flag take in HKID in Hex
-  |_| fix tests for ragged lists
-  |_| on verify fail log/cleanup
+ |_| test multicastservice 2 computers (Priya)
+ |_| test Nautilus actions (Thomas)
+ |_| fuse file system wright (Mallika)
+ |_| test fuse file system (Mallika)
+ |_| fix tests for ragged lists (Aaron Goldman)

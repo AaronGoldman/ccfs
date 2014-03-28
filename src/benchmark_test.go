@@ -26,8 +26,8 @@ var benchmarkTagHkid = hkidFromDString("54430439211086161065670118078952"+
 
 func init() {
 	log.SetFlags(log.Lshortfile)
-	Post(benchmarkRepo, "BlobFound", blob("blob found"))
-	Post(benchmarkRepo, "listFound/BlobFound", blob("list found"))
+	//Post(benchmarkRepo, "BlobFound", blob("blob found"))
+	//Post(benchmarkRepo, "listFound/BlobFound", blob("list found"))
 }
 
 func BenchmarkStoreOne(b *testing.B) {

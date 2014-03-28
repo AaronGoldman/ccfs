@@ -12,6 +12,7 @@ import (
 func TestMulticastservice_GetBlob(t *testing.T) {
 	t.Skipf("Come back to this test")
 	go BlobServerStart()
+
 	AnswerKey := []struct {
 		hcid     HCID
 		response blob
@@ -19,6 +20,8 @@ func TestMulticastservice_GetBlob(t *testing.T) {
 		{blob([]byte("blob found")).Hash(), blob([]byte("blob found"))},
 	}
 	for _, answer := range AnswerKey {
+
+		localfileserviceInstance.PostBlob(answer.response)
 		go func() {
 			time.Sleep(1 * time.Millisecond)
 			mcaddr, _ := net.ResolveUDPAddr("udp", "127.0.0.1:8000")
