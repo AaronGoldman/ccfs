@@ -87,6 +87,7 @@ func (fs_obj FS) Root() (fs.Node, fuse.Error) { //returns a directory
 		parent:       nil,
 		name:         "",
 		openHandles:  map[string]bool{},
+		inode:        1,
 	}, nil
 }
 
@@ -108,14 +109,17 @@ type Dir struct {
 	parent       *Dir
 	name         string
 	openHandles  map[string]bool
+	inode        uint64 //fuse.NodeID
 }
 
 func (d Dir) Attr() fuse.Attr {
 	log.Println("Attr func")
-	return fuse.Attr{Inode: 1, Mode: os.ModeDir | d.permission}
+	return fuse.Attr{Inode: d.inode, Mode: os.ModeDir | d.permission}
 }
 
 func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
+
+	new_nodeID := fs.GenerateDynamicInode(d.inode, name)
 	log.Printf("string=%s\n", name)
 	if name == "hello" {
 		return File{permission: os.FileMode(0444)}, nil
@@ -150,11 +154,11 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 		perm := os.FileMode(0555)
 
 		if err != nil {
-			log.Printf("no private key %s:", err)
+			log.Printf("error not nil; change file Mode %s:", err)
 			//perm =  fuse.Attr{Mode: 0755}
 			perm = os.FileMode(0755)
 		} else {
-			log.Printf("no private key %s:", err)
+			//log.Printf("no private key %s:", err)
 		}
 		if list_entry.TypeString == "blob" {
 			return File{
@@ -162,6 +166,7 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 				permission:  perm,
 				name:        name,
 				parent:      &d,
+				inode:       new_nodeID,
 			}, nil
 		}
 
@@ -175,6 +180,7 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			parent:       &d,
 			name:         name,
 			openHandles:  map[string]bool{},
+			inode:        new_nodeID,
 		}, nil
 
 	case "list":
@@ -203,6 +209,7 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			content_type: list_entry.TypeString,
 			parent:       &d,
 			openHandles:  map[string]bool{},
+			inode:        new_nodeID,
 		}, nil
 	case "tag":
 		t, err := GetTag(d.leaf.(HKID), name) //leaf is HID
@@ -226,9 +233,11 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 				permission:  perm,
 				name:        name,
 				parent:      &d,
+				inode:       new_nodeID,
 			}, nil
 		}
-		return Dir{path: d.path + "/" + name,
+		return Dir{
+			path:         d.path + "/" + name,
 			trunc:        d.trunc,
 			branch:       t.hkid,
 			leaf:         t.HashBytes,
@@ -236,6 +245,7 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			content_type: t.TypeString,
 			parent:       &d,
 			openHandles:  map[string]bool{},
+			inode:        new_nodeID,
 		}, nil
 
 	}
@@ -247,7 +257,10 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	var l list
 	var err error
 	var dirDirs = []fuse.Dirent{
-		{Inode: 2, Name: "hello", Type: fuse.DT_File},
+		{Inode: fs.GenerateDynamicInode(d.inode, "hello"),
+			Name: "hello",
+			Type: fuse.DT_File,
+		},
 	}
 
 	if d.content_type == "tag" {
@@ -275,14 +288,22 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 		return nil, nil
 	}
 	log.Printf("list map: %s", l)
+
 	for name, entry := range l {
 		if entry.TypeString == "blob" {
-			append_to_list := fuse.Dirent{Inode: 2, Name: name, Type: fuse.DT_File}
+			append_to_list := fuse.Dirent{
+				Inode: fs.GenerateDynamicInode(d.inode, name),
+				Name:  name,
+				Type:  fuse.DT_File,
+			}
 			dirDirs = append(dirDirs, append_to_list)
 			// we need to append this to list + work on the next if(commit/list/tag? )
 			// Type for the other one will be fuse.DT_DIR
 		} else {
-			append_to_list := fuse.Dirent{Inode: 2, Name: name, Type: fuse.DT_Dir}
+			append_to_list := fuse.Dirent{
+				Inode: fs.GenerateDynamicInode(d.inode, name),
+				Name:  name,
+				Type:  fuse.DT_Dir}
 			dirDirs = append(dirDirs, append_to_list)
 		}
 	} // end if range
@@ -298,7 +319,13 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 			}
 		}
 		if !inList {
-			dirDirs = append(dirDirs, fuse.Dirent{Inode: 2, Name: openHandle, Type: fuse.DT_Dir})
+			dirDirs = append(
+				dirDirs,
+				fuse.Dirent{
+					Inode: fs.GenerateDynamicInode(d.inode, openHandle),
+					Name:  openHandle,
+					Type:  fuse.DT_Dir,
+				})
 		}
 	}
 	return dirDirs, nil
@@ -317,6 +344,7 @@ func (d Dir) Create(request *fuse.CreateRequest, response *fuse.CreateResponse, 
 		permission:  request.Mode,
 		parent:      &d,
 		name:        request.Name,
+		inode:       fs.GenerateDynamicInode(d.inode, request.Name),
 	}
 	handle := OpenFileHandle{
 		buffer: []byte{},
@@ -340,6 +368,7 @@ type File struct {
 	permission  os.FileMode
 	parent      *Dir
 	name        string
+	inode       uint64 //fuse.NodeID
 }
 
 func (f File) Attr() fuse.Attr {
@@ -376,6 +405,7 @@ type OpenFileHandle struct {
 	buffer []byte
 	parent *Dir
 	name   string
+	inode  fuse.NodeID //we're not using this field yet
 }
 
 //handleReader interface
@@ -394,9 +424,9 @@ func (o OpenFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadRespo
 		return nil
 	}
 
-	log.Printf("start:%d", start)
-	log.Printf("stop:%d", stop)
-	log.Printf("length of buffer:%d", len(bufptr))
+	//log.Printf("start:%d", start)
+	//log.Printf("stop:%d", stop)
+	//log.Printf("length of buffer:%d", len(bufptr))
 	slice := bufptr[start:stop]
 	response.Data = slice //address of buffer goes to response
 	log.Printf("response data:%s", response.Data)
@@ -404,46 +434,67 @@ func (o OpenFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadRespo
 }
 
 func (o OpenFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteResponse, intr fs.Intr) fuse.Error {
-	log.Println("file read works! Into write ")
+	log.Printf("write requested: %s", request.Data)
 	start := request.Offset
 	writeData := request.Data
-	log.Printf("start:%d", start)
-	log.Printf("length of write data:%d", len(writeData))
-	if writeData != nil {
+	//log.Printf("start:%d", start)
+	//log.Printf("length of write data:%d", len(writeData))
+	if writeData == nil {
 		return fuse.ENOENT
 	}
-	num := copy(o.buffer[start:], writeData)
-	response.Size = num
+	lenData := int(start) + (len(writeData))
+	if lenData > int(len(o.buffer)) {
+		//set length and capacity of buffer
+		newbfr := make([]byte, (lenData), (lenData))
+		copy(newbfr, o.buffer)
+		response.Size = copy(newbfr[start:lenData], writeData)
+		log.Printf("before copying to o.buffer: %s", newbfr)
+		o.buffer = newbfr
+
+	} else {
+		num := copy(o.buffer[start:lenData], writeData)
+		response.Size = num
+
+	}
+	log.Printf("buffer: %s", o.buffer)
+	log.Printf("write request handle: %s", request.Handle)
+	err := o.Publish() //get into loop on parent object
+	if err != nil {
+		return fuse.EIO
+	}
 	return nil
 }
 
 func (o OpenFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse.Error {
-	err := o.Publish()
+	log.Printf("buffer is released")
+	//err := o.Publish()
 	log.Printf("%s has been released!", o.name)
-	if err != nil {
-		return nil
-	}
-	delete(o.parent.openHandles, o.name)
-	return fuse.ENOENT
+	//if err != nil {
+	//	return nil
+	//}
+	//delete(o.parent.openHandles, o.name)
+	return nil //fuse.ENOENT
 }
 
 //func (o OpenfileHandle)
-
+//////// flush() ////
 func (o OpenFileHandle) Flush(request *fuse.FlushRequest, intr fs.Intr) fuse.Error {
 
 	//node := request.Header //header contains nodeid - how to access?????
-	// FlushRequest asks for the current state of an open file to be flushed to storage, as when a file descriptor is being closed
-	//recursion to traceback to parent tag or commit
+	//FlushRequest asks for the current state of an open file to be flushed to storage, as when a file descriptor is being closed
+	///recursion to traceback to parent tag or commit
 	//post buffer
-	err := PostBlob(o.buffer)
-	if err != nil {
-		return fuse.EIO
-	}
+	//log.Printf("flush request handle: %s",request.Handle)
+	log.Printf("flush \n")
+	//err := PostBlob(o.buffer)
+	//if err != nil {
+	//	return fuse.EIO
+	//}
 	//call parent recursively
-	err = o.Publish() //get into loop on parent object
-	if err != nil {
-		return fuse.EIO
-	}
+	//err = o.Publish() //get into loop on parent object
+	//if err != nil {
+	//	return fuse.EIO
+	//}
 	return nil
 }
 
@@ -452,7 +503,9 @@ func (o OpenFileHandle) Flush(request *fuse.FlushRequest, intr fs.Intr) fuse.Err
 //	request.Handle
 //}
 func (o OpenFileHandle) Publish() error { //name=file name
+	log.Printf("buffer contains: %s", o.buffer)
 	bfrblob := blob(o.buffer)
+	log.Printf("post blob: %s\n hash of blob: %s", bfrblob, bfrblob.Hash())
 	err := PostBlob(bfrblob)
 	if err != nil {
 		return err
@@ -476,12 +529,15 @@ func (d Dir) Publish(h HCID, name string, typeString string) (err error) { //nam
 			return err
 		}
 		newList := l.add(name, h, typeString)
-		c.Update(l.Hash())
+		//log.Printf()
+		newCommit := c.Update(newList.Hash())
+		log.Printf("Posting a list..! List: %s", newList)
 		el := PostList(newList)
 		if el != nil {
 			return err
 		}
-		ec := PostCommit(c)
+		log.Printf("Posting a commit..!: \n%s", newCommit)
+		ec := PostCommit(newCommit)
 		if ec != nil {
 			return err
 		}
@@ -491,8 +547,9 @@ func (d Dir) Publish(h HCID, name string, typeString string) (err error) { //nam
 		if err != nil {
 			return err
 		}
-		t.Update(h, typeString)
-		et := PostTag(t)
+		newTag := t.Update(h, typeString)
+		log.Printf("Posting a tag..!: \n%s", newTag)
+		et := PostTag(newTag)
 		if et != nil {
 			return err
 		}
@@ -503,6 +560,7 @@ func (d Dir) Publish(h HCID, name string, typeString string) (err error) { //nam
 			return err
 		}
 		newList := l.add(name, h, typeString)
+		log.Printf("Posting a list..in list..!")
 		el := PostList(newList)
 		if el != nil {
 			return err
