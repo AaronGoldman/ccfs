@@ -505,7 +505,7 @@ func (o OpenFileHandle) Flush(request *fuse.FlushRequest, intr fs.Intr) fuse.Err
 func (o OpenFileHandle) Publish() error { //name=file name
 	log.Printf("buffer contains: %s", o.buffer)
 	bfrblob := blob(o.buffer)
-	log.Printf("post blob: %s\n hash of blob: %s", bfrblob, bfrblob.Hash())
+	log.Printf("Posting blob %s\n-----BEGIN BLOB-------\n%s\n-------END BLOB-------", bfrblob.Hash(), bfrblob)
 	err := PostBlob(bfrblob)
 	if err != nil {
 		return err
@@ -516,6 +516,14 @@ func (o OpenFileHandle) Publish() error { //name=file name
 func (d Dir) Publish(h HCID, name string, typeString string) (err error) { //name=file name
 
 	switch d.content_type {
+	//-----BEGIN LIST-------
+	//-------END LIST-------
+	//-----BEGIN COMMIT-----
+	//-------END COMMIT-----
+	//-----BEGIN TAG--------
+	//-------END TAG--------
+	//-----BEGIN BLOB-------
+	//-------END BLOB-------
 	default:
 		log.Printf("unknown type: %s", d.content_type)
 		return fmt.Errorf("unknown type: %s", d.content_type)
@@ -531,12 +539,12 @@ func (d Dir) Publish(h HCID, name string, typeString string) (err error) { //nam
 		newList := l.add(name, h, typeString)
 		//log.Printf()
 		newCommit := c.Update(newList.Hash())
-		log.Printf("Posting a list..! List: %s", newList)
+		log.Printf("Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------", newList.Hash(), newList)
 		el := PostList(newList)
 		if el != nil {
 			return err
 		}
-		log.Printf("Posting a commit..!: \n%s", newCommit)
+		log.Printf("Posting commit %s\n-----BEGIN COMMIT-----\n%s\n-------END COMMIT-----", newCommit.Hash(), newCommit)
 		ec := PostCommit(newCommit)
 		if ec != nil {
 			return err
@@ -548,7 +556,7 @@ func (d Dir) Publish(h HCID, name string, typeString string) (err error) { //nam
 			return err
 		}
 		newTag := t.Update(h, typeString)
-		log.Printf("Posting a tag..!: \n%s", newTag)
+		log.Printf("Posting tag %s\n-----BEGIN TAG--------\n%s\n-------END TAG--------", newTag.Hash(), newTag)
 		et := PostTag(newTag)
 		if et != nil {
 			return err
@@ -560,7 +568,7 @@ func (d Dir) Publish(h HCID, name string, typeString string) (err error) { //nam
 			return err
 		}
 		newList := l.add(name, h, typeString)
-		log.Printf("Posting a list..in list..!")
+		log.Printf("Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------", newList.Hash(), newList)
 		el := PostList(newList)
 		if el != nil {
 			return err

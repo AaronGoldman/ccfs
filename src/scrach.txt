@@ -34,6 +34,6 @@ import (
 	"github.com/AaronGoldman/ccfs/src/core"
 )
 
-main imports interfaces, content services
+main imports interfaces, content services, core
 interfaces import core
 content services import core

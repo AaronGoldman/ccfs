@@ -5,3 +5,5 @@
  |_| fuse file system wright (Mallika)
  |_| test fuse file system (Mallika)
  |_| fix tests for ragged lists (Aaron Goldman)
+|_| content refresher
+|_| synonym detector
