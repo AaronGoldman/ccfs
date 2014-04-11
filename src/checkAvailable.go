@@ -123,16 +123,16 @@ func responseAvaiable(hkid HKID, hcid HCID, typeString string, nameSegment strin
 }
 func buildResponse(hkid HKID, hcid HCID, typeString string, nameSegment string, version int64) (response string) {
 	if typeString == "blob" {
-		response = fmt.Sprintf("{\"type\": \"blob\", \"HCID\": \"%s\", \"URL\": \"%s\"}", hcid.Hex(),
+		response = fmt.Sprintf("{\"type\": \"blob\", \"hcid\": \"%s\", \"URL\": \"%s\"}", hcid.Hex(),
 			makeURL(hkid, hcid, typeString, nameSegment, version))
 	} else if typeString == "commit" {
-		response = fmt.Sprintf("{\"type\": \"commit\",\"HKID\": \"%s\", \"URL\": \"%s\"}", hkid.Hex(),
+		response = fmt.Sprintf("{\"type\": \"commit\",\"hkid\": \"%s\", \"URL\": \"%s\"}", hkid.Hex(),
 			makeURL(hkid, hcid, typeString, nameSegment, version))
 	} else if typeString == "tag" {
-		response = fmt.Sprintf("{\"type\": \"tag\", \"HKID\": \"%s\", \"namesegment\": \"%s\", \"URL\": \"%s\"}", hkid.Hex(), nameSegment,
+		response = fmt.Sprintf("{\"type\": \"tag\", \"hkid\": \"%s\", \"namesegment\": \"%s\", \"URL\": \"%s\"}", hkid.Hex(), nameSegment,
 			makeURL(hkid, hcid, typeString, nameSegment, version))
 	} else if typeString == "key" {
-		response = fmt.Sprintf("{\"type\": \"key\",\"HKID\": \"%s\", \"URL\": \"%s\"}", hkid.Hex(),
+		response = fmt.Sprintf("{\"type\": \"key\",\"hkid\": \"%s\", \"URL\": \"%s\"}", hkid.Hex(),
 			makeURL(hkid, hcid, typeString, nameSegment, version))
 	} else {
 		return ""
