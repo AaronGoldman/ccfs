@@ -210,6 +210,7 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			parent:       &d,
 			openHandles:  map[string]bool{},
 			inode:        new_nodeID,
+			name:         name,
 		}, nil
 	case "tag":
 		t, err := GetTag(d.leaf.(HKID), name) //leaf is HID
@@ -246,6 +247,7 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			parent:       &d,
 			openHandles:  map[string]bool{},
 			inode:        new_nodeID,
+			name:         name,
 		}, nil
 
 	}
