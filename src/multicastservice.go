@@ -27,14 +27,14 @@ type multicastservice struct {
 
 func (m multicastservice) GetBlob(h HCID) (b blob, err error) {
 	message := fmt.Sprintf("{\"type\":\"blob\", \"hcid\": \"%s\"}", h.Hex())
-	m.sendmessage(message)
 	blobchannel := make(chan blob, 1)
 	m.waitingforblob[h.Hex()] = blobchannel
+	m.sendmessage(message)
 	select {
 	case b = <-blobchannel:
 		return b, err
 
-	case <-time.After(12000 * time.Millisecond):
+	case <-time.After(150 * time.Millisecond):
 		log.Printf("Timing out now")
 		return b, fmt.Errorf("GetBlob on Multicast service timed out")
 	}
@@ -42,16 +42,16 @@ func (m multicastservice) GetBlob(h HCID) (b blob, err error) {
 }
 
 func (m multicastservice) GetCommit(h HKID) (c commit, err error) {
-	message := fmt.Sprintf("{\"type\":\"commit\",\"hkid\": \"%s\"}", h.Hex())
-	m.sendmessage(message)
-	commitchannel := make(chan commit, 1)
-	m.waitingforcommit[h.Hex()] = commitchannel
+	message := fmt.Sprintf("{\"type\":\"commit\",\"hkid\": \"%s\"}", h.String())
 
+	commitchannel := make(chan commit, 1)
+	m.waitingforcommit[h.String()] = commitchannel
+	m.sendmessage(message)
 	select {
 	case c = <-commitchannel:
 		return c, err
 
-	case <-time.After(12000 * time.Millisecond):
+	case <-time.After(150 * time.Millisecond):
 		log.Printf("Timing out now")
 		return c, fmt.Errorf("GetCommit on Multicast service timed out")
 	}
@@ -60,15 +60,15 @@ func (m multicastservice) GetCommit(h HKID) (c commit, err error) {
 
 func (m multicastservice) GetTag(h HKID, namesegment string) (t tag, err error) {
 	message := fmt.Sprintf("{\"type\":\"tag\", \"hkid\": \"%s\", \"namesegment\": \"%s\"}", h.Hex(), namesegment)
-	m.sendmessage(message)
+
 	tagchannel := make(chan tag, 1)
 	m.waitingfortag[h.Hex()+namesegment] = tagchannel
-
+	m.sendmessage(message)
 	select {
 	case t = <-tagchannel:
 		return t, err
 
-	case <-time.After(12000 * time.Millisecond):
+	case <-time.After(150 * time.Millisecond):
 		log.Printf("Timing out now")
 		return t, fmt.Errorf("GetTag on Multicast service timed out")
 	}
@@ -92,8 +92,10 @@ func (m multicastservice) GetKey(h HKID) (b blob, err error) {
 }
 
 func (m multicastservice) listenmessage() (err error) {
+	log.Printf("Listenmessage is being called now")
 	//It is taking only 256 bytes of data.
 	go func() {
+		log.Printf("gofunc in Listenmessage is being called now")
 		for {
 			b := make([]byte, 256)
 			_, addr, err := m.conn.ReadFromUDP(b)
@@ -103,6 +105,7 @@ func (m multicastservice) listenmessage() (err error) {
 			}
 			msg := strings.Trim(string(b), "\x00")
 			//log.Printf("%s", m.conn.LocalAddr())
+			log.Printf("Message that is being called in listen message, %s", msg)
 			m.receivemessage(msg, addr)
 		}
 	}()
@@ -112,7 +115,7 @@ func (m multicastservice) listenmessage() (err error) {
 func (m multicastservice) sendmessage(message string) (err error) {
 	b := make([]byte, 256)
 	copy(b, message)
-	//log.Printf("Sent message, %s", message)
+	log.Printf("Sent message, %s", message)
 	_, err = m.conn.WriteToUDP(b, m.mcaddr)
 	if err != nil {
 		log.Printf("multicasterror, %s, \n", err)
@@ -123,8 +126,9 @@ func (m multicastservice) sendmessage(message string) (err error) {
 }
 
 func (m multicastservice) receivemessage(message string, addr net.Addr) (err error) {
-	//log.Printf("Received message, %s,\n", message)
+	log.Printf("Received message, %s,\n", message)
 	hkid, hcid, typestring, namesegment, url := parseMessage(message)
+	log.Println(hkid, hcid, typestring, namesegment)
 	if url == "" {
 		checkAndRespond(hkid, hcid, typestring, namesegment)
 		return nil
@@ -139,9 +143,14 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 		blobchannel, present := m.waitingforblob[hcid.String()]
 		//log.Printf("url is %s", url)
 		data, err := m.geturl(url)
+
 		if err == nil {
 			if present {
+				log.Printf("The hcid is: %s", hcid.String())
 				blobchannel <- data
+				log.Printf("Now the data is: %s", data)
+			} else {
+				log.Printf("%s \nis not present in waiting map, \n%s", hcid.String(), m.waitingforblob)
 			}
 			if blob(data).Hash().Hex() == hcid.Hex() {
 				localfileserviceInstance.PostBlob(data)
@@ -154,10 +163,16 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 	if typestring == "tag" {
 		tagchannel, present := m.waitingfortag[hkid.Hex()+namesegment]
 		data, err := m.geturl(url)
+		if err != nil {
+			log.Printf("Error from geturl in tag, %s", err)
+		}
 		t, err := TagFromBytes(data)
 		if err == nil {
 			if present {
+				log.Printf("Tag is present")
 				tagchannel <- t
+			} else {
+				log.Printf("%s \n is not present in map \n %s", hkid.Hex()+namesegment, m.waitingfortag)
 			}
 			if t.Verify() {
 				localfileserviceInstance.PostTag(t)
@@ -178,7 +193,10 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 
 			if err == nil {
 				if present {
+					log.Printf("commit is present")
 					commitchannel <- c
+				} else {
+					log.Printf("commit %s\n is not present, \n%v", hkid.String(), m.waitingforcommit)
 				}
 				if c.Verify() {
 					localfileserviceInstance.PostCommit(c)
@@ -191,7 +209,10 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 		data, err := m.geturl(url)
 		if err == nil {
 			if present {
+				log.Printf("key is present")
 				keychannel <- data
+			} else {
+				log.Printf("key is not present, %s", m.waitingforkey)
 			}
 			p, err := PrivteKeyFromBytes(data)
 
@@ -230,6 +251,7 @@ func multicastservicefactory() (m multicastservice) {
 	}
 
 	conn, err := net.ListenMulticastUDP("udp", nil, mcaddr)
+	time.Sleep(50 * time.Millisecond)
 	if err != nil {
 		return multicastservice{}
 	}
