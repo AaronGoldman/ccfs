@@ -142,7 +142,7 @@ func (k kademliaservice) postobject(values url.Values, b []byte) (data []byte, e
 }
 
 func kademliaservicefactory() kademliaservice {
-	return kademliaservice{url: "http://128.61.27.13:5000/?"}
+	return kademliaservice{url: "http://128.61.21.129:5000/?"}
 }
 
 func init() {

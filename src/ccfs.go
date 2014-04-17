@@ -7,6 +7,10 @@ import (
 	"os"
 )
 
+func init() {
+	log.SetFlags(log.Lshortfile)
+}
+
 func main() {
 	log.SetFlags(log.Lshortfile)
 	parseFlagsAndTakeAction()

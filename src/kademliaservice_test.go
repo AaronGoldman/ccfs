@@ -62,15 +62,15 @@ func TestKademliaserviceCommit(t *testing.T) {
 	}
 }
 
-func TestKademliaserviceKey(t *testing.T) {
-	t.Skipf("")
-	repoHkid := hkidFromDString("64171129167204289916774847858432"+
-		"1039643124642934014944704416438487015947986633802511102841255411"+
-		"2620702113155684804978643917650455537680636225253952875765474", 10)
-	inkey, _ := GetKey(repoHkid)
-	kademliaserviceInstance.PostKey(inkey)
-	outkey, err := kademliaserviceInstance.GetKey(repoHkid)
-	if err != nil || !bytes.Equal(repoHkid, outkey.Hash()) {
-		t.Errorf("\nExpected:%s\nGot:%s", inkey, outkey)
-	}
-}
+//func TestKademliaserviceKey(t *testing.T) {
+//	//t.Skipf("")
+//	repoHkid := hkidFromDString("64171129167204289916774847858432"+
+//		"1039643124642934014944704416438487015947986633802511102841255411"+
+//		"2620702113155684804978643917650455537680636225253952875765474", 10)
+//	inkey, _ := GetKey(repoHkid)
+//	kademliaserviceInstance.PostKey(inkey)
+//	outkey, err := kademliaserviceInstance.GetKey(repoHkid)
+//	if err != nil || !bytes.Equal(repoHkid, outkey.Hash()) {
+//		t.Errorf("\nExpected:%s\nGot:%s", inkey, outkey)
+//	}
+//}

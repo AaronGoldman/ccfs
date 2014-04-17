@@ -92,10 +92,9 @@ func (m multicastservice) GetKey(h HKID) (b blob, err error) {
 }
 
 func (m multicastservice) listenmessage() (err error) {
-	log.Printf("Listenmessage is being called now")
 	//It is taking only 256 bytes of data.
 	go func() {
-		log.Printf("gofunc in Listenmessage is being called now")
+		log.Printf("Multicast service listening")
 		for {
 			b := make([]byte, 256)
 			_, addr, err := m.conn.ReadFromUDP(b)
@@ -115,7 +114,7 @@ func (m multicastservice) listenmessage() (err error) {
 func (m multicastservice) sendmessage(message string) (err error) {
 	b := make([]byte, 256)
 	copy(b, message)
-	log.Printf("Sent message, %s", message)
+	//log.Printf("Sent message, %s", message)
 	_, err = m.conn.WriteToUDP(b, m.mcaddr)
 	if err != nil {
 		log.Printf("multicasterror, %s, \n", err)
@@ -126,9 +125,8 @@ func (m multicastservice) sendmessage(message string) (err error) {
 }
 
 func (m multicastservice) receivemessage(message string, addr net.Addr) (err error) {
-	log.Printf("Received message, %s,\n", message)
+	//log.Printf("Received message, %s,\n", message)
 	hkid, hcid, typestring, namesegment, url := parseMessage(message)
-	log.Println(hkid, hcid, typestring, namesegment)
 	if url == "" {
 		checkAndRespond(hkid, hcid, typestring, namesegment)
 		return nil
@@ -146,9 +144,8 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 
 		if err == nil {
 			if present {
-				log.Printf("The hcid is: %s", hcid.String())
 				blobchannel <- data
-				log.Printf("Now the data is: %s", data)
+				//log.Printf("Data: %s\nHCID: %s", data, hcid)
 			} else {
 				log.Printf("%s \nis not present in waiting map, \n%s", hcid.String(), m.waitingforblob)
 			}
@@ -169,10 +166,10 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 		t, err := TagFromBytes(data)
 		if err == nil {
 			if present {
-				log.Printf("Tag is present")
+				//log.Printf("Tag is present")
 				tagchannel <- t
 			} else {
-				log.Printf("%s \n is not present in map \n %s", hkid.Hex()+namesegment, m.waitingfortag)
+				//log.Printf("%s \n is not present in map \n %s", hkid.Hex()+namesegment, m.waitingfortag)
 			}
 			if t.Verify() {
 				localfileserviceInstance.PostTag(t)
@@ -193,10 +190,10 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 
 			if err == nil {
 				if present {
-					log.Printf("commit is present")
+					//log.Printf("commit is present")
 					commitchannel <- c
 				} else {
-					log.Printf("commit %s\n is not present, \n%v", hkid.String(), m.waitingforcommit)
+					//log.Printf("commit %s\n is not present, \n%v", hkid.String(), m.waitingforcommit)
 				}
 				if c.Verify() {
 					localfileserviceInstance.PostCommit(c)

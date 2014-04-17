@@ -3,11 +3,11 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"log"
-	//"fmt"
-	//"net"
+	"net"
 	"testing"
-	//"time"
+	"time"
 )
 
 func TestMulticastservice_GetBlob(t *testing.T) {
@@ -23,11 +23,11 @@ func TestMulticastservice_GetBlob(t *testing.T) {
 	for _, answer := range AnswerKey {
 
 		localfileserviceInstance.PostBlob(answer.response)
-		/*go func() {
+		go func() {
 			time.Sleep(1 * time.Millisecond)
 			mcaddr, _ := net.ResolveUDPAddr("udp", "127.0.0.1:1234")
 			multicastserviceInstance.receivemessage("{\"type\":\"blob\", \"hcid\": \"42cc3a4c4a9d9d3ee7de9322b45acb0e5a5c33550d9ad4791df6ae937a869e12\", \"URL\": \"/b/42cc3a4c4a9d9d3ee7de9322b45acb0e5a5c33550d9ad4791df6ae937a869e12\"}", mcaddr)
-		}()*/
+		}()
 
 		output, err := multicastserviceInstance.GetBlob(answer.hcid)
 
@@ -48,11 +48,11 @@ func TestMulticastservice_GetCommit(t *testing.T) {
 	l := NewList(b.Hash(), "blob", "Blobinlist")
 	c := NewCommit(l.Hash(), hkid)
 	localfileserviceInstance.PostCommit(c)
-	//go func() {
-	//	time.Sleep(1 * time.Millisecond)
-	//	mcaddr, _ := net.ResolveUDPAddr("udp", "127.0.0.1:8000")
-	//	multicastserviceInstance.receivemessage(fmt.Sprintf("{\"type\":\"commit\", \"hkid\": \"9bd1b3c9aeda7025068319c0a4af1d2b7b644066c9820d247b19f1b9bf40840c\", \"URL\": \"/c/9bd1b3c9aeda7025068319c0a4af1d2b7b644066c9820d247b19f1b9bf40840c/%d\"}", c.version), mcaddr)
-	//}()
+	go func() {
+		time.Sleep(1 * time.Millisecond)
+		mcaddr, _ := net.ResolveUDPAddr("udp", "127.0.0.1:8000")
+		multicastserviceInstance.receivemessage(fmt.Sprintf("{\"type\":\"commit\", \"hkid\": \"9bd1b3c9aeda7025068319c0a4af1d2b7b644066c9820d247b19f1b9bf40840c\", \"URL\": \"/c/9bd1b3c9aeda7025068319c0a4af1d2b7b644066c9820d247b19f1b9bf40840c/%d\"}", c.version), mcaddr)
+	}()
 
 	output, err := multicastserviceInstance.GetCommit(c.Hkid())
 
@@ -75,11 +75,11 @@ func TestMulticastservice_GetTag(t *testing.T) {
 	b := blob([]byte("blob found"))
 	tag_t := NewTag(b.Hash(), "blob", "BlobinTag", hkid)
 	localfileserviceInstance.PostTag(tag_t)
-	//go func() {
-	//	time.Sleep(1 * time.Millisecond)
-	//	mcaddr, _ := net.ResolveUDPAddr("udp", "127.0.0.1:8000")
-	//	multicastserviceInstance.receivemessage(fmt.Sprintf("{\"type\":\"tag\", \"hkid\": \"%s\", \"namesegment\": \"%s\", \"URL\": \"/t/%s/%s/%d\"}", hkid, tag_t.nameSegment, hkid, tag_t.nameSegment, tag_t.version), mcaddr)
-	//}()
+	go func() {
+		time.Sleep(1 * time.Millisecond)
+		mcaddr, _ := net.ResolveUDPAddr("udp", "127.0.0.1:8000")
+		multicastserviceInstance.receivemessage(fmt.Sprintf("{\"type\":\"tag\", \"hkid\": \"%s\", \"namesegment\": \"%s\", \"URL\": \"/t/%s/%s/%d\"}", hkid, tag_t.nameSegment, hkid, tag_t.nameSegment, tag_t.version), mcaddr)
+	}()
 
 	output, err := multicastserviceInstance.GetTag(tag_t.Hkid(), tag_t.nameSegment)
 

@@ -245,11 +245,9 @@ func TestGetList(t *testing.T) {
 	testpath := "TestPostList1/TestPostList2/TestPostBlob"
 	indata := []byte("TestPostListListBlobData")
 	Post(testhkid, testpath, blob(indata))
-	outdata, err := Get(testhkid, "TestPostList1/")
-	truthdata := []byte("9700d700f22b2c4b07382304abcef84d" +
-		"4356598cba5c0bb5953c90840804f300,list,TestPostList2")
-	if !bytes.Equal(truthdata, outdata) || err != nil {
-		log.Printf("\n\tTestGetList:\n\t%s\n", outdata)
+	outdata, err := Get(testhkid, testpath)
+	if !bytes.Equal(indata, outdata) || err != nil {
+		log.Printf("\nTestGetList:\nExpected: %s\nGot: %s\n", indata, outdata)
 		t.Fail()
 	}
 }
