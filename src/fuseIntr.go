@@ -24,7 +24,7 @@ func startFSintegration() {
 	}
 	c, err := fuse.Mount(mountpoint)
 	if err != nil {
-		log.Printf("unable to mount mountpoint: %s", err)
+		log.Printf("Unable to mount mountpoint: %s", err)
 		return
 	}
 
@@ -33,14 +33,12 @@ func startFSintegration() {
 		signal.Notify(ch, os.Interrupt, os.Kill)
 		sig := <-ch //c is the name of the channel. usually there would be a target to receive the channel before the <-, but we don't need to use one
 		log.Printf("Got signal: %s", sig)
-
 		log.Printf("Exit unmount")
 		//cmd := exec.Command("fusermount", "-u", mountpoint)
 		ccfsUnmount(mountpoint)
 
 	}() //end func
 	fs.Serve(c, FS_from_HKID_string("c09b2765c6fd4b999d47c82f9cdf7f4b659bf7c29487cc0b357b8fc92ac8ad02", mountpoint))
-
 }
 
 func ccfsUnmount(mountpoint string) {
@@ -78,9 +76,10 @@ func (fs_obj FS) Root() (fs.Node, fuse.Error) { //returns a directory
 		perm = 0777
 	}
 
-	return Dir{path: "/",
-		trunc:        fs_obj.hkid,
-		branch:       fs_obj.hkid,
+	return Dir{
+		//path: "/",
+		//trunc:        fs_obj.hkid,
+		//branch:       fs_obj.hkid,
 		permission:   perm,
 		content_type: "commit",
 		leaf:         fs_obj.hkid,
@@ -93,16 +92,14 @@ func (fs_obj FS) Root() (fs.Node, fuse.Error) { //returns a directory
 
 // function to save writes before ejecting mountpoint
 func (fs_obj FS) Destroy() {
-
 	ccfsUnmount(fs_obj.mountpoint)
-
 }
 
 // Dir implements both Node and Handle for the root directory.
 type Dir struct {
-	path         string
-	trunc        HKID
-	branch       HKID
+	//path         string
+	//trunc        HKID
+	//branch       HKID
 	leaf         HID
 	permission   os.FileMode
 	content_type string
@@ -118,15 +115,12 @@ func (d Dir) Attr() fuse.Attr {
 }
 
 func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
-
 	new_nodeID := fs.GenerateDynamicInode(d.inode, name)
 	log.Printf("string=%s\n", name)
 	if name == "hello" {
 		return File{permission: os.FileMode(0444)}, nil
 	}
-
 	log.Printf("d.leaf is %s", d.leaf.Hex())
-
 	//in each case, call
 	switch d.content_type {
 	default:
@@ -171,9 +165,9 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 		}
 
 		return Dir{
-			path:         d.path + "/" + name,
-			trunc:        d.trunc,
-			branch:       d.leaf.(HKID),
+			//path:         d.path + "/" + name,
+			//trunc:        d.trunc,
+			//branch:       d.leaf.(HKID),
 			leaf:         list_entry.Hash,
 			permission:   perm,
 			content_type: list_entry.TypeString,
@@ -201,9 +195,10 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 				name:        name,
 			}, nil
 		}
-		return Dir{path: d.path + "/" + name,
-			trunc:        d.trunc,
-			branch:       d.branch,
+		return Dir{
+			//path: d.path + "/" + name,
+			//trunc:        d.trunc,
+			//branch:       d.branch,
 			leaf:         list_entry.Hash,
 			permission:   d.permission,
 			content_type: list_entry.TypeString,
@@ -238,9 +233,9 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			}, nil
 		}
 		return Dir{
-			path:         d.path + "/" + name,
-			trunc:        d.trunc,
-			branch:       t.hkid,
+			//path:         d.path + "/" + name,
+			//trunc:        d.trunc,
+			//branch:       t.hkid,
 			leaf:         t.HashBytes,
 			permission:   perm,
 			content_type: t.TypeString,

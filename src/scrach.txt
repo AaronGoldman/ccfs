@@ -35,5 +35,5 @@ import (
 )
 
 main imports interfaces, content services, core
-interfaces import core
+interfaces import core,content services
 content services import core
