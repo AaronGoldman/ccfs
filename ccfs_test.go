@@ -171,8 +171,10 @@ func TestPostTagTagBlob(t *testing.T) {
 	testpath := "testTag1/testTag2/testBlob"
 	_, err = services.Post(testhkid, testpath, indata)
 	outdata, err := services.Get(testhkid, testpath)
-	if !bytes.Equal(indata, outdata) || err != nil {
-		t.Fail()
+	if err != nil {
+		t.Errorf("Retreved with error: %s", err)
+	} else if !bytes.Equal(indata, outdata) {
+		t.Errorf("Expected:\n\t%s\nGot:\n\t%s", indata, outdata)
 	}
 }
 
@@ -189,8 +191,10 @@ func TestPostListCommitBlob(t *testing.T) {
 	testpath := "testList/testCommit/testBlob"
 	_, err = services.Post(testhkid, testpath, indata)
 	outdata, err := services.Get(testhkid, testpath)
-	if !bytes.Equal(indata, outdata) || err != nil {
-		t.Fail()
+	if err != nil {
+		t.Errorf("Retreved with error: %s", err)
+	} else if !bytes.Equal(indata, outdata) {
+		t.Errorf("Expected:\n\t%s\nGot:\n\t%s", indata, outdata)
 	}
 }
 
@@ -225,8 +229,10 @@ func TestPostListTagBlob(t *testing.T) {
 	testpath := "testList/testTag/testBlob"
 	_, err = services.Post(testhkid, testpath, indata)
 	outdata, err := services.Get(testhkid, testpath)
-	if !bytes.Equal(indata, outdata) || err != nil {
-		t.Fail()
+	if err != nil {
+		t.Errorf("Retreved with error: %s", err)
+	} else if !bytes.Equal(indata, outdata) {
+		t.Errorf("Expected:\n\t%s\nGot:\n\t%s", indata, outdata)
 	}
 }
 

@@ -6,6 +6,17 @@ go build -o ../bin/ccfs.exe
 
 go fmt
 
+teems:
+	interfaces:
+		expose ccfs as usefull srorage interfaces
+	services:
+		expose underling storage to ccfs
+	tools:
+		develop tools to make ccfs usefull and reliable
+		refreshers
+		cralers
+		search engine
+
 src
     content services
         appsscript service

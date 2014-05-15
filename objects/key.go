@@ -38,7 +38,7 @@ func (p PrivateKey) Hkid() HKID {
 }
 
 //Hash returns the hcid for the PrivateKey
-func (p PrivateKey) Hash() []byte {
+func (p PrivateKey) Hash() HCID {
 	var h hash.Hash = sha256.New()
 	h.Write(p.Bytes())
 	return h.Sum(nil)
