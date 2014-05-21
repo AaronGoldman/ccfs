@@ -54,7 +54,7 @@ func list_helper(h objects.HID, next_path_segment string, rest_of_path string,
 	geterr := fmt.Errorf("h in nil")
 	l := objects.List(nil)
 	if h != nil {
-		l, geterr = GetList(h.Bytes())
+		l, geterr = GetList(h.(objects.HCID))
 	}
 	posterr := error(nil)
 	if geterr == nil {
@@ -169,12 +169,14 @@ func tag_helper(h objects.HID, next_path_segment string, rest_of_path string,
 		_, err := GetPrivateKeyForHkid(h.(objects.HKID))
 		if err == nil {
 			//you own the Domain
+
 			next_hash := objects.HID(nil)
 			next_path := rest_of_path
 			next_typeString := "list"
 			if rest_of_path == "" {
 				next_typeString = post_type
 			}
+			log.Printf("tag pionting to a %s named %s", next_typeString, next_path_segment)
 			var hash_of_posted objects.HID
 			if rest_of_path == "" && post_type != "blob" {
 				hash_of_posted = objects.HKID(post_bytes.Bytes()) //insrt reference by HKID

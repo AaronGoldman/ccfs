@@ -144,6 +144,9 @@ func TestPostTagCommitBlob(t *testing.T) {
 		"1502019766737301062946423046280258817349516439546479625226895211"+
 		"80808353215150536034481206091147220911087792299373183736254", 10)
 	err := services.InsertDomain(testhkid, "testTag", domainHkid)
+	if err != nil {
+		t.Errorf("InsertDomain with error: %s", err)
+	}
 	err = services.InsertRepo(testhkid, "testTag/testCommit", repoHkid)
 	indata := objects.Blob([]byte("TestTagCommitBlobData"))
 	testpath := "testTag/testCommit/testBlob"
@@ -166,12 +169,21 @@ func TestPostTagTagBlob(t *testing.T) {
 		"0714973444364727181180850528073586453638681999434006549298762097"+
 		"4197649255374796716934112121800838847071661501215957753532505", 10)
 	err := services.InsertDomain(testhkid, "testTag1", domain1Hkid)
+	if err != nil {
+		t.Errorf("InsertDomain with error: %s", err)
+	}
 	err = services.InsertDomain(testhkid, "testTag1/testTag2", domain2Hkid)
+	if err != nil {
+		t.Errorf("InsertDomain with error: %s", err)
+	}
 	indata := objects.Blob([]byte("TestTagTagBlobData"))
 	testpath := "testTag1/testTag2/testBlob"
 	_, err = services.Post(testhkid, testpath, indata)
 	outdata, err := services.Get(testhkid, testpath)
 	if err != nil {
+		log.Printf("[TestPostTagTagBlob] testhkid %s", testhkid)
+		log.Printf("[TestPostTagTagBlob] domain1Hkid %s", domain1Hkid)
+		log.Printf("[TestPostTagTagBlob] domain2Hkid %s", domain2Hkid)
 		t.Errorf("Retreved with error: %s", err)
 	} else if !bytes.Equal(indata, outdata) {
 		t.Errorf("Expected:\n\t%s\nGot:\n\t%s", indata, outdata)
@@ -187,11 +199,16 @@ func TestPostListCommitBlob(t *testing.T) {
 		"0777289273091938777159029927847596771500408478956278378281366717"+
 		"7487960901581583946753338859223459810645621124266443931192097", 10)
 	err := services.InsertDomain(testhkid, "testList/testCommit", repoHkid)
+	if err != nil {
+		t.Errorf("InsertDomain with error: %s", err)
+	}
 	indata := objects.Blob([]byte("TestListCommitBlobData"))
 	testpath := "testList/testCommit/testBlob"
 	_, err = services.Post(testhkid, testpath, indata)
 	outdata, err := services.Get(testhkid, testpath)
 	if err != nil {
+		log.Printf("[TestPostListCommitBlob] testhkid %s", testhkid)
+		log.Printf("[TestPostListCommitBlob] repoHkid %s", repoHkid)
 		t.Errorf("Retreved with error: %s", err)
 	} else if !bytes.Equal(indata, outdata) {
 		t.Errorf("Expected:\n\t%s\nGot:\n\t%s", indata, outdata)
@@ -207,6 +224,9 @@ func TestPostTagListBlob(t *testing.T) {
 		"1944826557905230450143203631438168806532495876980559885034903315"+
 		"4294997505754401230560960060918213268981906409591978967796584", 10)
 	err := services.InsertDomain(testhkid, "testTag", domainHkid)
+	if err != nil {
+		t.Errorf("InsertDomain with error: %s", err)
+	}
 	indata := objects.Blob([]byte("TestTagListBlobData"))
 	testpath := "testTag/testList/testBlob"
 	_, err = services.Post(testhkid, testpath, indata)

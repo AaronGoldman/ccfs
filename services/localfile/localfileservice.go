@@ -15,6 +15,7 @@ type localfileservice struct{}
 
 func (lfs localfileservice) PostBlob(b objects.Blob) (err error) {
 	filepath := fmt.Sprintf("bin/blobs/%s", b.Hash().Hex())
+	//log.Printf("[localfileservice] PostBlob %s", filepath)
 	err = os.MkdirAll("bin/blobs", 0764)
 	err = ioutil.WriteFile(filepath, b.Bytes(), 0664)
 	return
@@ -22,6 +23,7 @@ func (lfs localfileservice) PostBlob(b objects.Blob) (err error) {
 func (lfs localfileservice) PostTag(t objects.Tag) (err error) {
 	filepath := fmt.Sprintf("bin/tags/%s/%s/%d", t.Hkid().Hex(),
 		t.NameSegment, t.Version)
+	//log.Printf("[localfileservice] PostTag %s", filepath)
 	dirpath := fmt.Sprintf("bin/tags/%s/%s", t.Hkid().Hex(),
 		t.NameSegment)
 	err = os.MkdirAll(dirpath, 0764)
@@ -30,7 +32,8 @@ func (lfs localfileservice) PostTag(t objects.Tag) (err error) {
 }
 func (lfs localfileservice) PostCommit(c objects.Commit) (err error) {
 	filepath := fmt.Sprintf("bin/commits/%s/%d", c.Hkid().Hex(),
-		c.Version)
+		c.Version())
+	//log.Printf("[localfileservice] PostCommit %s\n\t%d", filepath, c.Version())
 	dirpath := fmt.Sprintf("bin/commits/%s", c.Hkid().Hex())
 	err = os.MkdirAll(dirpath, 0764)
 	err = ioutil.WriteFile(filepath, c.Bytes(), 0664)
@@ -74,7 +77,7 @@ func (lfs localfileservice) GetTag(h objects.HKID, namesegment string) (t object
 	matches, err := filepath.Glob(fmt.Sprintf("bin/tags/%s/%s/*",
 		h.Hex(), namesegment))
 	filepath := lfs.latestVersion(matches)
-	log.Printf("Filepath: %v", filepath)
+	//log.Printf("Filepath: %v", filepath)
 	data, err := ioutil.ReadFile(filepath)
 	if err == nil {
 		t, _ = objects.TagFromBytes(data)
