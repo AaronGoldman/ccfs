@@ -103,13 +103,22 @@ func ListFromBytes(listbytes []byte) (newlist List, err error) {
 	for _, element := range listEntries {
 		cols = strings.Split(element, ",")
 		//log.Print(cols)
-		entryHash, _ := hex.DecodeString(cols[0])
+		//entryHash, err := hex.DecodeString(cols[0])
+		//if err != nil {
+		//	return nil, err
+		//}
 		entryTypeString := cols[1]
 		var entryHID HID
 		if entryTypeString == "blob" || entryTypeString == "list" {
-			entryHID = HCID(entryHash)
+			entryHID, err = HcidFromHex(cols[0])
+			if err != nil {
+				return nil, err
+			}
 		} else if entryTypeString == "commit" || entryTypeString == "tag" {
-			entryHID = HKID(entryHash)
+			entryHID, err = HkidFromHex(cols[0])
+			if err != nil {
+				return nil, err
+			}
 		} else {
 			log.Fatal()
 		}
@@ -235,12 +244,26 @@ func CommitFromBytes(bytes []byte) (c Commit, err error) {
 	if len(commitStrings) != 5 {
 		return c, fmt.Errorf("Could not parse commit bytes")
 	}
-	listHash, _ := hex.DecodeString(commitStrings[0])
-	version, _ := strconv.ParseInt(commitStrings[1], 10, 64)
-	parent, _ := hex.DecodeString(commitStrings[2])
-	cHkid, _ := hex.DecodeString(commitStrings[3])
-	signature, _ := hex.DecodeString(commitStrings[4])
-	//var h hash.Hash = sha256.New()
+	listHash, err := hex.DecodeString(commitStrings[0])
+	if err != nil {
+		return
+	}
+	version, err := strconv.ParseInt(commitStrings[1], 10, 64)
+	if err != nil {
+		return
+	}
+	parent, err := hex.DecodeString(commitStrings[2])
+	if err != nil {
+		return
+	}
+	cHkid, err := hex.DecodeString(commitStrings[3])
+	if err != nil {
+		return
+	}
+	signature, err := hex.DecodeString(commitStrings[4])
+	if err != nil {
+		return
+	}
 	c = Commit{listHash, version, parent, cHkid, signature}
 	return
 }
@@ -349,20 +372,38 @@ func TagFromBytes(bytes []byte) (t Tag, err error) {
 	if len(tagStrings) != 6 {
 		return t, fmt.Errorf("Could not parse tag bytes")
 	}
-	tagHashBytes, _ := hex.DecodeString(tagStrings[0])
+	//tagHashBytes, err := hex.DecodeString(tagStrings[0])
+	//if err != nil {
+	//	return nil, err
+	//}
 	tagTypeString := tagStrings[1]
 	var tagHID HID
 	if tagTypeString == "blob" || tagTypeString == "list" {
-		tagHID = HCID(tagHashBytes)
+		tagHID, err = HcidFromHex(tagStrings[0])
+		if err != nil {
+			return
+		}
 	} else if tagTypeString == "commit" || tagTypeString == "tag" {
-		tagHID = HKID(tagHashBytes)
+		tagHID, err = HkidFromHex(tagStrings[0])
+		if err != nil {
+			return
+		}
 	} else {
 		log.Fatal()
 	}
 	tagNameSegment := tagStrings[2]
-	tagVersion, _ := strconv.ParseInt(tagStrings[3], 10, 64)
-	tagHkid, _ := hex.DecodeString(tagStrings[4])
-	tagSignature, _ := hex.DecodeString(tagStrings[5])
+	tagVersion, err := strconv.ParseInt(tagStrings[3], 10, 64)
+	if err != nil {
+		return
+	}
+	tagHkid, err := hex.DecodeString(tagStrings[4])
+	if err != nil {
+		return
+	}
+	tagSignature, err := hex.DecodeString(tagStrings[5])
+	if err != nil {
+		return
+	}
 	t = Tag{tagHID, tagTypeString, tagNameSegment, tagVersion, tagHkid,
 		tagSignature}
 	return
