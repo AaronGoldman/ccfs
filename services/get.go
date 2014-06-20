@@ -66,7 +66,7 @@ func Get(objecthash objects.HID, path string) (b objects.Blob, err error) {
 				return nil, fmt.Errorf("Commit Verifiy Failed")
 			}
 			var l objects.List
-			l, err = GetList(c.ListHash())
+			l, err = GetList(c.ListHash)
 			if err != nil {
 				log.Printf("\n\t%v\n", err)
 			}

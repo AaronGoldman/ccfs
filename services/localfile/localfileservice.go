@@ -21,22 +21,22 @@ func (lfs localfileservice) PostBlob(b objects.Blob) (err error) {
 	return
 }
 func (lfs localfileservice) PostTag(t objects.Tag) (err error) {
-	lfs.PostBlob(objects.Blob(t))
-	filepath := fmt.Sprintf("bin/tags/%s/%s/%d", t.Hkid().Hex(),
+	lfs.PostBlob(objects.Blob(t.Bytes()))
+	filepath := fmt.Sprintf("bin/tags/%s/%s/%d", t.Hkid.Hex(),
 		t.NameSegment, t.Version)
 	//log.Printf("[localfileservice] PostTag %s", filepath)
-	dirpath := fmt.Sprintf("bin/tags/%s/%s", t.Hkid().Hex(),
+	dirpath := fmt.Sprintf("bin/tags/%s/%s", t.Hkid.Hex(),
 		t.NameSegment)
 	err = os.MkdirAll(dirpath, 0764)
 	err = ioutil.WriteFile(filepath, t.Bytes(), 0664)
 	return
 }
 func (lfs localfileservice) PostCommit(c objects.Commit) (err error) {
-	lfs.PostBlob(objects.Blob(c))
-	filepath := fmt.Sprintf("bin/commits/%s/%d", c.Hkid().Hex(),
-		c.Version())
+	lfs.PostBlob(objects.Blob(c.Bytes()))
+	filepath := fmt.Sprintf("bin/commits/%s/%d", c.Hkid.Hex(),
+		c.Version)
 	//log.Printf("[localfileservice] PostCommit %s\n\t%d", filepath, c.Version())
-	dirpath := fmt.Sprintf("bin/commits/%s", c.Hkid().Hex())
+	dirpath := fmt.Sprintf("bin/commits/%s", c.Hkid.Hex())
 	err = os.MkdirAll(dirpath, 0764)
 	err = ioutil.WriteFile(filepath, c.Bytes(), 0664)
 	return

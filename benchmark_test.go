@@ -76,17 +76,20 @@ func BenchmarkLowLevelPath(b *testing.B) {
 		}
 
 		//post tag
-		testTagPointingToTestBlob := objects.NewTag(objects.HID(testBlob.Hash()),
+		testTagPointingToTestBlob := objects.NewTag(
+			objects.HID(testBlob.Hash()),
 			"blob",
 			"testBlob",
-			hkidT) //gen test tag
+			nil,
+			hkidT,
+		) //gen test tag
 		err = services.PostTag(testTagPointingToTestBlob) //post test tag
 		if err != nil {
 			log.Println(err)
 		}
 
 		//post list
-		testListPiontingToTestTag := objects.NewList(testTagPointingToTestBlob.Hkid(),
+		testListPiontingToTestTag := objects.NewList(testTagPointingToTestBlob.Hkid,
 			"tag",
 			"testTag") //gen test list
 		err = services.PostBlob(testListPiontingToTestTag.Bytes()) //store test list
@@ -115,7 +118,7 @@ func BenchmarkLowLevelPath(b *testing.B) {
 			b.FailNow()
 		}
 		//get list
-		listbytes, err := services.GetBlob(testcommit.ListHash())
+		listbytes, err := services.GetBlob(testcommit.ListHash)
 		if err != nil {
 			log.Panic(err)
 		}
@@ -123,7 +126,7 @@ func BenchmarkLowLevelPath(b *testing.B) {
 		testlist, err := objects.ListFromBytes(listbytes)
 
 		//log.Printf("authentic list:%v\n", )
-		if !bytes.Equal(testcommit.ListHash(), testlist.Hash()) {
+		if !bytes.Equal(testcommit.ListHash, testlist.Hash()) {
 			b.FailNow()
 		}
 		//get tag

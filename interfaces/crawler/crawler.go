@@ -157,11 +157,11 @@ func crawlhcidCommit(targHash objects.HCID) (err error) {
 func handleCommit(inCommit objects.Commit) {
 	newHash := target{
 		typeString: "list",
-		hash:       inCommit.ListHash(),
+		hash:       inCommit.ListHash,
 	}
 	newParent := target{
 		typeString: "hcid_commit",
-		hash:       inCommit.Parent(),
+		hash:       inCommit.Parent,
 	}
 	//commitHKID := firstCommit.Hkid()
 
@@ -195,19 +195,19 @@ func handleTag(inTag objects.Tag) {
 		typeString: inTag.TypeString,
 		hash:       inTag.HashBytes,
 	}
-	//newParent := target{
-	//	typeString: "hcid_tag",
-	//	hash:       inTag.Parent,
-	//}
+	newParent := target{
+		typeString: "hcid_tag",
+		hash:       inTag.Parent,
+	}
 	//commitHKID := inTag.Hkid()
 
 	if !queuedTargets[newHash] {
 		targetQueue <- newHash
 		queuedTargets[newHash] = true
 	}
-	//if !queuedTargets[newParent] {
-	//	targetQueue <- newParent
-	//	queuedTargets[newParent] = true
-	//}
+	if !queuedTargets[newParent] {
+		targetQueue <- newParent
+		queuedTargets[newParent] = true
+	}
 
 }
