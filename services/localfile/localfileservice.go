@@ -21,6 +21,7 @@ func (lfs localfileservice) PostBlob(b objects.Blob) (err error) {
 	return
 }
 func (lfs localfileservice) PostTag(t objects.Tag) (err error) {
+	lfs.PostBlob(objects.Blob(t))
 	filepath := fmt.Sprintf("bin/tags/%s/%s/%d", t.Hkid().Hex(),
 		t.NameSegment, t.Version)
 	//log.Printf("[localfileservice] PostTag %s", filepath)
@@ -31,6 +32,7 @@ func (lfs localfileservice) PostTag(t objects.Tag) (err error) {
 	return
 }
 func (lfs localfileservice) PostCommit(c objects.Commit) (err error) {
+	lfs.PostBlob(objects.Blob(c))
 	filepath := fmt.Sprintf("bin/commits/%s/%d", c.Hkid().Hex(),
 		c.Version())
 	//log.Printf("[localfileservice] PostCommit %s\n\t%d", filepath, c.Version())
