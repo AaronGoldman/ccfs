@@ -91,15 +91,44 @@ func Get(objecthash objects.HID, path string) (b objects.Blob, err error) {
 
 func GetList(objectHash objects.HCID) (l objects.List, err error) {
 	listbytes, err := GetBlob(objectHash)
-	if len(listbytes) == 0 {
+
+	if err != nil || len(listbytes) == 0 {
 		return nil, err
 	}
 	l, err = objects.ListFromBytes(listbytes)
+	if err != nil {
+		return nil, err
+	}
+	return
+}
+
+func GetCommitForHcid(hash objects.HCID) (commit objects.Commit, err error) {
+	commitbytes, err := GetBlob(hash)
+	if err != nil {
+		return commit, err
+	}
+	commit, err = objects.CommitFromBytes(commitbytes)
+	if err != nil {
+		return commit, err
+	}
+	return
+}
+
+//hcidTag, tagErr := services.GetTagForHcid(targ.hash.(objects.HCID))
+func GetTagForHcid(hash objects.HCID) (tag objects.Tag, err error) {
+	tagbytes, err := GetBlob(hash)
+	if err != nil {
+		return tag, err
+	}
+	tag, err = objects.TagFromBytes(tagbytes)
+	if err != nil {
+		return tag, err
+	}
 	return
 }
 
 //getPiblicKeyForHkid uses the lookup services to get a public key for an hkid
-func GetPiblicKeyForHkid(hkid objects.HKID) objects.PublicKey {
+func GetPublicKeyForHkid(hkid objects.HKID) objects.PublicKey {
 	marshaledKey, err := GetBlob(objects.HCID(hkid))
 	if err != nil {
 		return objects.PublicKey{}

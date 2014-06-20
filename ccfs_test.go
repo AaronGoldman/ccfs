@@ -16,7 +16,7 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 	services.Registercontentservice(localfile.Instance)
 	objects.RegisterGeterPoster(
-		services.GetPiblicKeyForHkid,
+		services.GetPublicKeyForHkid,
 		services.GetPrivateKeyForHkid,
 		services.PostKey,
 		services.PostBlob,

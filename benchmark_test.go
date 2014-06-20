@@ -19,7 +19,7 @@ var benchmarkTagHkid objects.HKID
 func init() {
 	log.SetFlags(log.Lshortfile)
 	objects.RegisterGeterPoster(
-		services.GetPiblicKeyForHkid,
+		services.GetPublicKeyForHkid,
 		services.GetPrivateKeyForHkid,
 		services.PostKey,
 		services.PostBlob,
