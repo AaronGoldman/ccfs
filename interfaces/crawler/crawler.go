@@ -6,75 +6,86 @@ import (
 	"github.com/AaronGoldman/ccfs/services"
 	"log"
 	"net/http"
+	"sort"
 	"strings"
 )
 
-var queuedTargets map[target]bool
+var queuedTargets map[string]bool
 var targetQueue chan target
 
+// This function starts up the crawler for the CCFS
 func Start() {
-	fmt.Printf("Crawler Starting")
-	http.HandleFunc("/crawler/", WebCrawlerHandler)
-
-	queuedTargets = make(map[target]bool)
+	fmt.Printf("Crawler Starting\n")
+	queuedTargets = make(map[string]bool)
 	targetQueue = make(chan target, 100)
+	go processQueue()
+	http.HandleFunc("/crawler/", webCrawlerHandler)
+
 }
 
-func WebCrawlerHandler(w http.ResponseWriter, r *http.Request) {
+// This function handles web requests for the crawler
+func webCrawlerHandler(w http.ResponseWriter, r *http.Request) {
 
 	parts := strings.SplitN(r.RequestURI[9:], "/", 2)
 	hkidhex := parts[0]
-
+	requestStats := fmt.Sprintf("Request Statistics: \n")
+	w.Write([]byte(requestStats))
 	if len(hkidhex) == 64 {
 		h, err := objects.HkidFromHex(hkidhex)
 		if err == nil {
-			response := fmt.Sprintf("The hkid gotten is %s", h)
+			response := fmt.Sprintf("\tThe hkid gotten is %s\n", h)
 			w.Write([]byte(response)) //converts the response to bytes from strings
-			return
+			seedQueue(h)
 		} else {
-			// User Interface (to ask user for valid HKID) to be added here
+			hc, err := objects.HcidFromHex(hkidhex)
+			if err == nil {
+				response := fmt.Sprintf("\tThe hcid gotten is %s\n", hc)
+				w.Write([]byte(response))
+				seedQueue(hc)
+			}
 		}
+
 	}
-	http.Error(w, "HTTP Error 500 Internal Crawler server error\n\n", 500)
+	queueStats := fmt.Sprintf("Queue Statistics: \n")
+	w.Write([]byte(queueStats))
+	queuePrint := fmt.Sprintf("\tThe current length of the queue is %v\n",
+		len(targetQueue))
+	w.Write([]byte(queuePrint))
+	indexStats := fmt.Sprintf("Index Statistics: \n")
+	w.Write([]byte(indexStats))
+
+	var keys []string
+	for key := range queuedTargets {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		mapLine := fmt.Sprintf("\t%s %v\n", k, queuedTargets[k])
+		w.Write([]byte(mapLine))
+	}
+	//http.Error(w, "HTTP Error 500 Internal Crawler server error\n\n", 500)
 }
 
+// This type, target, is used for the map and the queue
 type target struct {
 	typeString string
 	hash       objects.HID
 }
 
-func ContentFiles(h objects.HID) {
-	hlist := target{
-		typeString: "list",
-		hash:       objects.HCID(h.Bytes()),
-	}
-	targetQueue <- hlist
-
-	hblob := target{
-		typeString: "blob",
-		hash:       objects.HCID(h.Bytes()),
-	}
-	targetQueue <- hblob
-
-	hcommit := target{
-		typeString: "commit",
-		hash:       objects.HKID(h.Bytes()),
-	}
-	targetQueue <- hcommit
-
-	h_hcid_commit := target{
-		typeString: "hcid_commit",
-		hash:       objects.HCID(h.Bytes()),
-	}
-	targetQueue <- h_hcid_commit
-
-	h_hcid_tag := target{
-		typeString: "hcid_tag",
-		hash:       objects.HCID(h.Bytes()),
-	}
-	targetQueue <- h_hcid_tag
+func (targ target) String() string {
+	return fmt.Sprintf("%s %s", targ.typeString, targ.hash)
 }
 
+// This function seeds the queue from a web request
+func seedQueue(h objects.HID) {
+	crawlList(objects.HCID(h.Bytes()))
+	crawlBlob(objects.HCID(h.Bytes()))
+	crawlCommit(objects.HKID(h.Bytes()))
+	crawlhcidCommit(objects.HCID(h.Bytes()))
+	crawlhcidTag(objects.HCID(h.Bytes()))
+}
+
+// This function scrapes a target for new targets to add to the queue
 func crawlTarget(targ target) {
 	err := fmt.Errorf("Attempted to crawl malformed typeString in target\n\t%v", targ)
 	switch targ.typeString {
@@ -127,9 +138,9 @@ func crawlList(targHash objects.HCID) (err error) {
 			typeString: entry.TypeString,
 			hash:       entry.Hash,
 		}
-		if !queuedTargets[newlistHash] {
+		if !queuedTargets[newlistHash.String()] {
 			targetQueue <- newlistHash
-			queuedTargets[newlistHash] = true
+			queuedTargets[newlistHash.String()] = true
 		}
 	}
 	return nil
@@ -154,6 +165,7 @@ func crawlhcidCommit(targHash objects.HCID) (err error) {
 	return nil
 }
 
+// This function handles commits from HCID or HKID
 func handleCommit(inCommit objects.Commit) {
 	newHash := target{
 		typeString: "list",
@@ -165,13 +177,13 @@ func handleCommit(inCommit objects.Commit) {
 	}
 	//commitHKID := firstCommit.Hkid()
 
-	if !queuedTargets[newHash] {
+	if !queuedTargets[newHash.String()] {
 		targetQueue <- newHash
-		queuedTargets[newHash] = true
+		queuedTargets[newHash.String()] = true
 	}
-	if !queuedTargets[newParent] {
+	if !queuedTargets[newParent.String()] {
 		targetQueue <- newParent
-		queuedTargets[newParent] = true
+		queuedTargets[newParent.String()] = true
 	}
 
 }
@@ -190,6 +202,7 @@ func crawlhcidTag(targHash objects.HCID) (err error) {
 	return nil
 }
 
+// This function handles Tags from HCID or HKID
 func handleTag(inTag objects.Tag) {
 	newHash := target{
 		typeString: inTag.TypeString,
@@ -199,15 +212,23 @@ func handleTag(inTag objects.Tag) {
 		typeString: "hcid_tag",
 		hash:       inTag.Parent,
 	}
-	//commitHKID := inTag.Hkid()
+	//tagHKID := inTag.Hkid
 
-	if !queuedTargets[newHash] {
+	if !queuedTargets[newHash.String()] {
 		targetQueue <- newHash
-		queuedTargets[newHash] = true
+		queuedTargets[newHash.String()] = true
 	}
-	if !queuedTargets[newParent] {
+	if !queuedTargets[newParent.String()] {
 		targetQueue <- newParent
-		queuedTargets[newParent] = true
+		queuedTargets[newParent.String()] = true
 	}
 
+}
+
+func processQueue() {
+	var targ target
+	for {
+		targ = <-targetQueue
+		crawlTarget(targ)
+	}
 }

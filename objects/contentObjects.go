@@ -107,6 +107,9 @@ func ListFromBytes(listbytes []byte) (newlist List, err error) {
 		//if err != nil {
 		//	return nil, err
 		//}
+		if len(cols) != 3 {
+			return newlist, fmt.Errorf("Could not parse list")
+		}
 		entryTypeString := cols[1]
 		var entryHID HID
 		if entryTypeString == "blob" || entryTypeString == "list" {
