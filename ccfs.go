@@ -25,7 +25,9 @@ func main() {
 
 	crawler.Start()
 	services.Registercontentservice(localfile.Instance)
+	services.Registertagsgeter(localfile.Instance)
 	services.Registerblobgeter(timeout.Instance)
+	services.Registertagsgeter(timeout.Instance)
 	//services.Registerblobgeter(appsscript.Instance)
 	//services.Registerblobgeter(googledrive.Instance)
 	//services.Registerblobgeter(kademliadht.Instance)

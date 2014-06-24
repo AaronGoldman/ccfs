@@ -21,6 +21,12 @@ func (timeoutservice) GetTag(h objects.HKID, namesegment string) (objects.Tag, e
 	time.Sleep(time.Second)
 	return objects.Tag{}, fmt.Errorf("GetTag Timeout")
 }
+
+func (timeoutservice) GetTags(h objects.HKID) ([]objects.Tag, error) {
+	time.Sleep(time.Second)
+	return []objects.Tag{}, fmt.Errorf("GetTags Timeout")
+}
+
 func (timeoutservice) GetKey(objects.HKID) (objects.Blob, error) {
 	time.Sleep(time.Second)
 	return objects.Blob{}, fmt.Errorf("GetKey Timeout")

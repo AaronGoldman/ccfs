@@ -8,6 +8,7 @@ import (
 var blobgeters = []blobgeter{}
 var commitgeters = []commitgeter{}
 var taggeters = []taggeter{}
+var tagsgeters = []tagsgeter{}
 var keygeters = []keygeter{}
 var blobposters = []blobposter{}
 var commitposters = []commitposter{}
@@ -17,6 +18,7 @@ var keyposters = []keyposter{}
 func Registerblobgeter(service blobgeter)       { blobgeters = append(blobgeters, service) }
 func Registercommitgeter(service commitgeter)   { commitgeters = append(commitgeters, service) }
 func Registertaggeter(service taggeter)         { taggeters = append(taggeters, service) }
+func Registertagsgeter(service tagsgeter)       { tagsgeters = append(tagsgeters, service) }
 func Registerkeygeter(service keygeter)         { keygeters = append(keygeters, service) }
 func Registerblobposter(service blobposter)     { blobposters = append(blobposters, service) }
 func Registercommitposter(service commitposter) { commitposters = append(commitposters, service) }
@@ -52,6 +54,9 @@ type commitgeter interface {
 }
 type taggeter interface {
 	GetTag(h objects.HKID, namesegment string) (objects.Tag, error)
+}
+type tagsgeter interface {
+	GetTags(h objects.HKID) ([]objects.Tag, error)
 }
 type keygeter interface {
 	GetKey(objects.HKID) (objects.Blob, error)

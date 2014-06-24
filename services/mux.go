@@ -16,7 +16,12 @@ func GetBlob(h objects.HCID) (objects.Blob, error) {
 	datach := make(chan objects.Blob, len(blobgeters))
 	errorch := make(chan error, len(blobgeters))
 	for _, rangeblobgeterInstance := range blobgeters {
-		go func(blobgeterInstance blobgeter, datach chan objects.Blob, errorch chan error, h objects.HCID) {
+		go func(
+			blobgeterInstance blobgeter,
+			datach chan objects.Blob,
+			errorch chan error,
+			h objects.HCID,
+		) {
 			b, err := blobgeterInstance.GetBlob(h)
 			if err == nil {
 				datach <- b
@@ -53,7 +58,12 @@ func GetCommit(h objects.HKID) (objects.Commit, error) {
 	datach := make(chan objects.Commit, len(commitgeters))
 	errorch := make(chan error, len(commitgeters))
 	for _, rangecommitgeterInstance := range commitgeters {
-		go func(commitgeterInstance commitgeter, datach chan objects.Commit, errorch chan error, h objects.HKID) {
+		go func(
+			commitgeterInstance commitgeter,
+			datach chan objects.Commit,
+			errorch chan error,
+			h objects.HKID,
+		) {
 			c, err := commitgeterInstance.GetCommit(h)
 			if err == nil {
 				datach <- c
@@ -86,7 +96,13 @@ func GetTag(h objects.HKID, namesegment string) (objects.Tag, error) {
 	datach := make(chan objects.Tag, len(taggeters))
 	errorch := make(chan error, len(taggeters))
 	for _, rangetaggeterInstance := range taggeters {
-		go func(taggeterInstance taggeter, datach chan objects.Tag, errorch chan error, h objects.HKID, namesegment string) {
+		go func(
+			taggeterInstance taggeter,
+			datach chan objects.Tag,
+			errorch chan error,
+			h objects.HKID,
+			namesegment string,
+		) {
 			t, err := taggeterInstance.GetTag(h, namesegment)
 			if err == nil {
 				datach <- t
@@ -114,12 +130,62 @@ func GetTag(h objects.HKID, namesegment string) (objects.Tag, error) {
 	}
 }
 
+//GetTags retreves the newest tag for each name segment for a given HKID
+func GetTags(h objects.HKID) (tags []objects.Tag, err error) {
+	datach := make(chan objects.Tag, len(tagsgeters))
+	errorch := make(chan error, len(tagsgeters))
+	for _, rangetagsgeterInstance := range tagsgeters {
+		go func(
+			tagsgeterInstance tagsgeter,
+			datach chan objects.Tag,
+			errorch chan error,
+			h objects.HKID,
+		) {
+			t, err := tagsgeterInstance.GetTags(h)
+			if err == nil {
+				for _, tag := range t {
+					datach <- tag
+				}
+				return
+			} else {
+				errorch <- err
+				return
+			}
+		}(rangetagsgeterInstance, datach, errorch, h)
+	}
+	for {
+		select {
+		case t := <-datach:
+			if t.Verify() {
+				tags = append(tags, t)
+			} else {
+				fmt.Println("Tag Verifiy Failed")
+			}
+		case err := <-errorch:
+			if err.Error() == "GetTags Timeout" {
+				if len(tags) > 0 {
+					return tags, nil
+				} else {
+					return tags, err
+				}
+			} else {
+				log.Println(err)
+			}
+		}
+	}
+}
+
 //GetKey uses the HKID to lookup the PrivateKey.
 func GetKey(h objects.HKID) (*objects.PrivateKey, error) {
 	datach := make(chan objects.Blob, len(keygeters))
 	errorch := make(chan error, len(keygeters))
 	for _, rangekeygeterInstance := range keygeters {
-		go func(keygeterInstance keygeter, datach chan objects.Blob, errorch chan error, h objects.HKID) {
+		go func(
+			keygeterInstance keygeter,
+			datach chan objects.Blob,
+			errorch chan error,
+			h objects.HKID,
+		) {
 			k, err := keygeterInstance.GetKey(h)
 			if err == nil {
 				datach <- k
