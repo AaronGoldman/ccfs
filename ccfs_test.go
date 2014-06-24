@@ -16,7 +16,7 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 	services.Registercontentservice(localfile.Instance)
 	objects.RegisterGeterPoster(
-		services.GetPiblicKeyForHkid,
+		services.GetPublicKeyForHkid,
 		services.GetPrivateKeyForHkid,
 		services.PostKey,
 		services.PostBlob,
@@ -40,7 +40,7 @@ func TestLowLevel(t *testing.T) {
 			"0722414168936112160694238047304378604753005642729767620850685191"+
 			"88612732562106886379081213385", 10)
 	c, err := services.GetCommit(testhkid)
-	if err != nil || !bytes.Equal(c.Hkid(), testhkid) || !c.Verify() {
+	if err != nil || !bytes.Equal(c.Hkid, testhkid) || !c.Verify() {
 		t.Logf("GetCommit Fail")
 		t.Fail()
 	}
@@ -51,8 +51,15 @@ func TestLowLevel(t *testing.T) {
 			"7256947679650787426167575073363006751150073195493002048627629373"+
 			"76227751462258339344895829332", 10)
 	testtag, err := services.GetTag(taghkid, "TestPostBlob")
-	if err != nil || !bytes.Equal(testtag.Hkid(), taghkid) || !testtag.Verify() {
-		t.Logf("GetTag Fail")
+	if err != nil {
+		t.Logf("GetTag Fail. error: %s", err)
+		t.Fail()
+	} else if !bytes.Equal(testtag.Hkid, taghkid) {
+		t.Logf("GetTag Fail.\n\t expected: %v\n\t got: %v", testtag.Hkid, taghkid)
+		t.Fail()
+
+	} else if !testtag.Verify() {
+		t.Logf("GetTag Verify Fail")
 		t.Fail()
 	}
 
@@ -378,17 +385,20 @@ func setup_for_gets() {
 	}
 
 	//post tag
-	testTagPointingToTestBlob := objects.NewTag(objects.HID(testBlob.Hash()),
+	testTagPointingToTestBlob := objects.NewTag(
+		objects.HID(testBlob.Hash()),
 		"blob",
 		"testBlob",
-		hkidT) //gen test tag
+		nil,
+		hkidT,
+	) //gen test tag
 	err = services.PostTag(testTagPointingToTestBlob) //post test tag
 	if err != nil {
 		log.Println(err)
 	}
 
 	//post list
-	testListPiontingToTestTag := objects.NewList(testTagPointingToTestBlob.Hkid(),
+	testListPiontingToTestTag := objects.NewList(testTagPointingToTestBlob.Hkid,
 		"tag",
 		"testTag") //gen test list
 	err = services.PostBlob(testListPiontingToTestTag.Bytes()) //store test list

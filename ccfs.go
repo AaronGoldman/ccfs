@@ -34,7 +34,7 @@ func main() {
 	//services.Registerblobgeter(multicast.Instance)
 
 	objects.RegisterGeterPoster(
-		services.GetPiblicKeyForHkid,
+		services.GetPublicKeyForHkid,
 		services.GetPrivateKeyForHkid,
 		services.PostKey,
 		services.PostBlob,

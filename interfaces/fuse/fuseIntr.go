@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/signal"
 )
+
 //testing push with new origin
 func startFSintegration() {
 	log.SetFlags(log.Lshortfile) //gives filename for every log statement
@@ -133,7 +134,7 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			return nil, nil
 		}
 		//get list hash
-		l, err := services.GetList(c.ListHash()) //l is the list object
+		l, err := services.GetList(c.ListHash) //l is the list object
 		if err != nil {
 			log.Printf("commit list retieval error %s:", err)
 			return nil, nil
@@ -144,7 +145,7 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			return nil, fuse.ENOENT
 		}
 		//getKey to figure out permissions of the child
-		_, err = services.GetKey(c.Hkid())
+		_, err = services.GetKey(c.Hkid)
 		//perm := fuse.Attr{Mode: 0555}//default read permissions
 		perm := os.FileMode(0555)
 
@@ -217,7 +218,7 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			return nil, fuse.ENOENT
 		}
 		//getKey to figure out permissions of the child
-		_, err = services.GetKey(t.Hkid())
+		_, err = services.GetKey(t.Hkid)
 		perm := os.FileMode(0555) //default read permissions
 		if err == nil {
 			perm = os.FileMode(0755)
@@ -270,7 +271,7 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 			log.Printf("commit %s:", err)
 			return nil, nil
 		}
-		l, err = services.GetList(c.ListHash())
+		l, err = services.GetList(c.ListHash)
 		if err != nil {
 			log.Printf("commit list %s:", err)
 			return nil, nil
@@ -530,7 +531,7 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 		if err != nil {
 			return err
 		}
-		l, err := services.GetList(c.ListHash())
+		l, err := services.GetList(c.ListHash)
 		if err != nil {
 			return err
 		}
@@ -556,7 +557,7 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 			newTag = t.Update(h, typeString)
 		} else {
 			log.Printf("Tag %s\\%s Not Found", d.leaf, name)
-			newTag = objects.NewTag(h, typeString, name, d.leaf.(objects.HKID))
+			newTag = objects.NewTag(h, typeString, name, nil, d.leaf.(objects.HKID))
 		}
 		log.Printf("Posting tag %s\n-----BEGIN TAG--------\n%s\n-------END TAG--------", newTag.Hash(), newTag)
 		et := services.PostTag(newTag)
