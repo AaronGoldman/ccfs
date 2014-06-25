@@ -7,7 +7,7 @@ package fuse
 
 import (
 	"bazil.org/fuse"
-	//"bazil.org/fuse/fs"
+	"bazil.org/fuse/fs"
 	//"fmt"
 	//"github.com/AaronGoldman/ccfs/objects"
 	//"github.com/AaronGoldman/ccfs/services"
@@ -33,7 +33,7 @@ func ccfsUnmount(mountpoint string) {
 
 
 func GenerateInode(NodeID fuse.NodeID, name string) fuse.NodeID {
-	return GenerateInode(NodeID, name)
+	return fuse.NodeID(fs.GenerateDynamicInode( uint64(NodeID), name))
 }
 
 
