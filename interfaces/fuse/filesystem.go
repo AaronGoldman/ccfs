@@ -3,7 +3,7 @@ package fuse
 import (
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
-	"fmt"
+//	"fmt"
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 	"log"

@@ -5,12 +5,12 @@ package fuse
 import (
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
-	"fmt"
+	//"fmt"
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 	"log"
-	"os"
-	"os/signal"
+	//"os"
+	//"os/signal"
 )
 
 
