@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/signal"
 )
+
 //testing push with new origin
 func startFSintegration() {
 	log.SetFlags(log.Lshortfile) //gives filename for every log statement
@@ -105,20 +106,43 @@ type Dir struct {
 	leaf         objects.HID
 	permission   os.FileMode
 	content_type string
-	parent       *Dir
+	parent       *Dir //should parent be a string
 	name         string
 	openHandles  map[string]bool
-	inode        uint64 //fuse.NodeID
+	nodeMap      map[fuse.NodeID]*Dir
+	inode        fuse.NodeID
 }
+
+//not using the fs function 'generatedynamicInode' because it doesn't accept fuse.NodeID as a uint64
+func GenerateInode(NodeID fuse.NodeID, name string) fuse.NodeID {
+	return GenerateInode(NodeID, name)
+}
+
+//constructor
+func (d Dir) newDir(Name string) *Dir {
+	p := Dir{
+		leaf:         objects.Blob{}.Hash(),
+		permission:   d.permission,
+		content_type: "list",
+		parent:       &d,
+		name:         Name,
+		openHandles:  map[string]bool{},
+		nodeMap:      map[fuse.NodeID]*Dir{},
+		inode:        GenerateInode(d.inode, Name),
+	}
+	return &p
+}
+
+//var nodeMap map[Dir]newDir //map[Dir]parent ???
 
 func (d Dir) Attr() fuse.Attr {
 	log.Printf("Directory attributes requested\n\tName:%s", d.name)
-	return fuse.Attr{Inode: d.inode, Mode: os.ModeDir | d.permission}
+	return fuse.Attr{Inode: uint64(d.inode), Mode: os.ModeDir | d.permission}
 }
 
 func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 	log.Printf("Directory Lookup:\n\tName: %s\n\tHID: %s", name, d.leaf.Hex())
-	new_nodeID := fs.GenerateDynamicInode(d.inode, name)
+	new_nodeID := fs.GenerateDynamicInode(uint64(d.inode), name)
 	if name == "hello" {
 		return File{permission: os.FileMode(0444)}, nil
 	}
@@ -175,7 +199,7 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			parent:       &d,
 			name:         name,
 			openHandles:  map[string]bool{},
-			inode:        new_nodeID,
+			inode:        GenerateInode(d.parent.inode, name),
 		}, nil
 
 	case "list":
@@ -205,8 +229,8 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			content_type: list_entry.TypeString,
 			parent:       &d,
 			openHandles:  map[string]bool{},
-			inode:        new_nodeID,
 			name:         name,
+			inode:        GenerateInode(d.parent.inode, name),
 		}, nil
 	case "tag":
 		t, err := services.GetTag(d.leaf.(objects.HKID), name) //leaf is HID
@@ -242,8 +266,8 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 			content_type: t.TypeString,
 			parent:       &d,
 			openHandles:  map[string]bool{},
-			inode:        new_nodeID,
 			name:         name,
+			inode:        GenerateInode(d.parent.inode, name),
 		}, nil
 
 	}
@@ -255,7 +279,7 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	var l objects.List
 	var err error
 	var dirDirs = []fuse.Dirent{
-		{Inode: fs.GenerateDynamicInode(d.inode, "hello"),
+		{Inode: fs.GenerateDynamicInode(uint64(d.inode), "hello"),
 			Name: "hello",
 			Type: fuse.DT_File,
 		},
@@ -290,7 +314,7 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	for name, entry := range l {
 		if entry.TypeString == "blob" {
 			append_to_list := fuse.Dirent{
-				Inode: fs.GenerateDynamicInode(d.inode, name),
+				Inode: fs.GenerateDynamicInode(uint64(d.inode), name),
 				Name:  name,
 				Type:  fuse.DT_File,
 			}
@@ -299,7 +323,7 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 			// Type for the other one will be fuse.DT_DIR
 		} else {
 			append_to_list := fuse.Dirent{
-				Inode: fs.GenerateDynamicInode(d.inode, name),
+				Inode: fs.GenerateDynamicInode(uint64(d.inode), name),
 				Name:  name,
 				Type:  fuse.DT_Dir}
 			dirDirs = append(dirDirs, append_to_list)
@@ -320,7 +344,7 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 			dirDirs = append(
 				dirDirs,
 				fuse.Dirent{
-					Inode: fs.GenerateDynamicInode(d.inode, openHandle),
+					Inode: fs.GenerateDynamicInode(uint64(d.inode), openHandle),
 					Name:  openHandle,
 					Type:  fuse.DT_Dir,
 				})
@@ -332,6 +356,7 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 //2 types of nodes for files and directories. So call rename twice?
 //Create node (directory)
 
+//creates new file only
 func (d Dir) Create(request *fuse.CreateRequest, response *fuse.CreateResponse, intr fs.Intr) (fs.Node, fs.Handle, fuse.Error) {
 	log.Printf("create node")
 	log.Printf("permission: %s", request.Mode)
@@ -342,7 +367,7 @@ func (d Dir) Create(request *fuse.CreateRequest, response *fuse.CreateResponse, 
 		permission:  request.Mode,
 		parent:      &d,
 		name:        request.Name,
-		inode:       fs.GenerateDynamicInode(d.inode, request.Name),
+		inode:       fs.GenerateDynamicInode(uint64(d.inode), request.Name),
 	}
 	handle := OpenFileHandle{
 		buffer: []byte{},
@@ -354,10 +379,20 @@ func (d Dir) Create(request *fuse.CreateRequest, response *fuse.CreateResponse, 
 }
 
 //For directory node
-
-func (f File) Rename(r *fuse.RenameRequest, newDir fs.Node, intr fs.Intr) fuse.Error {
+//(f File) ---> ?
+func (d Dir) Rename(r *fuse.RenameRequest, newDir fs.Node, intr fs.Intr) fuse.Error {
 	log.Printf("print request: %s", r)
-	return nil
+	log.Printf("rename request: rename dir - %s", d)
+	p := d.newDir(r.NewName) //generate pointer
+	//p.name = r.OldName 		// what is newDir to be used for?
+	//node = GenerateInode(d.inode, name)
+	//p := nodeMap(node){}
+	if r.OldName != r.NewName {
+		//p = newDir(r.NewName)
+		p.name = r.NewName
+	}
+	//p.name = r.NewName
+	return nil //ERNOENT
 }
 
 // File implements both Node and Handle for the hello file.
