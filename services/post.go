@@ -54,7 +54,7 @@ func list_helper(h objects.HID, next_path_segment string, rest_of_path string,
 	geterr := fmt.Errorf("h in nil")
 	l := objects.List(nil)
 	if h != nil {
-		l, geterr = GetList(h.Bytes())
+		l, geterr = GetList(h.(objects.HCID))
 	}
 	posterr := error(nil)
 	if geterr == nil {
@@ -111,7 +111,7 @@ func commit_helper(h objects.HKID, path string, post_bytes objects.Byteser, post
 	if geterr == nil {
 		//A existing vertion was found
 		next_typeString := "list"
-		next_hash := c.ListHash()
+		next_hash := c.ListHash
 		next_path := path
 		var hash_of_posted objects.HID
 		hash_of_posted, posterr = post(next_hash, next_path,
@@ -142,7 +142,7 @@ func commit_helper(h objects.HKID, path string, post_bytes objects.Byteser, post
 	//log.Print(c)
 	err := PostCommit(c)
 	if err == nil {
-		return c.Hkid(), nil
+		return c.Hkid, nil
 	}
 	return nil, err
 }
@@ -169,12 +169,14 @@ func tag_helper(h objects.HID, next_path_segment string, rest_of_path string,
 		_, err := GetPrivateKeyForHkid(h.(objects.HKID))
 		if err == nil {
 			//you own the Domain
+
 			next_hash := objects.HID(nil)
 			next_path := rest_of_path
 			next_typeString := "list"
 			if rest_of_path == "" {
 				next_typeString = post_type
 			}
+			log.Printf("tag pionting to a %s named %s", next_typeString, next_path_segment)
 			var hash_of_posted objects.HID
 			if rest_of_path == "" && post_type != "blob" {
 				hash_of_posted = objects.HKID(post_bytes.Bytes()) //insrt reference by HKID
@@ -182,7 +184,7 @@ func tag_helper(h objects.HID, next_path_segment string, rest_of_path string,
 				hash_of_posted, posterr = post(next_hash, next_path,
 					next_typeString, post_bytes, post_type)
 			}
-			t = objects.NewTag(hash_of_posted, next_typeString, next_path_segment, h.Bytes())
+			t = objects.NewTag(hash_of_posted, next_typeString, next_path_segment, nil, h.Bytes())
 		} else {
 			log.Printf("You don't seem to own this Domain")
 			return nil, fmt.Errorf("You dont own the Domain, meanie")
@@ -194,7 +196,7 @@ func tag_helper(h objects.HID, next_path_segment string, rest_of_path string,
 	//log.Print(t)
 	err := PostTag(t)
 	if err == nil {
-		return t.Hkid(), nil
+		return t.Hkid, nil
 	}
 	return nil, err
 }

@@ -17,6 +17,7 @@ import (
 )
 
 
+
 func Start() {
 	go startFSintegration()
 }
@@ -29,6 +30,7 @@ func ccfsUnmount(mountpoint string) {
 	log.Printf("Exit-kill program")
 	os.Exit(0)
 }
+
 
 func GenerateInode(NodeID fuse.NodeID, name string) fuse.NodeID {
 	return GenerateInode(NodeID, name)

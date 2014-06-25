@@ -3,6 +3,7 @@ package main
 
 import (
 	"bufio"
+	"github.com/AaronGoldman/ccfs/interfaces/crawler"
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 	"github.com/AaronGoldman/ccfs/services/localfile"
@@ -22,15 +23,18 @@ func init() {
 func main() {
 	log.SetFlags(log.Lshortfile)
 
+	crawler.Start()
 	services.Registercontentservice(localfile.Instance)
+	services.Registertagsgeter(localfile.Instance)
 	services.Registerblobgeter(timeout.Instance)
+	services.Registertagsgeter(timeout.Instance)
 	//services.Registerblobgeter(appsscript.Instance)
 	//services.Registerblobgeter(googledrive.Instance)
 	//services.Registerblobgeter(kademliadht.Instance)
 	//services.Registerblobgeter(multicast.Instance)
 
 	objects.RegisterGeterPoster(
-		services.GetPiblicKeyForHkid,
+		services.GetPublicKeyForHkid,
 		services.GetPrivateKeyForHkid,
 		services.PostKey,
 		services.PostBlob,

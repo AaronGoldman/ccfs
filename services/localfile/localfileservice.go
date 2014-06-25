@@ -15,23 +15,27 @@ type localfileservice struct{}
 
 func (lfs localfileservice) PostBlob(b objects.Blob) (err error) {
 	filepath := fmt.Sprintf("bin/blobs/%s", b.Hash().Hex())
+	//log.Printf("[localfileservice] PostBlob %s", filepath)
 	err = os.MkdirAll("bin/blobs", 0764)
 	err = ioutil.WriteFile(filepath, b.Bytes(), 0664)
 	return
 }
 func (lfs localfileservice) PostTag(t objects.Tag) (err error) {
-	filepath := fmt.Sprintf("bin/tags/%s/%s/%d", t.Hkid().Hex(),
+	lfs.PostBlob(objects.Blob(t.Bytes()))
+	filepath := fmt.Sprintf("bin/tags/%s/%s/%d", t.Hkid.Hex(),
 		t.NameSegment, t.Version)
-	dirpath := fmt.Sprintf("bin/tags/%s/%s", t.Hkid().Hex(),
+	//log.Printf("[localfileservice] PostTag %s", filepath)
+	dirpath := fmt.Sprintf("bin/tags/%s/%s", t.Hkid.Hex(),
 		t.NameSegment)
 	err = os.MkdirAll(dirpath, 0764)
 	err = ioutil.WriteFile(filepath, t.Bytes(), 0664)
 	return
 }
 func (lfs localfileservice) PostCommit(c objects.Commit) (err error) {
-	filepath := fmt.Sprintf("bin/commits/%s/%d", c.Hkid().Hex(),
-		c.Version)
-	dirpath := fmt.Sprintf("bin/commits/%s", c.Hkid().Hex())
+	lfs.PostBlob(objects.Blob(c.Bytes()))
+	filepath := fmt.Sprintf("bin/commits/%s/%d", c.Hkid.Hex(), c.Version)
+	//log.Printf("[localfileservice] PostCommit %s\n\t%d", filepath, c.Version())
+	dirpath := fmt.Sprintf("bin/commits/%s", c.Hkid.Hex())
 	err = os.MkdirAll(dirpath, 0764)
 	err = ioutil.WriteFile(filepath, c.Bytes(), 0664)
 	return
@@ -74,12 +78,40 @@ func (lfs localfileservice) GetTag(h objects.HKID, namesegment string) (t object
 	matches, err := filepath.Glob(fmt.Sprintf("bin/tags/%s/%s/*",
 		h.Hex(), namesegment))
 	filepath := lfs.latestVersion(matches)
-	log.Printf("Filepath: %v", filepath)
+	//log.Printf("Filepath: %v", filepath)
 	data, err := ioutil.ReadFile(filepath)
 	if err == nil {
 		t, _ = objects.TagFromBytes(data)
 	}
 	return t, err
+}
+func (lfs localfileservice) GetTags(h objects.HKID) (tags []objects.Tag, err error) {
+	//ToDo Validate input
+	directoryEntries, err := ioutil.ReadDir(fmt.Sprintf("bin/tags/%s", h.Hex()))
+	if err != nil {
+		log.Panicln(err)
+	}
+	log.Println(h)
+	namesegment := ""
+	for _, directoryEntry := range directoryEntries {
+		if directoryEntry.IsDir() {
+			namesegment = directoryEntry.Name()
+		} else {
+			continue
+		}
+		matches, err := filepath.Glob(fmt.Sprintf("bin/tags/%s/%s/*",
+			h.Hex(), namesegment))
+		filepath := lfs.latestVersion(matches)
+		//log.Printf("Filepath: %v", filepath)
+		data, err := ioutil.ReadFile(filepath)
+		if err == nil {
+			tag, err := objects.TagFromBytes(data)
+			if err == nil {
+				tags = append(tags, tag)
+			}
+		}
+	}
+	return tags, err
 }
 func (lfs localfileservice) GetKey(h objects.HKID) (objects.Blob, error) {
 	filepath := fmt.Sprintf("bin/keys/%s", h.Hex())
