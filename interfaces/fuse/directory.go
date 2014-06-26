@@ -51,46 +51,45 @@ func (d Dir) Rename(r *fuse.RenameRequest, newDir fs.Node, intr fs.Intr) fuse.Er
 	}
 	d.name = r.OldName
 
-	switch d.content_type{
+	switch d.content_type {
 
-		case "list":
-				l, err := services.GetList(d.leaf.(objects.HCID))
-				if err != nil {
-					return err
-					}
+	case "list":
+		l, err := services.GetList(d.leaf.(objects.HCID))
+		if err != nil {
+			return err
+		}
 
-				newList := l.Add(r.NewName, l[r.OldName].Hash, l[r.OldName].TypeString)
-				newList  = l.Remove(r.OldName)
-				el := services.PostList(newList)
-				if el != nil {
-					return err
-					}
-				d.Publish(d.leaf.(objects.HCID), d.name, d.content_type)
+		newList := l.Add(r.NewName, l[r.OldName].Hash, l[r.OldName].TypeString)
+		newList = l.Remove(r.OldName)
+		el := services.PostList(newList)
+		if el != nil {
+			return err
+		}
+		d.Publish(d.leaf.(objects.HCID), d.name, d.content_type)
 
-		case "commit":
-				c, err := services.GetCommit(d.leaf.(objects.HKID))
-			if err != nil {
-				return err
-			}
-			l, err := services.GetList(c.ListHash)
-			if err != nil {
-				return err
-				}
-			newList := l.Add(r.NewName, l[r.OldName].Hash, l[r.OldName].TypeString)
-			newList  = l.Remove(r.OldName)
+	case "commit":
+		c, err := services.GetCommit(d.leaf.(objects.HKID))
+		if err != nil {
+			return err
+		}
+		l, err := services.GetList(c.ListHash)
+		if err != nil {
+			return err
+		}
+		newList := l.Add(r.NewName, l[r.OldName].Hash, l[r.OldName].TypeString)
+		newList = l.Remove(r.OldName)
 
-			newCommit := c.Update(newList.Hash())
-			el := services.PostList(newList)
-			if el != nil {
-				return err
-			}
-			ec := services.PostCommit(newCommit)
-			if ec != nil {
-				return err
-			}
+		newCommit := c.Update(newList.Hash())
+		el := services.PostList(newList)
+		if el != nil {
+			return err
+		}
+		ec := services.PostCommit(newCommit)
+		if ec != nil {
+			return err
+		}
 
-
-		case "tag":
+	case "tag":
 
 		oldTag, err := services.GetTag(d.leaf.(objects.HKID), r.OldName)
 		var newTag objects.Tag
@@ -106,7 +105,7 @@ func (d Dir) Rename(r *fuse.RenameRequest, newDir fs.Node, intr fs.Intr) fuse.Er
 		}
 	} //end switch
 
-	return nil 
+	return nil
 }
 
 func (d Dir) Attr() fuse.Attr {
@@ -134,7 +133,6 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 
 }
 
-
 //2 types of nodes for files and directories. So call rename twice?
 //Create node (directory)
 
@@ -159,8 +157,6 @@ func (d Dir) Create(request *fuse.CreateRequest, response *fuse.CreateResponse, 
 	d.openHandles[handle.name] = true
 	return node, handle, nil
 }
-
-
 
 func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error) { //name=file name
 
@@ -363,15 +359,11 @@ func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, 
 /////////////////////////////////////////////////////////////////////////////////////////////
 //////////////// End lookup /////////////////////////////////////////////////////////////////
 
-
-
-
 func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	log.Printf("ReadDir requested:\n\tName:%s", d.name)
 	var l objects.List
 	var err error
 	var dirDirs = []fuse.Dirent{}
-	
 
 	if d.content_type == "tag" {
 		return dirDirs, nil
