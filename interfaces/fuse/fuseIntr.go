@@ -16,8 +16,6 @@ import (
 	//"os/signal"
 )
 
-
-
 func Start() {
 	go startFSintegration()
 }
@@ -31,9 +29,6 @@ func ccfsUnmount(mountpoint string) {
 	os.Exit(0)
 }
 
-
 func GenerateInode(NodeID fuse.NodeID, name string) fuse.NodeID {
-	return fuse.NodeID(fs.GenerateDynamicInode( uint64(NodeID), name))
+	return fuse.NodeID(fs.GenerateDynamicInode(uint64(NodeID), name))
 }
-
-

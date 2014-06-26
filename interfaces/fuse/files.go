@@ -5,13 +5,12 @@ package fuse
 import (
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
-//	"fmt"
+	//	"fmt"
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 	"log"
 	"os"
 )
-
 
 type File struct {
 	contentHash objects.HCID
@@ -22,8 +21,8 @@ type File struct {
 }
 
 func (f File) Attr() fuse.Attr {
-	log.Println("File attributes requested")
-	return fuse.Attr{Inode: 1, Mode: f.permission}
+	log.Printf("File attributes requested: %s", f.name)
+	return fuse.Attr{Inode: uint64(f.inode), Mode: f.permission}
 	//log.Println("Attr 0444")
 	//return fuse.Attr{Mode: 0444}
 }
