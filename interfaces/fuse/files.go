@@ -18,7 +18,7 @@ type File struct {
 	permission  os.FileMode
 	parent      *Dir
 	name        string
-	inode       uint64 //fuse.NodeID
+	inode       fuse.NodeID
 }
 
 func (f File) Attr() fuse.Attr {

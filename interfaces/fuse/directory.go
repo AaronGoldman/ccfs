@@ -15,13 +15,10 @@ import (
 
 
 type Dir struct {
-	//path         string
-	//trunc        HKID
-	//branch       HKID
 	leaf         objects.HID
 	permission   os.FileMode
 	content_type string
-	parent       *Dir //should parent be a string
+	parent       *Dir 
 	name         string
 	openHandles  map[string]bool
 	nodeMap      map[fuse.NodeID]*Dir
@@ -50,138 +47,20 @@ func (d Dir) Attr() fuse.Attr {
 
 func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 	log.Printf("Directory Lookup:\n\tName: %s\n\tHID: %s", name, d.leaf.Hex())
-	new_nodeID := fs.GenerateDynamicInode(uint64(d.inode), name)
-	if name == "hello" {
-		return File{permission: os.FileMode(0444)}, nil
-	}
-	//in each case, call
+	new_nodeID := fuse.NodeID(fs.GenerateDynamicInode(uint64(d.inode), name))
+	
 	switch d.content_type {
 	default:
 		return nil, nil
 	case "commit": // a commit has a list hash
-		c, err := services.GetCommit(d.leaf.(objects.HKID))
-		if err != nil {
-			log.Printf("commit %s:", err)
-			return nil, nil
-		}
-		//get list hash
-		l, err := services.GetList(c.ListHash) //l is the list object
-		if err != nil {
-			log.Printf("commit list retieval error %s:", err)
-			return nil, nil
-		}
-
-		list_entry, present := l[name] //go through list entries and is it maps to the string you passed in present == 1
-		if !present {
-			return nil, fuse.ENOENT
-		}
-		//getKey to figure out permissions of the child
-		_, err = services.GetKey(c.Hkid)
-		//perm := fuse.Attr{Mode: 0555}//default read permissions
-		perm := os.FileMode(0555)
-
-		if err != nil {
-			log.Printf("error not nil; change file Mode %s:", err)
-			//perm =  fuse.Attr{Mode: 0755}
-			perm = os.FileMode(0755)
-		} else {
-			//log.Printf("no private key %s:", err)
-		}
-		if list_entry.TypeString == "blob" {
-			return File{
-				contentHash: list_entry.Hash.(objects.HCID),
-				permission:  perm,
-				name:        name,
-				parent:      &d,
-				inode:       new_nodeID,
-			}, nil
-		}
-		ino := fuse.NodeID(1)
-		if (d.parent != nil){
-			ino = GenerateInode( d.parent.inode, name)
-		}
-
-		return Dir{
-			//path:         d.path + "/" + name,
-			//trunc:        d.trunc,
-			//branch:       d.leaf.(HKID),
-			leaf:         list_entry.Hash,
-			permission:   perm,
-			content_type: list_entry.TypeString,
-			parent:       &d,
-			name:         name,
-			openHandles:  map[string]bool{},
-			inode:        ino,
-		}, nil
-
+		node, err := d.LookupCommit(name, intr, new_nodeID)
+		return node, err
 	case "list":
-		l, err := services.GetList(d.leaf.(objects.HCID))
-		if err != nil {
-			log.Printf("commit list %s:", err)
-			return nil, nil
-		}
-		list_entry, present := l[name] //go through list entries and is it maps to the string you passed in present == 1
-		if !present {
-			return nil, fuse.ENOENT
-		}
-		if list_entry.TypeString == "blob" {
-			return File{
-				contentHash: list_entry.Hash.(objects.HCID),
-				permission:  d.permission,
-				parent:      &d,
-				name:        name,
-			}, nil
-		}
-		return Dir{
-			//path: d.path + "/" + name,
-			//trunc:        d.trunc,
-			//branch:       d.branch,
-			leaf:         list_entry.Hash,
-			permission:   d.permission,
-			content_type: list_entry.TypeString,
-			parent:       &d,
-			openHandles:  map[string]bool{},
-			name:         name,
-			inode:        GenerateInode(d.parent.inode, name),
-		}, nil
+		node, err := d.LookupList(name, intr, new_nodeID)
+		return node, err
 	case "tag":
-		t, err := services.GetTag(d.leaf.(objects.HKID), name) //leaf is HID
-		// no blobs because blobs are for file structure
-
-		if err != nil {
-			log.Printf("not a tag Err:%s", err)
-			return nil, fuse.ENOENT
-		}
-		//getKey to figure out permissions of the child
-		_, err = services.GetKey(t.Hkid)
-		perm := os.FileMode(0555) //default read permissions
-		if err == nil {
-			perm = os.FileMode(0755)
-		} else {
-			log.Printf("no private key %s:", err)
-		}
-		if t.TypeString == "blob" {
-			return File{
-				contentHash: t.HashBytes.(objects.HCID),
-				permission:  perm,
-				name:        name,
-				parent:      &d,
-				inode:       new_nodeID,
-			}, nil
-		}
-		return Dir{
-			//path:         d.path + "/" + name,
-			//trunc:        d.trunc,
-			//branch:       t.hkid,
-			leaf:         t.HashBytes,
-			permission:   perm,
-			content_type: t.TypeString,
-			parent:       &d,
-			openHandles:  map[string]bool{},
-			name:         name,
-			inode:        GenerateInode(d.parent.inode, name),
-		}, nil
-
+		node, err := d.LookupTag(name, intr, new_nodeID)
+		return node, err
 	}
 
 }
@@ -283,7 +162,7 @@ func (d Dir) Create(request *fuse.CreateRequest, response *fuse.CreateResponse, 
 		permission:  request.Mode,
 		parent:      &d,
 		name:        request.Name,
-		inode:       fs.GenerateDynamicInode(uint64(d.inode), request.Name),
+		inode:       fuse.NodeID(fs.GenerateDynamicInode(uint64(d.inode), request.Name)),
 	}
 	handle := OpenFileHandle{
 		buffer: []byte{},
@@ -384,3 +263,145 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 }
 
 
+
+
+
+///// Lookup functions ////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error){
+
+	c, err := services.GetCommit(d.leaf.(objects.HKID))
+		if err != nil {
+			log.Printf("commit %s:", err)
+			return nil, nil
+		}
+		//get list hash
+		l, err := services.GetList(c.ListHash) //l is the list object
+		if err != nil {
+			log.Printf("commit list retieval error %s:", err)
+			return nil, nil
+		}
+
+		list_entry, present := l[name] //go through list entries and is it maps to the string you passed in present == 1
+		if !present {
+			return nil, fuse.ENOENT
+		}
+		//getKey to figure out permissions of the child
+		_, err = services.GetKey(c.Hkid)
+		//perm := fuse.Attr{Mode: 0555}//default read permissions
+		perm := os.FileMode(0555)
+
+		if err != nil {
+			log.Printf("error not nil; change file Mode %s:", err)
+			//perm =  fuse.Attr{Mode: 0755}
+			perm = os.FileMode(0755)
+		} else {
+			//log.Printf("no private key %s:", err)
+		}
+		if list_entry.TypeString == "blob" {
+			return File{
+				contentHash: list_entry.Hash.(objects.HCID),
+				permission:  perm,
+				name:        name,
+				parent:      &d,
+				inode:       nodeID,
+			}, nil
+		}
+		ino := fuse.NodeID(1)
+		if (d.parent != nil){
+			ino = GenerateInode( d.parent.inode, name)
+		}
+
+		return Dir{
+			leaf:         list_entry.Hash,
+			permission:   perm,
+			content_type: list_entry.TypeString,
+			parent:       &d,
+			name:         name,
+			openHandles:  map[string]bool{},
+			inode:        ino,
+		}, nil
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error){
+l, err := services.GetList(d.leaf.(objects.HCID))
+		if err != nil {
+			log.Printf("commit list %s:", err)
+			return nil, nil
+		}
+		list_entry, present := l[name] //go through list entries and is it maps to the string you passed in present == 1
+		if !present {
+			return nil, fuse.ENOENT
+		}
+		if list_entry.TypeString == "blob" {
+			return File{
+				contentHash: list_entry.Hash.(objects.HCID),
+				permission:  d.permission,
+				parent:      &d,
+				name:        name,
+				inode:		 nodeID,
+			}, nil
+		}
+		return Dir{
+			//path: d.path + "/" + name,
+			//trunc:        d.trunc,
+			//branch:       d.branch,
+			leaf:         list_entry.Hash,
+			permission:   d.permission,
+			content_type: list_entry.TypeString,
+			parent:       &d,
+			openHandles:  map[string]bool{},
+			name:         name,
+			inode:        GenerateInode(d.parent.inode, name),
+		}, nil
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
+
+t, err := services.GetTag(d.leaf.(objects.HKID), name) //leaf is HID
+		// no blobs because blobs are for file structure
+
+		if err != nil {
+			log.Printf("not a tag Err:%s", err)
+			return nil, fuse.ENOENT
+		}
+		//getKey to figure out permissions of the child
+		_, err = services.GetKey(t.Hkid)
+		perm := os.FileMode(0555) //default read permissions
+		if err == nil {
+			perm = os.FileMode(0755)
+		} else {
+			log.Printf("no private key %s:", err)
+		}
+		if t.TypeString == "blob" {
+			return File{
+				contentHash: t.HashBytes.(objects.HCID),
+				permission:  perm,
+				name:        name,
+				parent:      &d,
+				inode:       nodeID,
+			}, nil
+		}
+		return Dir{
+			//path:         d.path + "/" + name,
+			//trunc:        d.trunc,
+			//branch:       t.hkid,
+			leaf:         t.HashBytes,
+			permission:   perm,
+			content_type: t.TypeString,
+			parent:       &d,
+			openHandles:  map[string]bool{},
+			name:         name,
+			inode:        GenerateInode(d.parent.inode, name),
+		}, nil
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+//////////////// End lookup /////////////////////////////////////////////////////////////////
