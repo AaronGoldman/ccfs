@@ -65,6 +65,11 @@ func (l List) Add(nameSegment string, hash HID, typeString string) List {
 	return l
 }
 
+func (l List) Remove(nameSegment string) List{
+	delete(l, nameSegment)
+	return l
+}
+
 func (l List) Hash_for_namesegment(namesegment string) (string, HID) {
 	objectHash := l[namesegment].Hash
 	typeString := l[namesegment].TypeString

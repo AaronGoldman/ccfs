@@ -13,8 +13,6 @@ import (
 	//"os/signal"
 )
 
-
-
 type OpenFileHandle struct {
 	buffer []byte
 	parent *Dir
@@ -24,7 +22,10 @@ type OpenFileHandle struct {
 
 //handleReader interface
 func (o OpenFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadResponse, intr fs.Intr) fuse.Error {
-	log.Println("FileHandle Read requested")
+	log.Printf("FileHandle Read requested")
+	log.Printf("Read request header is: %s", request.Header)
+	log.Printf("Read request Dir is: %t", request.Dir)
+	log.Printf("Read request handle is: %d", request.Handle) 
 	start := request.Offset
 	stop := start + int64(request.Size)
 	bufptr := o.buffer
@@ -33,6 +34,7 @@ func (o OpenFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadRespo
 		stop = int64(len(bufptr))
 	}
 	if stop == start {
+		log.Printf("no bytes read")
 		response.Data = []byte{} //new gives you a pointer
 		return nil
 	}
@@ -67,10 +69,9 @@ func (o OpenFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteRe
 	} else {
 		num := copy(o.buffer[start:lenData], writeData)
 		response.Size = num
-
 	}
-	//log.Printf("buffer: %s", o.buffer)
-	//log.Printf("write request handle: %v", request.Handle)
+	log.Printf("buffer: %s", o.buffer)
+	log.Printf("write response size: %v", response.Size)
 	err := o.Publish() //get into loop on parent object
 	if err != nil {
 		return fuse.EIO
@@ -80,13 +81,6 @@ func (o OpenFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteRe
 
 func (o OpenFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse.Error {
 	log.Println("FileHandle Release requested:\n\tName:", o.name)
-	//log.Printf("buffer is released")
-	//err := o.Publish()
-	//log.Printf("%s has been released!", o.name)
-	//if err != nil {
-	//	return nil
-	//}
-	//delete(o.parent.openHandles, o.name)
 	return nil //fuse.ENOENT
 }
 
@@ -94,30 +88,12 @@ func (o OpenFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse
 //////// flush() ////
 func (o OpenFileHandle) Flush(request *fuse.FlushRequest, intr fs.Intr) fuse.Error {
 	log.Println("FileHandle Flush requested:\n\tName:", o.name)
-	//node := request.Header //header contains nodeid - how to access?????
-	//FlushRequest asks for the current state of an open file to be flushed to storage, as when a file descriptor is being closed
-	///recursion to traceback to parent tag or commit
-	//post buffer
-	//log.Printf("flush request handle: %s",request.Handle)
-	//log.Printf("flush \n")
-	//err := PostBlob(o.buffer)
-	//if err != nil {
-	//	return fuse.EIO
-	//}
-	//call parent recursively
-	//err = o.Publish() //get into loop on parent object
-	//if err != nil {
-	//	return fuse.EIO
-	//}
+	o.Publish()
 	return nil
 }
 
-
-
 //write out file using postblob
-//func (o OpenFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse.Error {
-//	request.Handle
-//}
+
 func (o OpenFileHandle) Publish() error { //name=file name
 	//log.Printf("buffer contains: %s", o.buffer)
 	bfrblob := objects.Blob(o.buffer)
