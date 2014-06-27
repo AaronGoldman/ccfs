@@ -138,7 +138,7 @@ func ListFromBytes(listbytes []byte) (newlist List, err error) {
 type Commit struct {
 	ListHash  HCID
 	Version   int64
-	Parent    HCID
+	Parents   parents
 	Hkid      HKID
 	Signature []byte //131 byte max
 }
@@ -157,13 +157,13 @@ func (c Commit) String() string {
 	return fmt.Sprintf("%s,\n%d,\n%s,\n%s,\n%s",
 		c.ListHash.Hex(),
 		c.Version,
-		c.Parent.Hex(),
+		c.Parents,
 		c.Hkid.Hex(),
 		hex.EncodeToString(c.Signature))
 }
 
 func (c Commit) Verify() bool {
-	ObjectHash := c.genCommitHash(c.ListHash, c.Version, c.Parent, c.Hkid)
+	ObjectHash := c.genCommitHash(c.ListHash, c.Version, c.Parents, c.Hkid)
 	pubkey := ecdsa.PublicKey(geterPoster.getPiblicKeyForHkid(c.Hkid))
 	if pubkey.Curve == nil || pubkey.X == nil || pubkey.Y == nil {
 		return false
@@ -177,16 +177,28 @@ func (c Commit) Verify() bool {
 }
 
 func (c Commit) Update(listHash HCID) Commit {
-	c.Parent = c.Hash()
+	c.Parents = parents{c.Hash()}
 	c.Version = time.Now().UnixNano()
 	//c.Hkid = c.Hkid
 	c.ListHash = listHash
-	c.Signature = c.commitSign(c.ListHash, c.Version, c.Parent, c.Hkid)
+	c.Signature = c.commitSign(c.ListHash, c.Version, c.Parents, c.Hkid)
 	return c
 }
 
-func (c Commit) commitSign(listHash []byte, version int64, parent HCID, hkid []byte) (signature []byte) {
-	ObjectHash := c.genCommitHash(listHash, version, parent, hkid)
+func (c Commit) Merge(pCommits []Commit, listHash HCID) Commit {
+	c.Parents = parents{c.Hash()}
+	for _, pCommit := range pCommits {
+		c.Parents = append(c.Parents, pCommit.Hash())
+	}
+	c.Version = time.Now().UnixNano()
+	//c.Hkid = c.Hkid
+	c.ListHash = listHash
+	c.Signature = c.commitSign(c.ListHash, c.Version, c.Parents, c.Hkid)
+	return c
+}
+
+func (c Commit) commitSign(listHash []byte, version int64, cparents parents, hkid []byte) (signature []byte) {
+	ObjectHash := c.genCommitHash(listHash, version, cparents, hkid)
 	prikey, err := geterPoster.getPrivateKeyForHkid(hkid)
 	ecdsaprikey := ecdsa.PrivateKey(*prikey)
 	r, s, err := ecdsa.Sign(rand.Reader, &ecdsaprikey, ObjectHash)
@@ -197,24 +209,29 @@ func (c Commit) commitSign(listHash []byte, version int64, parent HCID, hkid []b
 	return
 }
 
-func (c Commit) genCommitHash(listHash []byte, version int64, parent HCID, hkid []byte) (
-	ObjectHash []byte) {
+func (c Commit) genCommitHash(
+	listHash HCID,
+	version int64,
+	cparents parents,
+	hkid HKID,
+) (ObjectHash []byte) {
 	var h hash.Hash = sha256.New()
 	h.Write([]byte(fmt.Sprintf("%s,\n%d,\n%s,\n%s",
-		hex.EncodeToString(listHash),
+		listHash,
 		version,
-		parent,
-		hex.EncodeToString(hkid))))
+		cparents,
+		hkid,
+	)))
 	ObjectHash = h.Sum(nil)
 	return
 }
 
-func NewCommit(listHash []byte, hkid HKID) (c Commit) {
+func NewCommit(listHash HCID, hkid HKID) (c Commit) {
 	c.ListHash = listHash
 	c.Version = time.Now().UnixNano()
 	c.Hkid = hkid
-	c.Parent = sha256.New().Sum(nil)
-	c.Signature = c.commitSign(c.ListHash, c.Version, c.Parent, c.Hkid)
+	c.Parents = []HCID{sha256.New().Sum(nil)}
+	c.Signature = c.commitSign(c.ListHash, c.Version, c.Parents, c.Hkid)
 	return
 }
 
@@ -239,10 +256,16 @@ func CommitFromBytes(bytes []byte) (c Commit, err error) {
 	if err != nil {
 		return
 	}
-	parent, err := hex.DecodeString(commitStrings[2])
-	if err != nil {
-		return
+	parentSplit := strings.Split(commitStrings[2], ",")
+	parsedParents := parents{}
+	for _, singlParentString := range parentSplit {
+		parsedHCID, err1 := HcidFromHex(singlParentString)
+		if err1 != nil {
+			return c, err1
+		}
+		parsedParents = append(parsedParents, parsedHCID)
 	}
+
 	cHkid, err := hex.DecodeString(commitStrings[3])
 	if err != nil {
 		return
@@ -251,7 +274,7 @@ func CommitFromBytes(bytes []byte) (c Commit, err error) {
 	if err != nil {
 		return
 	}
-	c = Commit{listHash, version, parent, cHkid, signature}
+	c = Commit{listHash, version, parsedParents, cHkid, signature}
 	return
 }
 
@@ -260,7 +283,7 @@ type Tag struct {
 	TypeString  string
 	NameSegment string
 	Version     int64
-	Parent      HCID
+	Parents     parents
 	Hkid        HKID
 	Signature   []byte
 }
@@ -276,14 +299,16 @@ func (t Tag) Bytes() []byte {
 }
 
 func (t Tag) String() string {
+
 	return fmt.Sprintf("%s,\n%s,\n%s,\n%d,\n%s,\n%s,\n%s",
 		t.HashBytes.Hex(),
 		t.TypeString,
 		t.NameSegment,
 		t.Version,
-		t.Parent,
+		t.Parents,
 		t.Hkid.Hex(),
-		hex.EncodeToString(t.Signature))
+		hex.EncodeToString(t.Signature),
+	)
 }
 
 func (t Tag) Verify() bool {
@@ -293,7 +318,7 @@ func (t Tag) Verify() bool {
 	tPublicKey := ecdsa.PublicKey(geterPoster.getPiblicKeyForHkid(t.Hkid))
 	r, s := elliptic.Unmarshal(elliptic.P521(), t.Signature)
 	ObjectHash := t.genTagHash(t.HashBytes, t.TypeString, t.NameSegment,
-		t.Version, t.Parent, t.Hkid)
+		t.Version, t.Parents, t.Hkid)
 	if r.BitLen() == 0 || s.BitLen() == 0 {
 		return false
 	}
@@ -301,7 +326,7 @@ func (t Tag) Verify() bool {
 }
 
 func (t Tag) Update(hashBytes HID, typeString string) Tag {
-	t.Parent = t.Hash()
+	t.Parents = parents{t.Hash()}
 	t.HashBytes = hashBytes
 	t.TypeString = typeString
 	//t.nameSegment = t.nameSegment
@@ -317,7 +342,36 @@ func (t Tag) Update(hashBytes HID, typeString string) Tag {
 		t.TypeString,
 		t.NameSegment,
 		t.Version,
-		t.Parent,
+		t.Parents,
+		t.Hkid,
+	)
+	ecdsaprikey := ecdsa.PrivateKey(*prikey)
+	r, s, _ := ecdsa.Sign(rand.Reader, &ecdsaprikey, ObjectHash)
+	t.Signature = elliptic.Marshal(elliptic.P521(), r, s)
+	return t
+}
+
+func (t Tag) Merge(tags []Tag, hashBytes HID, typeString string) Tag {
+	t.Parents = parents{t.Hash()}
+	for _, pTag := range tags {
+		t.Parents = append(t.Parents, pTag.Hash())
+	}
+	t.HashBytes = hashBytes
+	t.TypeString = typeString
+	//t.nameSegment = t.nameSegment
+	t.Version = time.Now().UnixNano()
+	//t.hkid = t.hkid
+	prikey, err := geterPoster.getPrivateKeyForHkid(t.Hkid)
+	if err != nil {
+		log.Panic("You don't seem to own this Domain")
+	}
+
+	ObjectHash := t.genTagHash(
+		t.HashBytes,
+		t.TypeString,
+		t.NameSegment,
+		t.Version,
+		t.Parents,
 		t.Hkid,
 	)
 	ecdsaprikey := ecdsa.PrivateKey(*prikey)
@@ -327,14 +381,14 @@ func (t Tag) Update(hashBytes HID, typeString string) Tag {
 }
 
 func NewTag(HashBytes HID, TypeString string,
-	nameSegment string, parent HCID, hkid HKID) Tag {
+	nameSegment string, tparent parents, hkid HKID) Tag {
 	prikey, _ := geterPoster.getPrivateKeyForHkid(hkid)
 	version := time.Now().UnixNano()
-	if parent == nil {
-		parent = Blob{}.Hash()
+	if tparent == nil {
+		tparent = parents{Blob{}.Hash()}
 	}
 	ObjectHash := Tag{}.genTagHash(HashBytes, TypeString, nameSegment, version,
-		parent, hkid)
+		tparent, hkid)
 
 	ecdsaprikey := ecdsa.PrivateKey(*prikey)
 	r, s, _ := ecdsa.Sign(rand.Reader, &ecdsaprikey, ObjectHash)
@@ -343,14 +397,14 @@ func NewTag(HashBytes HID, TypeString string,
 		TypeString,
 		nameSegment,
 		version,
-		parent,
+		tparent,
 		hkid,
 		signature}
 	return t
 }
 
 func (t Tag) genTagHash(taghash HID, TypeString string, nameSegment string,
-	version int64, parent HCID, hkid HKID) []byte {
+	version int64, tparent parents, hkid HKID) []byte {
 	var h hash.Hash = sha256.New()
 	h.Write(
 		[]byte(fmt.Sprintf("%s,\n%s,\n%s,\n%d,\n%s,\n%s",
@@ -358,7 +412,7 @@ func (t Tag) genTagHash(taghash HID, TypeString string, nameSegment string,
 			TypeString,
 			nameSegment,
 			version,
-			parent,
+			tparent,
 			hkid,
 		)),
 	)
@@ -395,10 +449,17 @@ func TagFromBytes(bytes []byte) (t Tag, err error) {
 	if err != nil {
 		return
 	}
-	tagParent, err := hex.DecodeString(tagStrings[4])
-	if err != nil {
-		return
+
+	parentSplit := strings.Split(tagStrings[4], ",")
+	parsedParents := parents{}
+	for _, singlParentString := range parentSplit {
+		parsedHCID, err1 := HcidFromHex(singlParentString)
+		if err1 != nil {
+			return t, err1
+		}
+		parsedParents = append(parsedParents, parsedHCID)
 	}
+
 	tagHkid, err := hex.DecodeString(tagStrings[5])
 	if err != nil {
 		return
@@ -412,11 +473,21 @@ func TagFromBytes(bytes []byte) (t Tag, err error) {
 		tagTypeString,
 		tagNameSegment,
 		tagVersion,
-		tagParent,
+		parsedParents,
 		tagHkid,
 		tagSignature,
 	}
 	return
+}
+
+type parents []HCID
+
+func (p parents) String() string {
+	parentString := ""
+	for _, pHCID := range p {
+		parentString = parentString + "," + pHCID.Hex()
+	}
+	return parentString[1:]
 }
 
 func GenHKID() HKID {

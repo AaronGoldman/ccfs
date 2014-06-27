@@ -124,6 +124,7 @@ func crawlBlob(targHash objects.HCID) (err error) {
 	}
 	// ......
 	_ = nextBlob
+	//indexBlob(nextBlob)
 	return nil
 }
 
@@ -143,6 +144,7 @@ func crawlList(targHash objects.HCID) (err error) {
 			queuedTargets[newlistHash.String()] = true
 		}
 	}
+	//indexList(firstList)
 	return nil
 }
 
@@ -171,20 +173,23 @@ func handleCommit(inCommit objects.Commit) {
 		typeString: "list",
 		hash:       inCommit.ListHash,
 	}
-	newParent := target{
-		typeString: "hcid_commit",
-		hash:       inCommit.Parent,
-	}
-	//commitHKID := firstCommit.Hkid()
-
 	if !queuedTargets[newHash.String()] {
 		targetQueue <- newHash
 		queuedTargets[newHash.String()] = true
 	}
-	if !queuedTargets[newParent.String()] {
-		targetQueue <- newParent
-		queuedTargets[newParent.String()] = true
+	for _, cparent := range inCommit.Parents {
+		newParent := target{
+			typeString: "hcid_commit",
+			hash:       cparent,
+		}
+		//commitHKID := firstCommit.Hkid()
+
+		if !queuedTargets[newParent.String()] {
+			targetQueue <- newParent
+			queuedTargets[newParent.String()] = true
+		}
 	}
+	//indexCommit(inCommit)
 
 }
 
@@ -208,21 +213,24 @@ func handleTag(inTag objects.Tag) {
 		typeString: inTag.TypeString,
 		hash:       inTag.HashBytes,
 	}
-	newParent := target{
-		typeString: "hcid_tag",
-		hash:       inTag.Parent,
-	}
-	//tagHKID := inTag.Hkid
 
 	if !queuedTargets[newHash.String()] {
 		targetQueue <- newHash
 		queuedTargets[newHash.String()] = true
 	}
-	if !queuedTargets[newParent.String()] {
-		targetQueue <- newParent
-		queuedTargets[newParent.String()] = true
-	}
+	for _, tparent := range inTag.Parents {
+		newParent := target{
+			typeString: "hcid_tag",
+			hash:       tparent,
+		}
+		//tagHKID := inTag.Hkid
 
+		if !queuedTargets[newParent.String()] {
+			targetQueue <- newParent
+			queuedTargets[newParent.String()] = true
+		}
+	}
+	//indexTag(inTag)
 }
 
 func processQueue() {
@@ -230,5 +238,70 @@ func processQueue() {
 	for {
 		targ = <-targetQueue
 		crawlTarget(targ)
+	}
+}
+
+var blobIndex struct {
+	size    map[string]int
+	nameSeg map[string]map[string]string
+	//map[blobHcid string]map[nameSeg string]referringHID string
+	descendants map[string]map[int64]objects.HCID
+	//map[blobHcid string]map[versionNumber int64]referringHCID string
+}
+
+var commitIndex struct {
+	nameSeg map[string]map[string]string
+	version map[string]map[int64]objects.HCID
+	//map[hkid string]map[versionNumber int64]HCIDversion string
+}
+
+var tagIndex struct {
+	nameSeg map[string]map[string]string
+	version map[string]map[string]map[int64]objects.HCID
+	//version map[HKID string]map[nameSeg string]map[versionNumber int64]objects.HCID
+}
+
+func indexBlob(inBlob objects.Blob) {
+	blobIndex.size[inBlob.Hash().Hex()] = len(inBlob)
+}
+
+func indexList(inList objects.List) {
+	inListHex := inList.Hash().Hex()
+	blobIndex.size[inListHex] = len(inList)
+	for nameSeg, entry := range inList {
+		if entry.TypeString == "list" || entry.TypeString == "blob" {
+			blobIndex.nameSeg[entry.Hash.Hex()][nameSeg] = inListHex
+		} else if entry.TypeString == "tag" {
+			tagIndex.nameSeg[entry.Hash.Hex()][nameSeg] = inListHex
+		} else if entry.TypeString == "commit" {
+			commitIndex.nameSeg[entry.Hash.Hex()][nameSeg] = inListHex
+		} else {
+			log.Printf("Received invalid typestring: %s\n", entry.TypeString)
+		}
+	}
+}
+
+func indexCommit(inCommit objects.Commit) {
+	commitIndex.version[inCommit.Hkid.Hex()][inCommit.Version] = inCommit.Hash()
+	for _, inComParent := range inCommit.Parents {
+		blobIndex.descendants[inComParent.Hex()][inCommit.Version] = inCommit.Hash()
+	}
+}
+
+func indexTag(inTag objects.Tag) {
+	inTagHex := inTag.Hash().Hex()
+	if inTag.TypeString == "list" || inTag.TypeString == "blob" {
+		blobIndex.nameSeg[inTag.HashBytes.Hex()][inTag.NameSegment] = inTagHex
+	} else if inTag.TypeString == "tag" {
+		tagIndex.nameSeg[inTag.HashBytes.Hex()][inTag.NameSegment] = inTagHex
+	} else if inTag.TypeString == "commit" {
+		commitIndex.nameSeg[inTag.HashBytes.Hex()][inTag.NameSegment] = inTagHex
+	} else {
+		log.Printf("Received invalid typestring: %s\n", inTag.TypeString)
+	}
+
+	tagIndex.version[inTag.Hkid.Hex()][inTag.NameSegment][inTag.Version] = inTag.Hash()
+	for _, inTagParent := range inTag.Parents {
+		blobIndex.descendants[inTagParent.Hex()][inTag.Version] = inTag.Hash()
 	}
 }
