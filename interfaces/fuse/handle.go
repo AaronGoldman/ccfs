@@ -23,9 +23,8 @@ type OpenFileHandle struct {
 //handleReader interface
 func (o OpenFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadResponse, intr fs.Intr) fuse.Error {
 	log.Printf("FileHandle Read requested")
-	log.Printf("Read request header is: %s", request.Header)
-	log.Printf("Read request Dir is: %t", request.Dir)
-	log.Printf("Read request handle is: %d", request.Handle)
+	log.Printf("Read request is: %+v", request)
+	log.Printf("Read request handle is: %+v", o)
 	start := request.Offset
 	stop := start + int64(request.Size)
 	bufptr := o.buffer

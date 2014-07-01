@@ -65,7 +65,7 @@ func (l List) Add(nameSegment string, hash HID, typeString string) List {
 	return l
 }
 
-func (l List) Remove(nameSegment string) List{
+func (l List) Remove(nameSegment string) List {
 	delete(l, nameSegment)
 	return l
 }
@@ -132,7 +132,7 @@ func ListFromBytes(listbytes []byte) (newlist List, err error) {
 				return nil, err
 			}
 		} else {
-			log.Fatal()
+			log.Fatalf("Unrecognised type: %s", entryTypeString)
 		}
 		entryNameSegment := cols[2]
 		l[entryNameSegment] = entry{entryHID, entryTypeString}

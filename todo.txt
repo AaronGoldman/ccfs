@@ -1,12 +1,9 @@
  _
 |_| ccfs
- |_| add a GetAnyTag(HKID)(Tag) or GetTagAllNameSegments(HKID)(List) (Aaron Goldman)
-  |_| multicastservice wire formant
-  |_| apps script url format
- |x| test multicastservice 2 computers (Priya)
- |x| test Nautilus actions (Thomas)
- |x| fuse file system wright (Mallika)
- |x| test fuse file system (Mallika)
+ |_| GetTags(h objects.HKID) ([]objects.Tag, error)
+  |_| appsscript
+  |_| googledrive
+  |_| multicast
  |_| fix tests for ragged lists (Aaron Goldman)
+ |_| fix relitive urls in libs tests
 |_| content refresher
-|_| synonym detector
