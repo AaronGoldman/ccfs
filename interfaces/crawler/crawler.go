@@ -20,6 +20,7 @@ func Start() {
 	targetQueue = make(chan target, 100)
 	go processQueue()
 	http.HandleFunc("/crawler/", webCrawlerHandler)
+	http.HandleFunc("/index/", webIndexHandler)
 
 }
 
@@ -64,6 +65,18 @@ func webCrawlerHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(mapLine))
 	}
 	//http.Error(w, "HTTP Error 500 Internal Crawler server error\n\n", 500)
+}
+
+// This function handles web requests for the index of the crawler
+func webIndexHandler(w http.ResponseWriter, r *http.Request) {
+	response := fmt.Sprintf("Welcome to the web index!\n")
+	w.Write([]byte(response))
+
+	w.Write([]byte(fmt.Sprintf("Blobs\n")))
+	//for _, blob := range blobIndex.
+	w.Write([]byte(fmt.Sprintf("Blobs \n\t%+v\n", blobIndex)))
+	w.Write([]byte(fmt.Sprintf("Commits \n\t%+v\n", commitIndex)))
+	w.Write([]byte(fmt.Sprintf("Tags \n\t%+v\n", tagIndex)))
 }
 
 // This type, target, is used for the map and the queue
@@ -122,9 +135,8 @@ func crawlBlob(targHash objects.HCID) (err error) {
 	if blobErr != nil {
 		return blobErr
 	}
-	// ......
-	_ = nextBlob
-	//indexBlob(nextBlob)
+	//_ = nextBlob
+	indexBlob(nextBlob)
 	return nil
 }
 
@@ -144,7 +156,7 @@ func crawlList(targHash objects.HCID) (err error) {
 			queuedTargets[newlistHash.String()] = true
 		}
 	}
-	//indexList(firstList)
+	indexList(firstList)
 	return nil
 }
 
@@ -189,12 +201,18 @@ func handleCommit(inCommit objects.Commit) {
 			queuedTargets[newParent.String()] = true
 		}
 	}
-	//indexCommit(inCommit)
+	indexCommit(inCommit)
 
 }
 
 func crawlTag(targHash objects.HKID) (err error) {
-	// ......
+	tags, tagErr := services.GetTags(targHash)
+	if tagErr != nil {
+		return tagErr
+	}
+	for _, tag := range tags {
+		handleTag(tag)
+	}
 	return nil
 }
 
@@ -230,7 +248,7 @@ func handleTag(inTag objects.Tag) {
 			queuedTargets[newParent.String()] = true
 		}
 	}
-	//indexTag(inTag)
+	indexTag(inTag)
 }
 
 func processQueue() {
@@ -241,67 +259,226 @@ func processQueue() {
 	}
 }
 
-var blobIndex struct {
-	size    map[string]int
-	nameSeg map[string]map[string]string
-	//map[blobHcid string]map[nameSeg string]referringHID string
-	descendants map[string]map[int64]objects.HCID
-	//map[blobHcid string]map[versionNumber int64]referringHCID string
+type blobIndexEntry struct { //map[blobHcid string]struct
+	size    int
+	nameSeg map[string][]string
+	//map[nameSeg string]referringHID string
+	descendants map[string]int64
+	//map[versionNumber int64]referringHCID string
 }
 
-var commitIndex struct {
-	nameSeg map[string]map[string]string
+func (indexEntry blobIndexEntry) insertSize(size int) blobIndexEntry {
+	indexEntry.size = size
+	return indexEntry
+}
+func (indexEntry blobIndexEntry) insertNameSegment(
+	nameSeg string,
+	referHID string,
+) blobIndexEntry {
+	if indexEntry.nameSeg == nil {
+		indexEntry.nameSeg = make(map[string][]string)
+	}
+	if _, present := indexEntry.nameSeg[nameSeg]; !present {
+		indexEntry.nameSeg[nameSeg] = []string{referHID}
+	} else {
+		indexEntry.nameSeg[nameSeg] = append(indexEntry.nameSeg[nameSeg], referHID)
+	}
+	return indexEntry
+}
+
+func (indexEntry blobIndexEntry) insertDescendant(
+	versionNumber int64,
+	descendantHCID objects.HCID,
+) blobIndexEntry {
+	if indexEntry.descendants == nil {
+		indexEntry.descendants = make(map[string]int64)
+	}
+	if _, present := indexEntry.descendants[descendantHCID.Hex()]; !present {
+		indexEntry.descendants[descendantHCID.Hex()] = versionNumber
+	}
+
+	return indexEntry
+}
+
+func insertDescendantS(parents []objects.HCID, version int64) {
+	if blobIndex == nil {
+		blobIndex = make(map[string]blobIndexEntry)
+	}
+	for _, entryParent := range parents {
+
+		if _, present := blobIndex[entryParent.Hex()]; !present {
+			blobIndex[entryParent.Hex()] = blobIndexEntry{}
+		}
+		blobIndex[entryParent.Hex()].insertDescendant(version, entryParent)
+	}
+}
+
+type commitIndexEntry struct { //map[hkid string] struct
+	nameSeg map[string][]string
+	version map[int64]objects.HCID
+	//map[versionNumber int64]HCIDversion string
+}
+
+func (indexEntry commitIndexEntry) insertVersion(
+	versionNumber int64,
+	instanceHCID objects.HCID,
+) commitIndexEntry {
+	if indexEntry.version == nil {
+		indexEntry.version = make(map[int64]objects.HCID)
+	}
+	indexEntry.version[versionNumber] = instanceHCID
+	return indexEntry
+}
+
+func (indexEntry commitIndexEntry) insertNameSegment(
+	nameSeg string,
+	referHID string,
+) commitIndexEntry {
+	if indexEntry.nameSeg == nil {
+		indexEntry.nameSeg = make(map[string][]string)
+	}
+	if _, present := indexEntry.nameSeg[nameSeg]; !present {
+		indexEntry.nameSeg[nameSeg] = []string{referHID}
+	} else {
+		indexEntry.nameSeg[nameSeg] = append(indexEntry.nameSeg[nameSeg], referHID)
+	}
+	return indexEntry
+}
+
+type tagIndexEntry struct { //map[HKID string]struct
+	nameSeg map[string][]string
 	version map[string]map[int64]objects.HCID
-	//map[hkid string]map[versionNumber int64]HCIDversion string
+	//version map[nameSeg string]map[versionNumber int64]objects.HCID
 }
 
-var tagIndex struct {
-	nameSeg map[string]map[string]string
-	version map[string]map[string]map[int64]objects.HCID
-	//version map[HKID string]map[nameSeg string]map[versionNumber int64]objects.HCID
+func (indexEntry tagIndexEntry) insertNameSegment(
+	nameSeg string,
+	referHID string,
+) tagIndexEntry {
+	if indexEntry.nameSeg == nil {
+		indexEntry.nameSeg = make(map[string][]string)
+	}
+	if _, present := indexEntry.nameSeg[nameSeg]; !present {
+		indexEntry.nameSeg[nameSeg] = []string{referHID}
+	} else {
+		indexEntry.nameSeg[nameSeg] = append(indexEntry.nameSeg[nameSeg], referHID)
+	}
+	return indexEntry
 }
+
+func (indexEntry tagIndexEntry) insertVersion(
+	versionNumber int64,
+	nameSeg string,
+	instanceHCID objects.HCID,
+) tagIndexEntry {
+	if indexEntry.version == nil {
+		indexEntry.version = make(map[string]map[int64]objects.HCID)
+	}
+	if _, present := indexEntry.version[nameSeg]; !present {
+		indexEntry.version[nameSeg] = make(map[int64]objects.HCID)
+	}
+	indexEntry.version[nameSeg][versionNumber] = instanceHCID
+	return indexEntry
+}
+
+func indexNameSegment(typeString, targetHex, referingHex, nameSeg string) {
+
+	switch typeString {
+	case "blob", "list":
+		if blobIndex == nil {
+			blobIndex = make(map[string]blobIndexEntry)
+		}
+		if _, present := blobIndex[targetHex]; !present {
+			blobIndex[targetHex] = blobIndexEntry{}
+		}
+		blobIndex[targetHex] = blobIndex[targetHex].insertNameSegment(nameSeg, referingHex)
+
+	case "commit":
+		if commitIndex == nil {
+			commitIndex = make(map[string]commitIndexEntry)
+		}
+		if _, present := commitIndex[targetHex]; !present {
+			commitIndex[targetHex] = commitIndexEntry{}
+		}
+		commitIndex[targetHex] = commitIndex[targetHex].insertNameSegment(nameSeg, referingHex)
+	case "tag":
+		if tagIndex == nil {
+			tagIndex = make(map[string]tagIndexEntry)
+		}
+		if _, present := tagIndex[targetHex]; !present {
+			tagIndex[targetHex] = tagIndexEntry{}
+		}
+		tagIndex[targetHex] = tagIndex[targetHex].insertNameSegment(nameSeg, referingHex)
+	default:
+		log.Printf("Received invalid typestring: %s\n", typeString)
+	}
+}
+
+var blobIndex map[string]blobIndexEntry
 
 func indexBlob(inBlob objects.Blob) {
-	blobIndex.size[inBlob.Hash().Hex()] = len(inBlob)
+	if blobIndex == nil {
+		blobIndex = make(map[string]blobIndexEntry)
+	}
+	hashHex := inBlob.Hash().Hex()
+	if _, present := blobIndex[hashHex]; !present {
+		blobIndex[hashHex] = blobIndexEntry{}
+	}
+	blobIndex[hashHex] = blobIndex[hashHex].insertSize(len(inBlob))
 }
 
 func indexList(inList objects.List) {
-	inListHex := inList.Hash().Hex()
-	blobIndex.size[inListHex] = len(inList)
+	indexBlob(inList.Bytes()) //Indexing Lists as blobs because they are also blobs
 	for nameSeg, entry := range inList {
-		if entry.TypeString == "list" || entry.TypeString == "blob" {
-			blobIndex.nameSeg[entry.Hash.Hex()][nameSeg] = inListHex
-		} else if entry.TypeString == "tag" {
-			tagIndex.nameSeg[entry.Hash.Hex()][nameSeg] = inListHex
-		} else if entry.TypeString == "commit" {
-			commitIndex.nameSeg[entry.Hash.Hex()][nameSeg] = inListHex
-		} else {
-			log.Printf("Received invalid typestring: %s\n", entry.TypeString)
-		}
+		indexNameSegment(
+			entry.TypeString,
+			entry.Hash.Hex(),
+			inList.Hash().Hex(),
+			nameSeg,
+		)
 	}
 }
+
+var commitIndex map[string]commitIndexEntry
 
 func indexCommit(inCommit objects.Commit) {
-	commitIndex.version[inCommit.Hkid.Hex()][inCommit.Version] = inCommit.Hash()
-	for _, inComParent := range inCommit.Parents {
-		blobIndex.descendants[inComParent.Hex()][inCommit.Version] = inCommit.Hash()
+	if commitIndex == nil {
+		commitIndex = make(map[string]commitIndexEntry)
 	}
+	if _, present := commitIndex[inCommit.Hkid.Hex()]; !present {
+		commitIndex[inCommit.Hkid.Hex()] = commitIndexEntry{}
+	}
+	commitIndex[inCommit.Hkid.Hex()] = commitIndex[inCommit.Hkid.Hex()].insertVersion(
+		inCommit.Version,
+		inCommit.Hash(),
+	)
+	insertDescendantS(inCommit.Parents, inCommit.Version)
 }
 
-func indexTag(inTag objects.Tag) {
-	inTagHex := inTag.Hash().Hex()
-	if inTag.TypeString == "list" || inTag.TypeString == "blob" {
-		blobIndex.nameSeg[inTag.HashBytes.Hex()][inTag.NameSegment] = inTagHex
-	} else if inTag.TypeString == "tag" {
-		tagIndex.nameSeg[inTag.HashBytes.Hex()][inTag.NameSegment] = inTagHex
-	} else if inTag.TypeString == "commit" {
-		commitIndex.nameSeg[inTag.HashBytes.Hex()][inTag.NameSegment] = inTagHex
-	} else {
-		log.Printf("Received invalid typestring: %s\n", inTag.TypeString)
-	}
+var tagIndex map[string]tagIndexEntry
 
-	tagIndex.version[inTag.Hkid.Hex()][inTag.NameSegment][inTag.Version] = inTag.Hash()
-	for _, inTagParent := range inTag.Parents {
-		blobIndex.descendants[inTagParent.Hex()][inTag.Version] = inTag.Hash()
+func indexTag(inTag objects.Tag) {
+	indexNameSegment(
+		inTag.TypeString,
+		inTag.HashBytes.Hex(),
+		inTag.Hash().Hex(),
+		inTag.NameSegment,
+	)
+
+	if tagIndex == nil {
+		tagIndex = make(map[string]tagIndexEntry)
 	}
+	if _, present := tagIndex[inTag.Hkid.Hex()]; !present {
+		tagIndex[inTag.Hkid.Hex()] = tagIndexEntry{} //  make(map[string]map[int64]objects.HCID)
+	}
+	tagIndex[inTag.Hkid.Hex()] = tagIndex[inTag.Hkid.Hex()].insertVersion(
+		inTag.Version,
+		inTag.NameSegment,
+		inTag.Hash(),
+	)
+	insertDescendantS(inTag.Parents, inTag.Version)
+	//if _, present := tagIndex[inTag.Hkid.Hex()].version[inTag.NameSegment]; !present {
+	//	tagIndex[inTag.Hkid.Hex()].version[inTag.NameSegment] = make(map[int64]objects.HCID)
+	//}
+	//tagIndex[inTag.Hkid.Hex()].version[inTag.NameSegment][inTag.Version] = inTag.Hash()
 }
