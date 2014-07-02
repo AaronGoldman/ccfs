@@ -42,7 +42,9 @@ func (f File) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
 //nodeopener interface contains open(). Node may be used for file or directory
 func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr fs.Intr) (fs.Handle, fuse.Error) {
 	log.Printf("Open File")
+	request.Flags = fuse.OpenFlags(os.O_RDWR)
 	log.Printf("request: %+v", request)
+	//request.dir = 0
 	//   O_RDONLY int = os.O_RDONLY // open the file read-only.
 	//   O_WRONLY int = os.O_WRONLY // open the file write-only.
 	//   O_RDWR   int = os.O_RDWR   // open the file read-write.

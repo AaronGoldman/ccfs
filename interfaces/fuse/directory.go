@@ -167,6 +167,8 @@ func (d Dir) Create(
 	log.Printf("create node")
 	log.Printf("permission: %s", request.Mode)
 	log.Printf("name: %s", request.Name)
+	request.Flags = fuse.OpenFlags(os.O_RDWR)
+	//request.Dir = 1
 	log.Printf("flags: %s", request.Flags)
 	//   O_RDONLY int = os.O_RDONLY // open the file read-only.
 	//   O_WRONLY int = os.O_WRONLY // open the file write-only.
