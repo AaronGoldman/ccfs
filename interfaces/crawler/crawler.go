@@ -69,14 +69,140 @@ func webCrawlerHandler(w http.ResponseWriter, r *http.Request) {
 
 // This function handles web requests for the index of the crawler
 func webIndexHandler(w http.ResponseWriter, r *http.Request) {
-	response := fmt.Sprintf("Welcome to the web index!\n")
-	w.Write([]byte(response))
+	w.Write([]byte(fmt.Sprintf("Welcome to the web index!\n")))
 
 	w.Write([]byte(fmt.Sprintf("Blobs\n")))
-	//for _, blob := range blobIndex.
-	w.Write([]byte(fmt.Sprintf("Blobs \n\t%+v\n", blobIndex)))
-	w.Write([]byte(fmt.Sprintf("Commits \n\t%+v\n", commitIndex)))
-	w.Write([]byte(fmt.Sprintf("Tags \n\t%+v\n", tagIndex)))
+	w.Write([]byte(blobMaptoString(blobIndex)))
+
+	w.Write([]byte(fmt.Sprintf("Commits\n")))
+	w.Write([]byte(commitMaptoString(commitIndex)))
+
+	w.Write([]byte(fmt.Sprintf("Tags\n")))
+	w.Write([]byte(tagMaptoString(tagIndex)))
+}
+
+func blobMaptoString(hashMap map[string]blobIndexEntry) string {
+	document := ""
+	var keys []string
+	for key := range hashMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		mapLine := fmt.Sprintf("\t%s\n%v\n", key, hashMap[key])
+		document += mapLine
+		//w.Write([]byte(mapLine))
+	}
+	return document
+}
+
+func sliceStringMaptoString(hashMap map[string][]string) string {
+	document := ""
+	var keys []string
+	for key := range hashMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		mapLine := fmt.Sprintf("\t\t\t%s\n%v\n", key, sliceStringtoString(hashMap[key]))
+		document += mapLine
+		//w.Write([]byte(mapLine))
+	}
+	return document
+}
+
+func sliceStringtoString(strings []string) string {
+	document := ""
+	for _, key := range strings {
+		mapLine := fmt.Sprintf("\t\t\t\t%s\n", key)
+		document += mapLine
+	}
+	return document
+}
+
+func commitMaptoString(hashMap map[string]commitIndexEntry) string {
+	document := ""
+	var keys []string
+	for key := range hashMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		mapLine := fmt.Sprintf("\t%s\n%v\n", key, hashMap[key])
+		document += mapLine
+		//w.Write([]byte(mapLine))
+	}
+	return document
+}
+
+func tagMaptoString(hashMap map[string]tagIndexEntry) string {
+	document := ""
+	var keys []string
+	for key := range hashMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		mapLine := fmt.Sprintf("\t%s\n%v\n", key, hashMap[key])
+		document += mapLine
+		//w.Write([]byte(mapLine))
+	}
+	return document
+}
+
+type int64arr []int64
+
+func (data int64arr) Len() int { return len(data) }
+
+func (data int64arr) Swap(i, j int) { data[i], data[j] = data[j], data[i] }
+
+func (data int64arr) Less(i, j int) bool { return data[i] < data[j] }
+
+func sortint64(sortData int64arr) { sort.Sort(sortData) }
+
+func intMaptoString(hashMap map[int64]objects.HCID) string {
+	document := ""
+	var keys []int64
+	for key := range hashMap {
+		keys = append(keys, key)
+	}
+	sortint64(keys)
+	for _, key := range keys {
+		mapLine := fmt.Sprintf("\t\t\tVersion: %d HCID: %v\n", key, hashMap[key])
+		document += mapLine
+		//w.Write([]byte(mapLine))
+	}
+	return document
+}
+
+func stringIntMaptoString(hashMap map[string]map[int64]objects.HCID) string {
+	document := ""
+	var keys []string
+	for key := range hashMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		mapLine := intMaptoString(hashMap[key])
+		document += mapLine + "\n"
+		//w.Write([]byte(mapLine))
+	}
+	return document
+}
+
+func stringMaptoInt64(hashMap map[string]int64) string {
+	document := ""
+	var keys []string
+	for key := range hashMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		mapLine := fmt.Sprintf("\t%s\n%v\n", key, hashMap[key])
+		document += mapLine
+		//w.Write([]byte(mapLine))
+	}
+	return document
 }
 
 // This type, target, is used for the map and the queue
@@ -260,17 +386,34 @@ func processQueue() {
 }
 
 type blobIndexEntry struct { //map[blobHcid string]struct
-	size    int
-	nameSeg map[string][]string
+	typeString string
+	size       int
+	nameSeg    map[string][]string
 	//map[nameSeg string]referringHID string
 	descendants map[string]int64
 	//map[versionNumber int64]referringHCID string
+}
+
+func (indexEntry blobIndexEntry) String() string {
+	return fmt.Sprintf(
+		"\t\tType: %s\n\t\tSize: %d\n\t\tName Segments:\n%s\t\tDescendants:\n%s",
+		indexEntry.typeString,
+		indexEntry.size,
+		sliceStringMaptoString(indexEntry.nameSeg),
+		stringMaptoInt64(indexEntry.descendants),
+	)
 }
 
 func (indexEntry blobIndexEntry) insertSize(size int) blobIndexEntry {
 	indexEntry.size = size
 	return indexEntry
 }
+
+func (indexEntry blobIndexEntry) insertType(typeString string) blobIndexEntry {
+	indexEntry.typeString = typeString
+	return indexEntry
+}
+
 func (indexEntry blobIndexEntry) insertNameSegment(
 	nameSeg string,
 	referHID string,
@@ -319,6 +462,14 @@ type commitIndexEntry struct { //map[hkid string] struct
 	//map[versionNumber int64]HCIDversion string
 }
 
+func (indexEntry commitIndexEntry) String() string {
+	return fmt.Sprintf(
+		"\t\tName Segments:\n%s\n\t\tVersion:\n%s\n",
+		sliceStringMaptoString(indexEntry.nameSeg),
+		intMaptoString(indexEntry.version),
+	)
+}
+
 func (indexEntry commitIndexEntry) insertVersion(
 	versionNumber int64,
 	instanceHCID objects.HCID,
@@ -349,6 +500,14 @@ type tagIndexEntry struct { //map[HKID string]struct
 	nameSeg map[string][]string
 	version map[string]map[int64]objects.HCID
 	//version map[nameSeg string]map[versionNumber int64]objects.HCID
+}
+
+func (indexEntry tagIndexEntry) String() string {
+	return fmt.Sprintf(
+		"\t\tName Segments:\n%s\n\t\tVersion:\n%s\n",
+		sliceStringMaptoString(indexEntry.nameSeg),
+		stringIntMaptoString(indexEntry.version),
+	)
 }
 
 func (indexEntry tagIndexEntry) insertNameSegment(
@@ -425,10 +584,13 @@ func indexBlob(inBlob objects.Blob) {
 		blobIndex[hashHex] = blobIndexEntry{}
 	}
 	blobIndex[hashHex] = blobIndex[hashHex].insertSize(len(inBlob))
+	blobIndex[hashHex] = blobIndex[hashHex].insertType("Blob")
 }
 
 func indexList(inList objects.List) {
 	indexBlob(inList.Bytes()) //Indexing Lists as blobs because they are also blobs
+	hashHex := inList.Hash().Hex()
+	blobIndex[hashHex] = blobIndex[hashHex].insertType("List")
 	for nameSeg, entry := range inList {
 		indexNameSegment(
 			entry.TypeString,
@@ -442,6 +604,9 @@ func indexList(inList objects.List) {
 var commitIndex map[string]commitIndexEntry
 
 func indexCommit(inCommit objects.Commit) {
+	indexBlob(inCommit.Bytes())
+	hashHex := inCommit.Hash().Hex()
+	blobIndex[hashHex] = blobIndex[hashHex].insertType("Commit")
 	if commitIndex == nil {
 		commitIndex = make(map[string]commitIndexEntry)
 	}
@@ -458,6 +623,9 @@ func indexCommit(inCommit objects.Commit) {
 var tagIndex map[string]tagIndexEntry
 
 func indexTag(inTag objects.Tag) {
+	indexBlob(inTag.Bytes())
+	hashHex := inTag.Hash().Hex()
+	blobIndex[hashHex] = blobIndex[hashHex].insertType("Tag")
 	indexNameSegment(
 		inTag.TypeString,
 		inTag.HashBytes.Hex(),
@@ -477,8 +645,4 @@ func indexTag(inTag objects.Tag) {
 		inTag.Hash(),
 	)
 	insertDescendantS(inTag.Parents, inTag.Version)
-	//if _, present := tagIndex[inTag.Hkid.Hex()].version[inTag.NameSegment]; !present {
-	//	tagIndex[inTag.Hkid.Hex()].version[inTag.NameSegment] = make(map[int64]objects.HCID)
-	//}
-	//tagIndex[inTag.Hkid.Hex()].version[inTag.NameSegment][inTag.Version] = inTag.Hash()
 }
