@@ -19,8 +19,8 @@ type Dir struct {
 	parent       *Dir
 	name         string
 	openHandles  map[string]bool
-	nodeMap      map[fuse.NodeID]*Dir
-	inode        fuse.NodeID
+	//nodeMap      map[fuse.NodeID]*Dir
+	inode fuse.NodeID
 }
 
 //constructor
@@ -32,20 +32,20 @@ func (d Dir) newDir(Name string) *Dir {
 		parent:       &d,
 		name:         Name,
 		openHandles:  map[string]bool{},
-		nodeMap:      map[fuse.NodeID]*Dir{},
-		inode:        GenerateInode(d.inode, Name),
+		//nodeMap:      map[fuse.NodeID]*Dir{},
+		inode: GenerateInode(d.inode, Name),
 	}
 	return &p
 }
 
-//For directory node
-//(f File) ---> ?
-func (d Dir) Rename(r *fuse.RenameRequest, newDir fs.Node, intr fs.Intr) fuse.Error {
-	log.Printf("print request: %s", r)
-	log.Printf("rename request: rename dir - %s", d)
-	//p := d.newDir(r.NewName) //generate pointer
+func (d Dir) Rename(
+	r *fuse.RenameRequest,
+	newDir fs.Node,
+	intr fs.Intr,
+) fuse.Error {
+	log.Printf("Rename request: %+v", r)
+	log.Printf("rename request: rename dir - %+v", d)
 	//find content_type
-	//
 	if r.OldName != r.NewName {
 		d.name = r.NewName
 	}
@@ -58,9 +58,13 @@ func (d Dir) Rename(r *fuse.RenameRequest, newDir fs.Node, intr fs.Intr) fuse.Er
 		if err != nil {
 			return err
 		}
-
 		newList := l.Add(r.NewName, l[r.OldName].Hash, l[r.OldName].TypeString)
 		newList = l.Remove(r.OldName)
+		log.Printf(
+			"Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------",
+			newList.Hash(),
+			newList,
+		)
 		el := services.PostList(newList)
 		if el != nil {
 			return err
@@ -80,10 +84,20 @@ func (d Dir) Rename(r *fuse.RenameRequest, newDir fs.Node, intr fs.Intr) fuse.Er
 		newList = l.Remove(r.OldName)
 
 		newCommit := c.Update(newList.Hash())
+		log.Printf(
+			"Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------",
+			newList.Hash(),
+			newList,
+		)
 		el := services.PostList(newList)
 		if el != nil {
 			return err
 		}
+		log.Printf(
+			"Posting commit %s\n-----BEGIN COMMIT-----\n%s\n-------END COMMIT-----",
+			newCommit.Hash(),
+			newCommit,
+		)
 		ec := services.PostCommit(newCommit)
 		if ec != nil {
 			return err
@@ -94,11 +108,22 @@ func (d Dir) Rename(r *fuse.RenameRequest, newDir fs.Node, intr fs.Intr) fuse.Er
 		oldTag, err := services.GetTag(d.leaf.(objects.HKID), r.OldName)
 		var newTag objects.Tag
 		if err == nil {
-			newTag = objects.NewTag(oldTag.HashBytes, oldTag.TypeString, r.NewName, oldTag.Hash(), d.leaf.(objects.HKID))
+			newTag = objects.NewTag(
+				oldTag.HashBytes,
+				oldTag.TypeString,
+				r.NewName,
+				[]objects.HCID{oldTag.Hash()},
+				d.leaf.(objects.HKID),
+			)
 		} else {
 			log.Printf("Tag %s\\%s Not Found", d.leaf, d.name)
 			return fuse.ENOENT
 		}
+		log.Printf(
+			"Posting tag %s\n-----BEGIN TAG--------\n%s\n-------END TAG--------",
+			newTag.Hash(),
+			newTag,
+		)
 		et := services.PostTag(newTag)
 		if et != nil {
 			return err
@@ -120,7 +145,7 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 	switch d.content_type {
 	default:
 		return nil, nil
-	case "commit": // a commit has a list hash
+	case "commit":
 		node, err := d.LookupCommit(name, intr, new_nodeID)
 		return node, err
 	case "list":
@@ -133,15 +158,26 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 
 }
 
-//2 types of nodes for files and directories. So call rename twice?
-//Create node (directory)
-
 //creates new file only
-func (d Dir) Create(request *fuse.CreateRequest, response *fuse.CreateResponse, intr fs.Intr) (fs.Node, fs.Handle, fuse.Error) {
+func (d Dir) Create(
+	request *fuse.CreateRequest,
+	response *fuse.CreateResponse,
+	intr fs.Intr,
+) (fs.Node, fs.Handle, fuse.Error) {
 	log.Printf("create node")
 	log.Printf("permission: %s", request.Mode)
 	log.Printf("name: %s", request.Name)
+	request.Flags = fuse.OpenFlags(os.O_RDWR)
+	//request.Dir = 1
 	log.Printf("flags: %s", request.Flags)
+	//   O_RDONLY int = os.O_RDONLY // open the file read-only.
+	//   O_WRONLY int = os.O_WRONLY // open the file write-only.
+	//   O_RDWR   int = os.O_RDWR   // open the file read-write.
+	//   O_APPEND int = os.O_APPEND // append data to the file when writing.
+	//   O_CREATE int = os.O_CREAT  // create a new file if none exists.
+	//   O_EXCL   int = os.O_EXCL   // used with O_CREATE, file must not exist
+	//   O_SYNC   int = os.O_SYNC   // open for synchronous I/O.
+	//   O_TRUNC  int = os.O_TRUNC  // if possible, truncate file when opened.
 	node := File{
 		contentHash: objects.Blob{}.Hash(),
 		permission:  request.Mode,
@@ -153,13 +189,13 @@ func (d Dir) Create(request *fuse.CreateRequest, response *fuse.CreateResponse, 
 		buffer: []byte{},
 		parent: &d,
 		name:   request.Name,
+		inode:  node.inode,
 	}
 	d.openHandles[handle.name] = true
 	return node, handle, nil
 }
 
-func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error) { //name=file name
-
+func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error) {
 	switch d.content_type {
 
 	default:
@@ -177,19 +213,26 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 		newList := l.Add(name, h, typeString)
 
 		newCommit := c.Update(newList.Hash())
-		log.Printf("Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------", newList.Hash(), newList)
+		log.Printf(
+			"Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------",
+			newList.Hash(),
+			newList,
+		)
 		el := services.PostList(newList)
 		if el != nil {
 			return err
 		}
-		log.Printf("Posting commit %s\n-----BEGIN COMMIT-----\n%s\n-------END COMMIT-----", newCommit.Hash(), newCommit)
+		log.Printf(
+			"Posting commit %s\n-----BEGIN COMMIT-----\n%s\n-------END COMMIT-----",
+			newCommit.Hash(),
+			newCommit,
+		)
 		ec := services.PostCommit(newCommit)
 		if ec != nil {
 			return err
 		}
 		return nil
 	case "tag":
-		//log.Printf("entered tag block\n\thkid:%s\n\tnamesegment:%s", d.leaf, name)
 		t, err := services.GetTag(d.leaf.(objects.HKID), name)
 		var newTag objects.Tag
 		if err == nil {
@@ -198,7 +241,11 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 			log.Printf("Tag %s\\%s Not Found", d.leaf, name)
 			newTag = objects.NewTag(h, typeString, name, nil, d.leaf.(objects.HKID))
 		}
-		log.Printf("Posting tag %s\n-----BEGIN TAG--------\n%s\n-------END TAG--------", newTag.Hash(), newTag)
+		log.Printf(
+			"Posting tag %s\n-----BEGIN TAG--------\n%s\n-------END TAG--------",
+			newTag.Hash(),
+			newTag,
+		)
 		et := services.PostTag(newTag)
 		if et != nil {
 			return err
@@ -210,7 +257,11 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 			return err
 		}
 		newList := l.Add(name, h, typeString)
-		log.Printf("Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------", newList.Hash(), newList)
+		log.Printf(
+			"Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------",
+			newList.Hash(),
+			newList,
+		)
 		el := services.PostList(newList)
 		if el != nil {
 			return err
@@ -220,8 +271,6 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 	}
 }
 
-///// Lookup functions ////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
 func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
 
 	c, err := services.GetCommit(d.leaf.(objects.HKID))
@@ -278,8 +327,6 @@ func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-
 func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
 	l, err := services.GetList(d.leaf.(objects.HCID))
 	if err != nil {
@@ -300,9 +347,6 @@ func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node,
 		}, nil
 	}
 	return Dir{
-		//path: d.path + "/" + name,
-		//trunc:        d.trunc,
-		//branch:       d.branch,
 		leaf:         list_entry.Hash,
 		permission:   d.permission,
 		content_type: list_entry.TypeString,
@@ -313,8 +357,6 @@ func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node,
 	}, nil
 
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
 
 func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
 
@@ -343,9 +385,6 @@ func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, 
 		}, nil
 	}
 	return Dir{
-		//path:         d.path + "/" + name,
-		//trunc:        d.trunc,
-		//branch:       t.hkid,
 		leaf:         t.HashBytes,
 		permission:   perm,
 		content_type: t.TypeString,
@@ -355,9 +394,6 @@ func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, 
 		inode:        GenerateInode(d.parent.inode, name),
 	}, nil
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-//////////////// End lookup /////////////////////////////////////////////////////////////////
 
 func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	log.Printf("ReadDir requested:\n\tName:%s", d.name)
@@ -388,7 +424,6 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	} else {
 		return nil, fuse.ENOENT
 	}
-	//log.Printf("list map: %s", l)
 
 	for name, entry := range l {
 		if entry.TypeString == "blob" {
