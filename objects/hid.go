@@ -2,6 +2,7 @@ package objects
 
 import (
 	"encoding/hex"
+	"fmt"
 )
 
 type HCID []byte
@@ -41,6 +42,9 @@ func HcidFromHex(s string) (HCID, error) {
 	dabytes, err := hex.DecodeString(s)
 	if err == nil {
 		return HCID(dabytes), err
+	}
+	if len(s) != 64 {
+		return nil, fmt.Errorf("HEX not 64 digits")
 	}
 	return nil, err
 }

@@ -6,7 +6,6 @@ import (
 	"github.com/AaronGoldman/ccfs/services"
 	"log"
 	"net/http"
-	"sort"
 	"strings"
 	"text/template"
 )
@@ -27,43 +26,39 @@ func Start() {
 
 // This function handles web requests for the crawler
 func webCrawlerHandler(w http.ResponseWriter, r *http.Request) {
-
 	parts := strings.SplitN(r.RequestURI[9:], "/", 2)
 	hkidhex := parts[0]
-	requestStats := fmt.Sprintf("Request Statistics: \n")
-	w.Write([]byte(requestStats))
-	if len(hkidhex) == 64 {
-		h, err := objects.HkidFromHex(hkidhex)
-		if err == nil {
-			response := fmt.Sprintf("\tThe hkid gotten is %s\n", h)
-			w.Write([]byte(response))
-			seedQueue(h)
-		} else {
-			hc, err := objects.HcidFromHex(hkidhex)
-			if err == nil {
-				response := fmt.Sprintf("\tThe hcid gotten is %s\n", hc)
-				w.Write([]byte(response))
-				seedQueue(hc)
-			}
-		}
-
+	h, hexerr := objects.HcidFromHex(hkidhex)
+	if hexerr == nil {
+		seedQueue(h)
 	}
-	queueStats := fmt.Sprintf("Queue Statistics: \n")
-	w.Write([]byte(queueStats))
-	queuePrint := fmt.Sprintf("\tThe current length of the queue is %v\n",
-		len(targetQueue))
-	w.Write([]byte(queuePrint))
-	indexStats := fmt.Sprintf("Index Statistics: \n")
-	w.Write([]byte(indexStats))
-
-	var keys []string
-	for key := range queuedTargets {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		mapLine := fmt.Sprintf("\t%s %v\n", k, queuedTargets[k])
-		w.Write([]byte(mapLine))
+	t, err := template.New("WebIndex template").Parse(`Request Statistics:
+	The HID received is: {{.HkidHex}}{{if .Err}}
+	Error Parsing HID: {{.Err}}{{end}}
+Queue Statistics:
+	The current length of the queue is: {{.QueueLength}}
+Index Statistics:
+	{{range $keys, $values := .Queue}}
+		{{$keys}}{{end}}`)
+	if err != nil {
+		log.Println(err)
+		http.Error(
+			w,
+			fmt.Sprintf("HTTP Error 500 Internal Crawler server error\n%s\n", err),
+			500,
+		)
+	} else {
+		t.Execute(w, struct {
+			HkidHex     string
+			QueueLength int
+			Queue       map[string]bool
+			Err         error
+		}{
+			HkidHex:     hkidhex,
+			QueueLength: len(targetQueue),
+			Queue:       queuedTargets,
+			Err:         hexerr,
+		}) //merge template ‘t’ with content of ‘index’
 	}
 }
 
@@ -80,8 +75,7 @@ func webIndexHandler(w http.ResponseWriter, r *http.Request) {
 		Tags:    tagIndex,
 	}
 
-	t := template.New("WebIndex template") //create a new template with some name
-	t, err := t.Parse(
+	t, err := template.New("WebIndex template").Parse(
 		`{{define "sliceTemplate"}}{{range $lice:= .}}
 				{{$lice}}{{end}}{{end}}{{define "mapTemplate"}}{{range $key, $value:= .}}
 				#: {{$key}} HCID: {{$value}}{{end}}{{end}}{{define "blobIndexEntryTemplate"}}
