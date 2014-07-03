@@ -36,7 +36,7 @@ func webCrawlerHandler(w http.ResponseWriter, r *http.Request) {
 		h, err := objects.HkidFromHex(hkidhex)
 		if err == nil {
 			response := fmt.Sprintf("\tThe hkid gotten is %s\n", h)
-			w.Write([]byte(response)) //converts the response to bytes from strings
+			w.Write([]byte(response))
 			seedQueue(h)
 		} else {
 			hc, err := objects.HcidFromHex(hkidhex)
@@ -65,23 +65,9 @@ func webCrawlerHandler(w http.ResponseWriter, r *http.Request) {
 		mapLine := fmt.Sprintf("\t%s %v\n", k, queuedTargets[k])
 		w.Write([]byte(mapLine))
 	}
-	//http.Error(w, "HTTP Error 500 Internal Crawler server error\n\n", 500)
 }
 
 // This function handles web requests for the index of the crawler
-//func webIndexHandler(w http.ResponseWriter, r *http.Request) {
-//	w.Write([]byte(fmt.Sprintf("Welcome to the web index!\n")))
-
-//	w.Write([]byte(fmt.Sprintf("Blobs\n")))
-//	w.Write([]byte(blobMaptoString(blobIndex)))
-
-//	w.Write([]byte(fmt.Sprintf("Commits\n")))
-//	w.Write([]byte(commitMaptoString(commitIndex)))
-
-//	w.Write([]byte(fmt.Sprintf("Tags\n")))
-//	w.Write([]byte(tagMaptoString(tagIndex)))
-//}
-
 func webIndexHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("Welcome to the web index!\n")))
 	index := struct {
@@ -124,133 +110,14 @@ Tags		{{range $key, $value:= .Tags}}
 `)
 	if err != nil {
 		log.Println(err)
+		http.Error(
+			w,
+			fmt.Sprintf("HTTP Error 500 Internal Indexer server error\n%s\n", err),
+			500,
+		)
 	} else {
 		t.Execute(w, index) //merge template ‘t’ with content of ‘index’
 	}
-}
-
-func blobMaptoString(hashMap map[string]blobIndexEntry) string {
-	document := ""
-	var keys []string
-	for key := range hashMap {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		mapLine := fmt.Sprintf("\t%s\n%v\n", key, hashMap[key])
-		document += mapLine
-		//w.Write([]byte(mapLine))
-	}
-	return document
-}
-
-func sliceStringMaptoString(hashMap map[string][]string) string {
-	document := ""
-	var keys []string
-	for key := range hashMap {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		mapLine := fmt.Sprintf("\t\t\t%s\n%v\n", key, sliceStringtoString(hashMap[key]))
-		document += mapLine
-		//w.Write([]byte(mapLine))
-	}
-	return document
-}
-
-func sliceStringtoString(strings []string) string {
-	document := ""
-	for _, key := range strings {
-		mapLine := fmt.Sprintf("\t\t\t\t%s\n", key)
-		document += mapLine
-	}
-	return document
-}
-
-func commitMaptoString(hashMap map[string]commitIndexEntry) string {
-	document := ""
-	var keys []string
-	for key := range hashMap {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		mapLine := fmt.Sprintf("\t%s\n%v\n", key, hashMap[key])
-		document += mapLine
-		//w.Write([]byte(mapLine))
-	}
-	return document
-}
-
-func tagMaptoString(hashMap map[string]tagIndexEntry) string {
-	document := ""
-	var keys []string
-	for key := range hashMap {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		mapLine := fmt.Sprintf("\t%s\n%v\n", key, hashMap[key])
-		document += mapLine
-		//w.Write([]byte(mapLine))
-	}
-	return document
-}
-
-type int64arr []int64
-
-func (data int64arr) Len() int { return len(data) }
-
-func (data int64arr) Swap(i, j int) { data[i], data[j] = data[j], data[i] }
-
-func (data int64arr) Less(i, j int) bool { return data[i] < data[j] }
-
-func sortint64(sortData int64arr) { sort.Sort(sortData) }
-
-func intMaptoString(hashMap map[int64]objects.HCID) string {
-	document := ""
-	var keys []int64
-	for key := range hashMap {
-		keys = append(keys, key)
-	}
-	sortint64(keys)
-	for _, key := range keys {
-		mapLine := fmt.Sprintf("\t\t\tVersion: %d HCID: %v\n", key, hashMap[key])
-		document += mapLine
-		//w.Write([]byte(mapLine))
-	}
-	return document
-}
-
-func stringIntMaptoString(hashMap map[string]map[int64]objects.HCID) string {
-	document := ""
-	var keys []string
-	for key := range hashMap {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		mapLine := intMaptoString(hashMap[key])
-		document += mapLine + "\n"
-		//w.Write([]byte(mapLine))
-	}
-	return document
-}
-
-func stringMaptoInt64(hashMap map[string]int64) string {
-	document := ""
-	var keys []string
-	for key := range hashMap {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		mapLine := fmt.Sprintf("\t%s\n%v\n", key, hashMap[key])
-		document += mapLine
-		//w.Write([]byte(mapLine))
-	}
-	return document
 }
 
 // This type, target, is used for the map and the queue
@@ -296,12 +163,6 @@ func crawlTarget(targ target) {
 	if err != nil {
 		log.Print(err)
 	}
-
-	//firstKey, keyErr := services.GetKey(h.Bytes())
-	//if keyErr != nil {
-	//	// .....
-	//	_ = firstKey
-	//}
 }
 
 func crawlBlob(targHash objects.HCID) (err error) {
@@ -309,7 +170,6 @@ func crawlBlob(targHash objects.HCID) (err error) {
 	if blobErr != nil {
 		return blobErr
 	}
-	//_ = nextBlob
 	indexBlob(nextBlob)
 	return nil
 }
@@ -368,15 +228,12 @@ func handleCommit(inCommit objects.Commit) {
 			typeString: "hcid_commit",
 			hash:       cparent,
 		}
-		//commitHKID := firstCommit.Hkid()
-
 		if !queuedTargets[newParent.String()] {
 			targetQueue <- newParent
 			queuedTargets[newParent.String()] = true
 		}
 	}
 	indexCommit(inCommit)
-
 }
 
 func crawlTag(targHash objects.HKID) (err error) {
@@ -415,8 +272,6 @@ func handleTag(inTag objects.Tag) {
 			typeString: "hcid_tag",
 			hash:       tparent,
 		}
-		//tagHKID := inTag.Hkid
-
 		if !queuedTargets[newParent.String()] {
 			targetQueue <- newParent
 			queuedTargets[newParent.String()] = true
@@ -433,24 +288,12 @@ func processQueue() {
 	}
 }
 
-type blobIndexEntry struct { //map[blobHcid string]struct
-	TypeString string
-	Size       int
-	NameSeg    map[string][]string
-	//map[nameSeg string]referringHID string
-	Descendants map[string]int64
-	//map[versionNumber int64]referringHCID string
+type blobIndexEntry struct {
+	TypeString  string
+	Size        int
+	NameSeg     map[ /*nameSeg*/ string] /*referringHID*/ []string
+	Descendants map[ /*referringHCID*/ string] /*versionNumber*/ int64
 }
-
-//func (indexEntry blobIndexEntry) String() string {
-//	return fmt.Sprintf(
-//		"\t\tType: %s\n\t\tSize: %d\n\t\tName Segments:\n%s\t\tDescendants:\n%s",
-//		indexEntry.TypeString,
-//		indexEntry.Size,
-//		sliceStringMaptoString(indexEntry.NameSeg),
-//		stringMaptoInt64(indexEntry.Descendants),
-//	)
-//}
 
 func (indexEntry blobIndexEntry) insertSize(size int) blobIndexEntry {
 	indexEntry.Size = size
@@ -504,19 +347,10 @@ func insertDescendantS(parents []objects.HCID, version int64) {
 	}
 }
 
-type commitIndexEntry struct { //map[hkid string] struct
+type commitIndexEntry struct {
 	NameSeg map[string][]string
-	Version map[int64]objects.HCID
-	//map[versionNumber int64]HCIDversion string
+	Version map[ /*versionNumber*/ int64]objects.HCID
 }
-
-//func (indexEntry commitIndexEntry) String() string {
-//	return fmt.Sprintf(
-//		"\t\tName Segments:\n%s\n\t\tVersion:\n%s\n",
-//		sliceStringMaptoString(indexEntry.NameSeg),
-//		intMaptoString(indexEntry.Version),
-//	)
-//}
 
 func (indexEntry commitIndexEntry) insertVersion(
 	versionNumber int64,
@@ -544,19 +378,10 @@ func (indexEntry commitIndexEntry) insertNameSegment(
 	return indexEntry
 }
 
-type tagIndexEntry struct { //map[HKID string]struct
+type tagIndexEntry struct {
 	NameSeg map[string][]string
-	Version map[string]map[int64]objects.HCID
-	//version map[nameSeg string]map[versionNumber int64]objects.HCID
+	Version map[ /*nameSeg*/ string]map[ /*versionNumber*/ int64]objects.HCID
 }
-
-//func (indexEntry tagIndexEntry) String() string {
-//	return fmt.Sprintf(
-//		"\t\tName Segments:\n%s\n\t\tVersion:\n%s\n",
-//		sliceStringMaptoString(indexEntry.NameSeg),
-//		stringIntMaptoString(indexEntry.Version),
-//	)
-//}
 
 func (indexEntry tagIndexEntry) insertNameSegment(
 	nameSeg string,
@@ -685,7 +510,7 @@ func indexTag(inTag objects.Tag) {
 		tagIndex = make(map[string]tagIndexEntry)
 	}
 	if _, present := tagIndex[inTag.Hkid.Hex()]; !present {
-		tagIndex[inTag.Hkid.Hex()] = tagIndexEntry{} //  make(map[string]map[int64]objects.HCID)
+		tagIndex[inTag.Hkid.Hex()] = tagIndexEntry{}
 	}
 	tagIndex[inTag.Hkid.Hex()] = tagIndex[inTag.Hkid.Hex()].insertVersion(
 		inTag.Version,
