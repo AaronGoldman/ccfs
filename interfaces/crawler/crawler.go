@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"sort"
 	"strings"
+	"text/template"
 )
 
 var queuedTargets map[string]bool
@@ -68,17 +69,64 @@ func webCrawlerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // This function handles web requests for the index of the crawler
+//func webIndexHandler(w http.ResponseWriter, r *http.Request) {
+//	w.Write([]byte(fmt.Sprintf("Welcome to the web index!\n")))
+
+//	w.Write([]byte(fmt.Sprintf("Blobs\n")))
+//	w.Write([]byte(blobMaptoString(blobIndex)))
+
+//	w.Write([]byte(fmt.Sprintf("Commits\n")))
+//	w.Write([]byte(commitMaptoString(commitIndex)))
+
+//	w.Write([]byte(fmt.Sprintf("Tags\n")))
+//	w.Write([]byte(tagMaptoString(tagIndex)))
+//}
+
 func webIndexHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("Welcome to the web index!\n")))
+	index := struct {
+		Blobs   interface{}
+		Commits interface{}
+		Tags    interface{}
+	}{
+		Blobs:   blobIndex,
+		Commits: commitIndex,
+		Tags:    tagIndex,
+	}
 
-	w.Write([]byte(fmt.Sprintf("Blobs\n")))
-	w.Write([]byte(blobMaptoString(blobIndex)))
-
-	w.Write([]byte(fmt.Sprintf("Commits\n")))
-	w.Write([]byte(commitMaptoString(commitIndex)))
-
-	w.Write([]byte(fmt.Sprintf("Tags\n")))
-	w.Write([]byte(tagMaptoString(tagIndex)))
+	t := template.New("WebIndex template") //create a new template with some name
+	t, err := t.Parse(
+		`{{define "sliceTemplate"}}{{range $lice:= .}}
+				{{$lice}}{{end}}{{end}}{{define "mapTemplate"}}{{range $key, $value:= .}}
+				#: {{$key}} HCID: {{$value}}{{end}}{{end}}{{define "blobIndexEntryTemplate"}}
+		Type: {{.TypeString}}
+		Size: {{.Size}}
+		Name Segment: {{range $key, $value:= .NameSeg}}
+			{{$key}}{{template "sliceTemplate" $value}}{{end}}
+		Descendants: {{range $key, $value:= .Descendants}}
+			{{$key}}{{$value}}{{end}}
+{{end}}{{define "commitIndexEntryTemplate"}}
+		Name Segment: {{range $key, $value:= .NameSeg}}
+			{{$key}}{{template "sliceTemplate" $value}}{{end}}
+		Version: {{range $key, $value:= .Version}}
+			#: {{$key}} HCID: {{$value}}{{end}}
+{{end}}{{define "tagIndexEntryTemplate"}}
+		Name Segment: {{range $key, $value:= .NameSeg}}
+			{{$key}}{{template "sliceTemplate" $value}}{{end}}
+		Version: {{range $key, $value:= .Version}}
+			Name Segment: {{$key}}{{template "mapTemplate" $value}}{{end}}
+{{end}}Blobs	{{range $key, $value:= .Blobs}}
+	{{$key}}{{template "blobIndexEntryTemplate" $value}}{{end}}
+Commits	{{range $key, $value:= .Commits}}
+	{{$key}}{{template "commitIndexEntryTemplate" $value}}{{end}}
+Tags		{{range $key, $value:= .Tags}}
+	{{$key}}{{template "tagIndexEntryTemplate" $value}}{{end}}
+`)
+	if err != nil {
+		log.Println(err)
+	} else {
+		t.Execute(w, index) //merge template ‘t’ with content of ‘index’
+	}
 }
 
 func blobMaptoString(hashMap map[string]blobIndexEntry) string {
@@ -386,31 +434,31 @@ func processQueue() {
 }
 
 type blobIndexEntry struct { //map[blobHcid string]struct
-	typeString string
-	size       int
-	nameSeg    map[string][]string
+	TypeString string
+	Size       int
+	NameSeg    map[string][]string
 	//map[nameSeg string]referringHID string
-	descendants map[string]int64
+	Descendants map[string]int64
 	//map[versionNumber int64]referringHCID string
 }
 
-func (indexEntry blobIndexEntry) String() string {
-	return fmt.Sprintf(
-		"\t\tType: %s\n\t\tSize: %d\n\t\tName Segments:\n%s\t\tDescendants:\n%s",
-		indexEntry.typeString,
-		indexEntry.size,
-		sliceStringMaptoString(indexEntry.nameSeg),
-		stringMaptoInt64(indexEntry.descendants),
-	)
-}
+//func (indexEntry blobIndexEntry) String() string {
+//	return fmt.Sprintf(
+//		"\t\tType: %s\n\t\tSize: %d\n\t\tName Segments:\n%s\t\tDescendants:\n%s",
+//		indexEntry.TypeString,
+//		indexEntry.Size,
+//		sliceStringMaptoString(indexEntry.NameSeg),
+//		stringMaptoInt64(indexEntry.Descendants),
+//	)
+//}
 
 func (indexEntry blobIndexEntry) insertSize(size int) blobIndexEntry {
-	indexEntry.size = size
+	indexEntry.Size = size
 	return indexEntry
 }
 
 func (indexEntry blobIndexEntry) insertType(typeString string) blobIndexEntry {
-	indexEntry.typeString = typeString
+	indexEntry.TypeString = typeString
 	return indexEntry
 }
 
@@ -418,13 +466,13 @@ func (indexEntry blobIndexEntry) insertNameSegment(
 	nameSeg string,
 	referHID string,
 ) blobIndexEntry {
-	if indexEntry.nameSeg == nil {
-		indexEntry.nameSeg = make(map[string][]string)
+	if indexEntry.NameSeg == nil {
+		indexEntry.NameSeg = make(map[string][]string)
 	}
-	if _, present := indexEntry.nameSeg[nameSeg]; !present {
-		indexEntry.nameSeg[nameSeg] = []string{referHID}
+	if _, present := indexEntry.NameSeg[nameSeg]; !present {
+		indexEntry.NameSeg[nameSeg] = []string{referHID}
 	} else {
-		indexEntry.nameSeg[nameSeg] = append(indexEntry.nameSeg[nameSeg], referHID)
+		indexEntry.NameSeg[nameSeg] = append(indexEntry.NameSeg[nameSeg], referHID)
 	}
 	return indexEntry
 }
@@ -433,11 +481,11 @@ func (indexEntry blobIndexEntry) insertDescendant(
 	versionNumber int64,
 	descendantHCID objects.HCID,
 ) blobIndexEntry {
-	if indexEntry.descendants == nil {
-		indexEntry.descendants = make(map[string]int64)
+	if indexEntry.Descendants == nil {
+		indexEntry.Descendants = make(map[string]int64)
 	}
-	if _, present := indexEntry.descendants[descendantHCID.Hex()]; !present {
-		indexEntry.descendants[descendantHCID.Hex()] = versionNumber
+	if _, present := indexEntry.Descendants[descendantHCID.Hex()]; !present {
+		indexEntry.Descendants[descendantHCID.Hex()] = versionNumber
 	}
 
 	return indexEntry
@@ -457,27 +505,27 @@ func insertDescendantS(parents []objects.HCID, version int64) {
 }
 
 type commitIndexEntry struct { //map[hkid string] struct
-	nameSeg map[string][]string
-	version map[int64]objects.HCID
+	NameSeg map[string][]string
+	Version map[int64]objects.HCID
 	//map[versionNumber int64]HCIDversion string
 }
 
-func (indexEntry commitIndexEntry) String() string {
-	return fmt.Sprintf(
-		"\t\tName Segments:\n%s\n\t\tVersion:\n%s\n",
-		sliceStringMaptoString(indexEntry.nameSeg),
-		intMaptoString(indexEntry.version),
-	)
-}
+//func (indexEntry commitIndexEntry) String() string {
+//	return fmt.Sprintf(
+//		"\t\tName Segments:\n%s\n\t\tVersion:\n%s\n",
+//		sliceStringMaptoString(indexEntry.NameSeg),
+//		intMaptoString(indexEntry.Version),
+//	)
+//}
 
 func (indexEntry commitIndexEntry) insertVersion(
 	versionNumber int64,
 	instanceHCID objects.HCID,
 ) commitIndexEntry {
-	if indexEntry.version == nil {
-		indexEntry.version = make(map[int64]objects.HCID)
+	if indexEntry.Version == nil {
+		indexEntry.Version = make(map[int64]objects.HCID)
 	}
-	indexEntry.version[versionNumber] = instanceHCID
+	indexEntry.Version[versionNumber] = instanceHCID
 	return indexEntry
 }
 
@@ -485,42 +533,42 @@ func (indexEntry commitIndexEntry) insertNameSegment(
 	nameSeg string,
 	referHID string,
 ) commitIndexEntry {
-	if indexEntry.nameSeg == nil {
-		indexEntry.nameSeg = make(map[string][]string)
+	if indexEntry.NameSeg == nil {
+		indexEntry.NameSeg = make(map[string][]string)
 	}
-	if _, present := indexEntry.nameSeg[nameSeg]; !present {
-		indexEntry.nameSeg[nameSeg] = []string{referHID}
+	if _, present := indexEntry.NameSeg[nameSeg]; !present {
+		indexEntry.NameSeg[nameSeg] = []string{referHID}
 	} else {
-		indexEntry.nameSeg[nameSeg] = append(indexEntry.nameSeg[nameSeg], referHID)
+		indexEntry.NameSeg[nameSeg] = append(indexEntry.NameSeg[nameSeg], referHID)
 	}
 	return indexEntry
 }
 
 type tagIndexEntry struct { //map[HKID string]struct
-	nameSeg map[string][]string
-	version map[string]map[int64]objects.HCID
+	NameSeg map[string][]string
+	Version map[string]map[int64]objects.HCID
 	//version map[nameSeg string]map[versionNumber int64]objects.HCID
 }
 
-func (indexEntry tagIndexEntry) String() string {
-	return fmt.Sprintf(
-		"\t\tName Segments:\n%s\n\t\tVersion:\n%s\n",
-		sliceStringMaptoString(indexEntry.nameSeg),
-		stringIntMaptoString(indexEntry.version),
-	)
-}
+//func (indexEntry tagIndexEntry) String() string {
+//	return fmt.Sprintf(
+//		"\t\tName Segments:\n%s\n\t\tVersion:\n%s\n",
+//		sliceStringMaptoString(indexEntry.NameSeg),
+//		stringIntMaptoString(indexEntry.Version),
+//	)
+//}
 
 func (indexEntry tagIndexEntry) insertNameSegment(
 	nameSeg string,
 	referHID string,
 ) tagIndexEntry {
-	if indexEntry.nameSeg == nil {
-		indexEntry.nameSeg = make(map[string][]string)
+	if indexEntry.NameSeg == nil {
+		indexEntry.NameSeg = make(map[string][]string)
 	}
-	if _, present := indexEntry.nameSeg[nameSeg]; !present {
-		indexEntry.nameSeg[nameSeg] = []string{referHID}
+	if _, present := indexEntry.NameSeg[nameSeg]; !present {
+		indexEntry.NameSeg[nameSeg] = []string{referHID}
 	} else {
-		indexEntry.nameSeg[nameSeg] = append(indexEntry.nameSeg[nameSeg], referHID)
+		indexEntry.NameSeg[nameSeg] = append(indexEntry.NameSeg[nameSeg], referHID)
 	}
 	return indexEntry
 }
@@ -530,13 +578,13 @@ func (indexEntry tagIndexEntry) insertVersion(
 	nameSeg string,
 	instanceHCID objects.HCID,
 ) tagIndexEntry {
-	if indexEntry.version == nil {
-		indexEntry.version = make(map[string]map[int64]objects.HCID)
+	if indexEntry.Version == nil {
+		indexEntry.Version = make(map[string]map[int64]objects.HCID)
 	}
-	if _, present := indexEntry.version[nameSeg]; !present {
-		indexEntry.version[nameSeg] = make(map[int64]objects.HCID)
+	if _, present := indexEntry.Version[nameSeg]; !present {
+		indexEntry.Version[nameSeg] = make(map[int64]objects.HCID)
 	}
-	indexEntry.version[nameSeg][versionNumber] = instanceHCID
+	indexEntry.Version[nameSeg][versionNumber] = instanceHCID
 	return indexEntry
 }
 
