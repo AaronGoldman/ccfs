@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"crypto/elliptic"
 	"encoding/hex"
+	"log"
+	"testing"
+
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 	"github.com/AaronGoldman/ccfs/services/localfile"
 	_ "github.com/AaronGoldman/ccfs/services/timeout"
-	"log"
-	"testing"
 )
 
 func init() {

@@ -3,11 +3,12 @@ package kademliadht
 
 import (
 	"bytes"
-	"github.com/AaronGoldman/ccfs/objects"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+
+	"github.com/AaronGoldman/ccfs/objects"
 )
 
 type kademliaservice struct {

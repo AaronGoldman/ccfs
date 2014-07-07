@@ -3,14 +3,15 @@ package multicast
 
 import (
 	"fmt"
-	"github.com/AaronGoldman/ccfs/objects"
-	"github.com/AaronGoldman/ccfs/services/localfile"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/AaronGoldman/ccfs/objects"
+	"github.com/AaronGoldman/ccfs/services/localfile"
 )
 
 type tagfields struct {
@@ -60,8 +61,15 @@ func (m multicastservice) GetCommit(h objects.HKID) (c objects.Commit, err error
 
 }
 
-func (m multicastservice) GetTag(h objects.HKID, namesegment string) (t objects.Tag, err error) {
-	message := fmt.Sprintf("{\"type\":\"tag\", \"hkid\": \"%s\", \"namesegment\": \"%s\"}", h.Hex(), namesegment)
+func (m multicastservice) GetTag(
+	h objects.HKID,
+	namesegment string,
+) (t objects.Tag, err error) {
+	message := fmt.Sprintf(
+		"{\"type\":\"tag\", \"hkid\": \"%s\", \"namesegment\": \"%s\"}",
+		h.Hex(),
+		namesegment,
+	)
 
 	tagchannel := make(chan objects.Tag, 1)
 	m.waitingfortag[h.Hex()+namesegment] = tagchannel
@@ -106,7 +114,8 @@ func (m multicastservice) listenmessage() (err error) {
 			}
 			msg := strings.Trim(string(b), "\x00")
 			//log.Printf("%s", m.conn.LocalAddr())
-			log.Printf("Message that is being called in listen message, %s", msg)
+			log.Printf(
+				"Message that is being called in listen message, %s", msg)
 			m.receivemessage(msg, addr)
 		}
 	}()
@@ -126,7 +135,10 @@ func (m multicastservice) sendmessage(message string) (err error) {
 	return err
 }
 
-func (m multicastservice) receivemessage(message string, addr net.Addr) (err error) {
+func (m multicastservice) receivemessage(
+	message string,
+	addr net.Addr,
+) (err error) {
 	//log.Printf("Received message, %s,\n", message)
 	hkid, hcid, typestring, namesegment, url := parseMessage(message)
 	if url == "" {
@@ -149,7 +161,11 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 				blobchannel <- data
 				//log.Printf("Data: %s\nHCID: %s", data, hcid)
 			} else {
-				log.Printf("%s \nis not present in waiting map, \n%s", hcid.String(), m.waitingforblob)
+				log.Printf(
+					"%s \nis not present in waiting map, \n%v",
+					hcid.String(),
+					m.waitingforblob,
+				)
 			}
 			if objects.Blob(data).Hash().Hex() == hcid.Hex() {
 
@@ -172,7 +188,11 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 				//log.Printf("Tag is present")
 				tagchannel <- t
 			} else {
-				//log.Printf("%s \n is not present in map \n %s", hkid.Hex()+namesegment, m.waitingfortag)
+				//log.Printf(
+				//	"%s \n is not present in map \n %s",
+				//	hkid.Hex()+namesegment,
+				//	m.waitingfortag,
+				//)
 			}
 			if t.Verify() {
 				localfile.Instance.PostTag(t)
@@ -196,7 +216,11 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 					//log.Printf("commit is present")
 					commitchannel <- c
 				} else {
-					//log.Printf("commit %s\n is not present, \n%v", hkid.String(), m.waitingforcommit)
+					//log.Printf(
+					//	"commit %s\n is not present, \n%v",
+					//	hkid.String(),
+					//	m.waitingforcommit,
+					//)
 				}
 				if c.Verify() {
 					localfile.Instance.PostCommit(c)
@@ -212,7 +236,7 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 				log.Printf("key is present")
 				keychannel <- data
 			} else {
-				log.Printf("key is not present, %s", m.waitingforkey)
+				log.Printf("key is not present, %v", m.waitingforkey)
 			}
 			p, err := objects.PrivteKeyFromBytes(data)
 
@@ -227,7 +251,8 @@ func (m multicastservice) receivemessage(message string, addr net.Addr) (err err
 }
 
 func (m multicastservice) geturl(url string) (data []byte, err error) {
-	resp, err := http.Get(url) //Takes the http channel and makes it a channel object
+	resp, err := http.Get(url)
+	//Takes the http channel and makes it a channel object
 	if err != nil {
 		log.Printf("The HTTP Get error is %s", err)
 		return data, err

@@ -3,9 +3,10 @@ package multicast
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services/localfile"
-	"log"
 )
 
 //checks if I have the blob, it returns yes or no

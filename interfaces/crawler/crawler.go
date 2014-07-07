@@ -2,12 +2,13 @@ package crawler
 
 import (
 	"fmt"
-	"github.com/AaronGoldman/ccfs/objects"
-	"github.com/AaronGoldman/ccfs/services"
 	"log"
 	"net/http"
 	"strings"
 	"text/template"
+
+	"github.com/AaronGoldman/ccfs/objects"
+	"github.com/AaronGoldman/ccfs/services"
 )
 
 var queuedTargets map[string]bool

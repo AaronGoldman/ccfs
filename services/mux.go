@@ -3,8 +3,9 @@ package services
 import (
 	"bytes"
 	"fmt"
-	"github.com/AaronGoldman/ccfs/objects"
 	"log"
+
+	"github.com/AaronGoldman/ccfs/objects"
 )
 
 //GetBlob looks up blobs by their HCIDs.

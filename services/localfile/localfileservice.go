@@ -2,12 +2,13 @@ package localfile
 
 import (
 	"fmt"
-	"github.com/AaronGoldman/ccfs/objects"
-	"github.com/AaronGoldman/ccfs/services"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/AaronGoldman/ccfs/objects"
+	"github.com/AaronGoldman/ccfs/services"
 )
 
 //localfileservice is an

@@ -1,8 +1,9 @@
 package multicast
 
 import (
-	"github.com/AaronGoldman/ccfs/objects"
 	"testing"
+
+	"github.com/AaronGoldman/ccfs/objects"
 )
 
 func TestMakeURL(t *testing.T) {

@@ -2,9 +2,10 @@ package timeout
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
-	"time"
 )
 
 type timeoutservice struct{}

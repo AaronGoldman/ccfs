@@ -2,12 +2,13 @@ package appsscript
 
 import (
 	"bytes"
+	"log"
+	"testing"
+
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 	"github.com/AaronGoldman/ccfs/services/localfile"
 	"github.com/AaronGoldman/ccfs/services/timeout"
-	"log"
-	"testing"
 )
 
 func init() {

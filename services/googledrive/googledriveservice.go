@@ -1,13 +1,14 @@
 package googledrive
 
 import (
-	"code.google.com/p/goauth2/oauth"
-	"code.google.com/p/google-api-go-client/drive/v2"
 	"fmt"
-	"github.com/AaronGoldman/ccfs/objects"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"code.google.com/p/goauth2/oauth"
+	"code.google.com/p/google-api-go-client/drive/v2"
+	"github.com/AaronGoldman/ccfs/objects"
 )
 
 func (gds googledriveservice) getChildWithTitle(parentId string, title string) (string, error) {

@@ -3,13 +3,13 @@
 package fuse
 
 import (
-	"bazil.org/fuse"
-	"bazil.org/fuse/fs"
-	//	"fmt"
-	"github.com/AaronGoldman/ccfs/objects"
-	"github.com/AaronGoldman/ccfs/services"
 	"log"
 	"os"
+
+	"bazil.org/fuse"
+	"bazil.org/fuse/fs"
+	"github.com/AaronGoldman/ccfs/objects"
+	"github.com/AaronGoldman/ccfs/services"
 )
 
 type File struct {
