@@ -90,7 +90,7 @@ func (lfs localfileservice) GetTags(h objects.HKID) (tags []objects.Tag, err err
 	//ToDo Validate input
 	directoryEntries, err := ioutil.ReadDir(fmt.Sprintf("bin/tags/%s", h.Hex()))
 	if err != nil {
-		log.Panicln(err)
+		log.Println(err)
 	}
 	log.Println(h)
 	namesegment := ""
