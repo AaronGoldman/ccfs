@@ -331,7 +331,7 @@ func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
 	l, err := services.GetList(d.leaf.(objects.HCID))
 	if err != nil {
-		log.Printf("commit list %s:", err)
+		log.Printf("get list %s:", err)
 		return nil, nil
 	}
 	list_entry, present := l[name] //go through list entries and is it maps to the string you passed in present == 1
@@ -403,6 +403,23 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	var dirDirs = []fuse.Dirent{}
 
 	if d.content_type == "tag" {
+		tags, err := services.GetTags(d.leaf.(objects.HKID))
+		if err != nil {
+			log.Printf("tag %s:", err)
+			return nil, fuse.ENOENT
+		}
+		for _, tag := range tags {
+			name := tag.NameSegment
+			enttype := fuse.DT_Dir
+			if tag.TypeString == "blob" {
+				enttype = fuse.DT_File
+			}
+			dirDirs = append(dirDirs, fuse.Dirent{
+				Inode: fs.GenerateDynamicInode(uint64(d.inode), name),
+				Name:  name,
+				Type:  enttype,
+			})
+		}
 		return dirDirs, nil
 	} else if d.content_type == "commit" {
 		c, err := services.GetCommit(d.leaf.(objects.HKID))
