@@ -72,19 +72,21 @@ func ListFromBytes(listbytes []byte) (newlist List, err error) {
 		}
 		entryTypeString := cols[1]
 		var entryHID HID
-		if entryTypeString == "blob" || entryTypeString == "list" {
+		switch entryTypeString {
+		case "blob", "list":
 			entryHID, err = HcidFromHex(cols[0])
 			if err != nil {
 				return nil, err
 			}
-		} else if entryTypeString == "commit" || entryTypeString == "tag" {
+		case "commit", "tag":
 			entryHID, err = HkidFromHex(cols[0])
 			if err != nil {
 				return nil, err
 			}
-		} else {
+		default:
 			log.Fatalf("Unrecognised type: %s", entryTypeString)
 		}
+
 		entryNameSegment := cols[2]
 		l[entryNameSegment] = entry{entryHID, entryTypeString}
 	}
