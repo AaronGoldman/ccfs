@@ -28,6 +28,7 @@ func Registercontentservice(service contentservice) {
 	Registerblobgeter(service)
 	Registercommitgeter(service)
 	Registertaggeter(service)
+	Registertagsgeter(service)
 	Registerkeygeter(service)
 	Registerblobposter(service)
 	Registercommitposter(service)
@@ -36,16 +37,17 @@ func Registercontentservice(service contentservice) {
 }
 
 type contentservice interface {
-	contentgeter
-	contentposter
-}
-
-type contentgeter interface {
 	blobgeter
 	commitgeter
 	taggeter
+	tagsgeter
 	keygeter
+	blobposter
+	commitposter
+	tagposter
+	keyposter
 }
+
 type blobgeter interface {
 	GetBlob(objects.HCID) (objects.Blob, error)
 }
@@ -62,12 +64,6 @@ type keygeter interface {
 	GetKey(objects.HKID) (objects.Blob, error)
 }
 
-type contentposter interface {
-	blobposter
-	commitposter
-	tagposter
-	keyposter
-}
 type blobposter interface {
 	PostBlob(b objects.Blob) error
 }
