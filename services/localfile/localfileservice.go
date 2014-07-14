@@ -109,9 +109,14 @@ func (lfs localfileservice) GetTags(h objects.HKID) (tags []objects.Tag, err err
 			tag, err := objects.TagFromBytes(data)
 			if err == nil {
 				tags = append(tags, tag)
+			} else {
+				log.Println(err)
 			}
+		} else {
+			log.Panicln(err)
 		}
 	}
+	log.Println(tags)
 	return tags, err
 }
 func (lfs localfileservice) GetKey(h objects.HKID) (objects.Blob, error) {
