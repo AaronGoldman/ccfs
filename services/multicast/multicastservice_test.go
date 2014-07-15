@@ -4,15 +4,16 @@ package multicast
 import (
 	"bytes"
 	"fmt"
+	"log"
+	"net"
+	"testing"
+	"time"
+
 	"github.com/AaronGoldman/ccfs/interfaces/web"
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 	"github.com/AaronGoldman/ccfs/services/localfile"
 	"github.com/AaronGoldman/ccfs/services/timeout"
-	"log"
-	"net"
-	"testing"
-	"time"
 )
 
 var benchmarkRepo objects.HKID

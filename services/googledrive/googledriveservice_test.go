@@ -3,9 +3,10 @@ package googledrive
 
 import (
 	"bytes"
-	"github.com/AaronGoldman/ccfs/objects"
 	"log"
 	"testing"
+
+	"github.com/AaronGoldman/ccfs/objects"
 )
 
 func TestGoogledriveservice_GetBlob(t *testing.T) {

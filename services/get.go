@@ -4,9 +4,10 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"fmt"
-	"github.com/AaronGoldman/ccfs/objects"
 	"log"
 	"strings"
+
+	"github.com/AaronGoldman/ccfs/objects"
 )
 
 //Get retrieves the content objects using HID and path

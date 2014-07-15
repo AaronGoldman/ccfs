@@ -2,9 +2,9 @@ package kademliadht
 
 import (
 	"bytes"
-	//"log"
-	"github.com/AaronGoldman/ccfs/objects"
 	"testing"
+
+	"github.com/AaronGoldman/ccfs/objects"
 )
 
 func TestKademliaserviceBlob(t *testing.T) {
@@ -33,7 +33,13 @@ func TestKademliaserviceTag(t *testing.T) {
 		"TestPostBlob",
 	)
 	if err != nil || !outtag.Verify() /*|| !bytes.Equal(outtag.Hkid(), domainHkid)*/ {
-		t.Errorf("\nExpected:%s\nGot:%s\nErr:%v\nVerify:%v", intag, outtag, err, outtag.Verify())
+		t.Errorf(
+			"\nExpected:%s\nGot:%s\nErr:%v\nVerify:%v",
+			intag,
+			outtag,
+			err,
+			outtag.Verify(),
+		)
 	}
 }
 
@@ -51,7 +57,7 @@ func TestKademliaserviceCommit(t *testing.T) {
 	Instance.PostCommit(incommit)
 	outcommit, err := Instance.GetCommit(repoHkid)
 	if err != nil || !outcommit.Verify() {
-		t.Errorf("\nExpected:%s\nGot:%s\nErr:%s\nVerify:%s", incommit, outcommit, err, outcommit.Verify())
+		t.Errorf("\nExpected:%v\nGot:%v\nErr:%s\nVerify:%t", incommit, outcommit, err, outcommit.Verify())
 	}
 }
 

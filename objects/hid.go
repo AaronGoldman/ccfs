@@ -1,41 +1,37 @@
 package objects
 
 import (
+	"crypto/elliptic"
 	"encoding/hex"
 	"fmt"
+	"log"
+	"math/big"
 )
 
-type HCID []byte
-
-func (hcid HCID) Hex() string {
-	return hex.EncodeToString(hcid)
+type HID interface {
+	Byteser
+	Hexer
 }
+type Byteser interface {
+	Bytes() []byte
+}
+
+type Hexer interface {
+	Hex() string
+}
+
+type HCID []byte
 
 func (hcid HCID) Bytes() []byte {
 	return hcid
 }
 
-type HKID []byte
-
-//Hex reterns the HKID in the form of a hexidesimal string.
-func (hkid HKID) Hex() string {
-	return hex.EncodeToString(hkid)
+func (hcid HCID) Hex() string {
+	return hex.EncodeToString(hcid)
 }
 
-func (hkid HKID) Bytes() []byte {
-	return hkid
-}
-
-func (hkid HKID) String() string {
-	return hkid.Hex()
-}
-
-func HkidFromHex(s string) (HKID, error) {
-	dabytes, err := hex.DecodeString(s)
-	if err == nil {
-		return HKID(dabytes), err
-	}
-	return nil, err
+func (hcid HCID) String() string {
+	return hcid.Hex()
 }
 
 func HcidFromHex(s string) (HCID, error) {
@@ -49,18 +45,94 @@ func HcidFromHex(s string) (HCID, error) {
 	return nil, err
 }
 
-func (hcid HCID) String() string {
-	return hcid.Hex()
+type HKID []byte
+
+func (hkid HKID) Bytes() []byte {
+	return hkid
 }
 
-type HID interface {
-	Byteser
-	Hexer
-}
-type Byteser interface {
-	Bytes() []byte
+//Hex reterns the HKID in the form of a hexidesimal string.
+func (hkid HKID) Hex() string {
+	return hex.EncodeToString(hkid)
 }
 
-type Hexer interface {
-	Hex() string
+func (hkid HKID) String() string {
+	return hkid.Hex()
+}
+
+func GenHKID() HKID {
+	privkey := KeyGen()
+	err := geterPoster.PostKey(privkey)
+	if err != nil {
+		log.Fatalf("Failed to persist Privet Key")
+	}
+	err = geterPoster.PostBlob(elliptic.Marshal(privkey.PublicKey.Curve,
+		privkey.PublicKey.X, privkey.PublicKey.Y))
+	if err != nil {
+		log.Fatalf("Failed to post Public Key")
+	}
+	return privkey.Hkid()
+}
+
+func HkidFromHex(s string) (HKID, error) {
+	dabytes, err := hex.DecodeString(s)
+	if err == nil {
+		return HKID(dabytes), err
+	}
+	return nil, err
+}
+
+func HkidFromD(D big.Int) HKID {
+	priv, err := PrivteKeyFromD(D)
+	key := elliptic.Marshal(priv.PublicKey.Curve,
+		priv.PublicKey.X, priv.PublicKey.Y)
+	hkid := priv.Hkid()
+	err = geterPoster.PostKey(priv) //store privet key
+	if err != nil {
+		log.Panic(err)
+	}
+	err = geterPoster.PostBlob(key) //store public key
+	if err != nil {
+		log.Panic(err)
+	}
+	return hkid
+}
+
+func HkidFromDString(str string, base int) HKID {
+	D, success := new(big.Int).SetString(str, base)
+	if !success {
+		log.Panic(nil)
+	}
+	return HkidFromD(*D)
+}
+
+type parents []HCID
+
+func (p parents) String() string {
+	parentString := ""
+	for _, pHCID := range p {
+		parentString = parentString + "," + pHCID.Hex()
+	}
+	return parentString[1:]
+}
+
+type GeterPoster struct {
+	getPiblicKeyForHkid  func(hkid HKID) PublicKey
+	getPrivateKeyForHkid func(hkid HKID) (k *PrivateKey, err error)
+	PostKey              func(p *PrivateKey) error
+	PostBlob             func(b Blob) error
+}
+
+var geterPoster GeterPoster
+
+func RegisterGeterPoster(
+	getPiblicKeyForHkid func(hkid HKID) PublicKey,
+	getPrivateKeyForHkid func(hkid HKID) (k *PrivateKey, err error),
+	PostKey func(p *PrivateKey) error,
+	PostBlob func(b Blob) error,
+) {
+	geterPoster.getPiblicKeyForHkid = getPiblicKeyForHkid
+	geterPoster.getPrivateKeyForHkid = getPrivateKeyForHkid
+	geterPoster.PostKey = PostKey
+	geterPoster.PostBlob = PostBlob
 }

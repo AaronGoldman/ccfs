@@ -3,14 +3,12 @@
 package fuse
 
 import (
+	"log"
+
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
-	//"fmt"
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
-	"log"
-	//"os"
-	//"os/signal"
 )
 
 type OpenFileHandle struct {

@@ -3,7 +3,6 @@ package localfile
 
 import (
 	"fmt"
-	"github.com/AaronGoldman/ccfs/objects"
 	"io/ioutil"
 	"log"
 	"os"
@@ -11,6 +10,8 @@ import (
 	"path"
 	"path/filepath"
 	"testing"
+
+	"github.com/AaronGoldman/ccfs/objects"
 )
 
 var answerKey = []struct {

@@ -6,14 +6,11 @@
 package fuse
 
 import (
-	"bazil.org/fuse"
-	"bazil.org/fuse/fs"
-	//"fmt"
-	//"github.com/AaronGoldman/ccfs/objects"
-	//"github.com/AaronGoldman/ccfs/services"
 	"log"
 	"os"
-	//"os/signal"
+
+	"bazil.org/fuse"
+	"bazil.org/fuse/fs"
 )
 
 func Start() {

@@ -4,15 +4,16 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/AaronGoldman/ccfs/interfaces/fuse"
-	"github.com/AaronGoldman/ccfs/interfaces/web"
-	"github.com/AaronGoldman/ccfs/objects"
-	"github.com/AaronGoldman/ccfs/services"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/AaronGoldman/ccfs/interfaces/fuse"
+	"github.com/AaronGoldman/ccfs/interfaces/web"
+	"github.com/AaronGoldman/ccfs/objects"
+	"github.com/AaronGoldman/ccfs/services"
 )
 
 func parseFlagsAndTakeAction() {

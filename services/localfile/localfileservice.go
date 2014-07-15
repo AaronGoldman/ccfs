@@ -2,12 +2,13 @@ package localfile
 
 import (
 	"fmt"
-	"github.com/AaronGoldman/ccfs/objects"
-	"github.com/AaronGoldman/ccfs/services"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/AaronGoldman/ccfs/objects"
+	"github.com/AaronGoldman/ccfs/services"
 )
 
 //localfileservice is an
@@ -89,7 +90,7 @@ func (lfs localfileservice) GetTags(h objects.HKID) (tags []objects.Tag, err err
 	//ToDo Validate input
 	directoryEntries, err := ioutil.ReadDir(fmt.Sprintf("bin/tags/%s", h.Hex()))
 	if err != nil {
-		log.Panicln(err)
+		log.Println(err)
 	}
 	log.Println(h)
 	namesegment := ""
@@ -108,9 +109,14 @@ func (lfs localfileservice) GetTags(h objects.HKID) (tags []objects.Tag, err err
 			tag, err := objects.TagFromBytes(data)
 			if err == nil {
 				tags = append(tags, tag)
+			} else {
+				log.Println(err)
 			}
+		} else {
+			log.Panicln(err)
 		}
 	}
+	log.Println(tags)
 	return tags, err
 }
 func (lfs localfileservice) GetKey(h objects.HKID) (objects.Blob, error) {

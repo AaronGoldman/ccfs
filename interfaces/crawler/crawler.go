@@ -2,12 +2,13 @@ package crawler
 
 import (
 	"fmt"
-	"github.com/AaronGoldman/ccfs/objects"
-	"github.com/AaronGoldman/ccfs/services"
 	"log"
 	"net/http"
 	"strings"
 	"text/template"
+
+	"github.com/AaronGoldman/ccfs/objects"
+	"github.com/AaronGoldman/ccfs/services"
 )
 
 var queuedTargets map[string]bool
@@ -84,7 +85,7 @@ func webIndexHandler(w http.ResponseWriter, r *http.Request) {
 		Name Segment: {{range $key, $value:= .NameSeg}}
 			{{$key}}{{template "sliceTemplate" $value}}{{end}}
 		Descendants: {{range $key, $value:= .Descendants}}
-			{{$key}}{{$value}}{{end}}
+			#: {{$value}} HCID: {{$key}}{{end}}
 {{end}}{{define "commitIndexEntryTemplate"}}
 		Name Segment: {{range $key, $value:= .NameSeg}}
 			{{$key}}{{template "sliceTemplate" $value}}{{end}}
@@ -328,16 +329,19 @@ func (indexEntry blobIndexEntry) insertDescendant(
 	return indexEntry
 }
 
-func insertDescendantS(parents []objects.HCID, version int64) {
+func insertDescendantS(
+	parents []objects.HCID,
+	descendant objects.HCID,
+	version int64,
+) {
 	if blobIndex == nil {
 		blobIndex = make(map[string]blobIndexEntry)
 	}
 	for _, entryParent := range parents {
-
 		if _, present := blobIndex[entryParent.Hex()]; !present {
 			blobIndex[entryParent.Hex()] = blobIndexEntry{}
 		}
-		blobIndex[entryParent.Hex()].insertDescendant(version, entryParent)
+		blobIndex[entryParent.Hex()] = blobIndex[entryParent.Hex()].insertDescendant(version, descendant)
 	}
 }
 
@@ -484,7 +488,7 @@ func indexCommit(inCommit objects.Commit) {
 		inCommit.Version,
 		inCommit.Hash(),
 	)
-	insertDescendantS(inCommit.Parents, inCommit.Version)
+	insertDescendantS(inCommit.Parents, inCommit.Hash(), inCommit.Version)
 }
 
 var tagIndex map[string]tagIndexEntry
@@ -511,5 +515,5 @@ func indexTag(inTag objects.Tag) {
 		inTag.NameSegment,
 		inTag.Hash(),
 	)
-	insertDescendantS(inTag.Parents, inTag.Version)
+	insertDescendantS(inTag.Parents, inTag.Hash(), inTag.Version)
 }
