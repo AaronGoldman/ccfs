@@ -140,10 +140,8 @@ func crawlTarget(targ target) {
 	switch targ.typeString {
 	case "commit":
 		err = crawlCommit(targ.hash.(objects.HKID))
-
 	case "list":
 		err = crawlList(targ.hash.(objects.HCID))
-
 	case "blob":
 		err = crawlBlob(targ.hash.(objects.HCID))
 	case "tag":
@@ -154,7 +152,6 @@ func crawlTarget(targ target) {
 		err = crawlhcidTag(targ.hash.(objects.HCID))
 	default:
 	}
-
 	if err != nil {
 		log.Print(err)
 	}

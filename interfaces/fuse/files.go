@@ -5,6 +5,7 @@ package fuse
 import (
 	"log"
 	"os"
+	//"time"
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
@@ -18,11 +19,16 @@ type File struct {
 	parent      *Dir
 	name        string
 	inode       fuse.NodeID
+	//Mtime		time.
 }
 
 func (f File) Attr() fuse.Attr {
 	log.Printf("File attributes requested: %s", f.name)
-	return fuse.Attr{Inode: uint64(f.inode), Mode: f.permission}
+	return fuse.Attr{
+		Inode: uint64(f.inode),
+		Mode:  f.permission,
+		//Mtime: f.Mtime
+	}
 	//log.Println("Attr 0444")
 	//return fuse.Attr{Mode: 0444}
 }
@@ -56,6 +62,7 @@ func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr 
 
 	b, err := services.GetBlob(f.contentHash) //
 	if err != nil {
+		log.Printf("get blob error in opening handel %s", err)
 		return nil, fuse.ENOENT
 	}
 /*switch request.Flags{

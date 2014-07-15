@@ -116,7 +116,7 @@ func (lfs localfileservice) GetTags(h objects.HKID) (tags []objects.Tag, err err
 			log.Panicln(err)
 		}
 	}
-	log.Println(tags)
+	//log.Println(tags)
 	return tags, err
 }
 func (lfs localfileservice) GetKey(h objects.HKID) (objects.Blob, error) {

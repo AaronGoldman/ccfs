@@ -46,8 +46,8 @@ func (o OpenFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadRespo
 }
 
 func (o *OpenFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteResponse, intr fs.Intr) fuse.Error {
-	log.Printf("FileHandle Write handle objectrequested:%+v",o)
-	log.Printf("FileHandle Write request data :%+v", request)
+	log.Printf("Handle Write handle: %+v", o)
+	log.Printf("Handle Write request: %+v", request)
 	start := request.Offset
 	writeData := request.Data
 	//log.Printf("start:%d", start)
@@ -58,7 +58,7 @@ func (o *OpenFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteR
 	lenData := int(start) + (len(writeData))
 	if lenData > int(len(o.buffer)) {
 		//set length and capacity of buffer
-		newbfr := make([]byte, (lenData), (lenData))
+		var newbfr = make([]byte, (lenData), (lenData))
 		copy(newbfr, o.buffer)
 		response.Size = copy(newbfr[start:lenData], writeData)
 		//log.Printf("before copying to o.buffer: %s", newbfr)
@@ -84,10 +84,9 @@ func (o OpenFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse
 }
 
 //func (o OpenfileHandle)
-//////// flush() ////
 func (o OpenFileHandle) Flush(request *fuse.FlushRequest, intr fs.Intr) fuse.Error {
-	log.Printf("FileHandle Flush requested:\n\tName of handle obj:%+v", o)
-	log.Printf("FileHandle Flush requested:\n\tName of request:%+v", request)
+	log.Printf("FileHandle Flush requested:\n\tHandle: %+v", o)
+	log.Printf("FileHandle Flush requested:\n\tRequest: %+v", request)
 	//o.Publish()
 	return nil
 }
