@@ -23,6 +23,10 @@ type Dir struct {
 	inode fuse.NodeID
 }
 
+func (d Dir) Fsync(r *fuse.FsyncRequest, intr fs.Intr) fuse.Error{
+		r.Respond(); // ????
+		return nil;
+}
 //constructor
 func (d Dir) newDir(Name string) *Dir {
 	p := Dir{
@@ -167,7 +171,7 @@ func (d Dir) Create(
 	log.Printf("create node")
 	log.Printf("permission: %s", request.Mode)
 	log.Printf("name: %s", request.Name)
-	request.Flags = fuse.OpenFlags(os.O_RDWR)
+	//request.Flags = fuse.OpenFlags(os.O_RDWR)
 	//request.Dir = 1
 	log.Printf("flags: %s", request.Flags)
 	//   O_RDONLY int = os.O_RDONLY // open the file read-only.
@@ -178,9 +182,11 @@ func (d Dir) Create(
 	//   O_EXCL   int = os.O_EXCL   // used with O_CREATE, file must not exist
 	//   O_SYNC   int = os.O_SYNC   // open for synchronous I/O.
 	//   O_TRUNC  int = os.O_TRUNC  // if possible, truncate file when opened.
+
+
 	node := File{
 		contentHash: objects.Blob{}.Hash(),
-		permission:  request.Mode,
+		permission:  request.Mode, //os.FileMode(0777)
 		parent:      &d,
 		name:        request.Name,
 		inode:       fuse.NodeID(fs.GenerateDynamicInode(uint64(d.inode), request.Name)),
@@ -292,12 +298,12 @@ func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 	//getKey to figure out permissions of the child
 	_, err = services.GetKey(c.Hkid)
 	//perm := fuse.Attr{Mode: 0555}//default read permissions
-	perm := os.FileMode(0555)
+	perm := os.FileMode(0777)
 
 	if err != nil {
 		log.Printf("error not nil; change file Mode %s:", err)
 		//perm =  fuse.Attr{Mode: 0755}
-		perm = os.FileMode(0755)
+		perm = os.FileMode(0555)
 	} else {
 		//log.Printf("no private key %s:", err)
 	}
@@ -396,7 +402,7 @@ func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, 
 }
 
 func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
-	log.Printf("ReadDir requested:\n\tName:%s", d.name)
+	//log.Printf("ReadDir requested:\n\tName:%s", d.name)
 	var l objects.List
 	var err error
 	var dirDirs = []fuse.Dirent{}

@@ -42,7 +42,7 @@ func (f File) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
 //nodeopener interface contains open(). Node may be used for file or directory
 func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr fs.Intr) (fs.Handle, fuse.Error) {
 	log.Printf("Open File")
-	request.Flags = fuse.OpenFlags(os.O_RDWR)
+	//request.Flags = fuse.OpenFlags(os.O_RDWR)
 	log.Printf("request: %+v", request)
 	//request.dir = 0
 	//   O_RDONLY int = os.O_RDONLY // open the file read-only.
@@ -53,10 +53,19 @@ func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr 
 	//   O_EXCL   int = os.O_EXCL   // used with O_CREATE, file must not exist
 	//   O_SYNC   int = os.O_SYNC   // open for synchronous I/O.
 	//   O_TRUNC  int = os.O_TRUNC  // if possible, truncate file when opened.
+
 	b, err := services.GetBlob(f.contentHash) //
 	if err != nil {
 		return nil, fuse.ENOENT
 	}
+/*switch request.Flags{
+		default:
+
+		case 
+		case 
+
+} */
+
 	handle := OpenFileHandle{
 		buffer: b,
 		parent: f.parent,

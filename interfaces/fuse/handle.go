@@ -47,8 +47,9 @@ func (o OpenFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadRespo
 	return nil
 }
 
-func (o OpenFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteResponse, intr fs.Intr) fuse.Error {
-	log.Printf("FileHandle Write requested:\n\t%s", request.Data)
+func (o *OpenFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteResponse, intr fs.Intr) fuse.Error {
+	log.Printf("FileHandle Write handle objectrequested:%+v",o)
+	log.Printf("FileHandle Write request data :%+v", request)
 	start := request.Offset
 	writeData := request.Data
 	//log.Printf("start:%d", start)
@@ -73,6 +74,7 @@ func (o OpenFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteRe
 	log.Printf("write response size: %v", response.Size)
 	err := o.Publish() //get into loop on parent object
 	if err != nil {
+		log.Printf("error publish in write(): %+v", err)
 		return fuse.EIO
 	}
 	return nil
@@ -86,8 +88,9 @@ func (o OpenFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse
 //func (o OpenfileHandle)
 //////// flush() ////
 func (o OpenFileHandle) Flush(request *fuse.FlushRequest, intr fs.Intr) fuse.Error {
-	log.Println("FileHandle Flush requested:\n\tName:", o.name)
-	o.Publish()
+	log.Printf("FileHandle Flush requested:\n\tName of handle obj:%+v", o)
+	log.Printf("FileHandle Flush requested:\n\tName of request:%+v", request)
+	//o.Publish()
 	return nil
 }
 
