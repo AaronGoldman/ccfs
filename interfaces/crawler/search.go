@@ -9,14 +9,19 @@ import (
 	//	"strings"
 
 	"github.com/AaronGoldman/ccfs/objects"
-	//	"github.com/AaronGoldman/ccfs/services"
+	"github.com/AaronGoldman/ccfs/services"
 )
 
 func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 
 	ResponseStruct := struct {
-		Query    string
-		BlobInfo blobIndexEntry
+		Query             string
+		BlobInfo          blobIndexEntry
+		BlobInfoPresent   bool
+		CommitInfo        commitIndexEntry
+		CommitInfoPresent bool
+		TagInfo           tagIndexEntry
+		TagInfoPresent    bool
 	}{}
 
 	parsedURL, err := url.Parse(r.RequestURI)
@@ -26,12 +31,31 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 	ResponseStruct.Query = parsedURL.Query().Get("q")
 	log.Println(ResponseStruct.Query)
 	log.Println(len(ResponseStruct.Query))
-	_, err = objects.HcidFromHex(ResponseStruct.Query)
+	hcid, err := objects.HcidFromHex(ResponseStruct.Query)
 	if err == nil {
 		present := true
-		ResponseStruct.BlobInfo, present = blobIndex[ResponseStruct.Query]
+		ResponseStruct.BlobInfo, ResponseStruct.BlobInfoPresent = blobIndex[ResponseStruct.Query]
 		if !present {
 			log.Println("HID is not present")
+		} else {
+			switch ResponseStruct.BlobInfo.TypeString {
+			case "list":
+			case "commit":
+				commit, err := services.GetCommitForHcid(hcid)
+				if err == nil {
+					ResponseStruct.CommitInfo, ResponseStruct.CommitInfoPresent = commitIndex[commit.Hkid.Hex()]
+				}
+			case "tag":
+				tag, err := services.GetTagForHcid(hcid)
+				if err == nil {
+					ResponseStruct.TagInfo, ResponseStruct.TagInfoPresent = tagIndex[tag.Hkid.Hex()]
+				}
+			case "Repository Key":
+				ResponseStruct.CommitInfo, ResponseStruct.CommitInfoPresent = commitIndex[ResponseStruct.Query]
+			case "Domain Key":
+				ResponseStruct.TagInfo, ResponseStruct.TagInfoPresent = tagIndex[ResponseStruct.Query]
+			default:
+			}
 		}
 		log.Println(err)
 	}
@@ -49,9 +73,11 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 				<input type = "submit" value = "search">
 			</form>
 			</br>
-			Search results for: {{.Query}}
+			{{if .Query}} Search results for: {{.Query}} {{end}}
 			</br>
-			{{.BlobInfo}}
+			{{if .BlobInfoPresent}} {{.BlobInfo}} {{end}}
+			{{if .CommitInfoPresent}} {{.CommitInfo}} {{end}}
+			{{if .TagInfoPresent}} {{.TagInfo}} {{end}}
 		</body>
 	</html>
 			`)
