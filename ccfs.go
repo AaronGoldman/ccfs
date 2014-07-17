@@ -24,7 +24,6 @@ func init() {
 func main() {
 	log.SetFlags(log.Lshortfile)
 
-	crawler.Start()
 	services.Registercontentservice(localfile.Instance)
 	services.Registerblobgeter(timeout.Instance)
 	services.Registertagsgeter(timeout.Instance)
@@ -40,6 +39,7 @@ func main() {
 		services.PostBlob,
 	)
 	parseFlagsAndTakeAction()
+	crawler.Start()
 	in := bufio.NewReader(os.Stdin)
 	_, _ = in.ReadString('\n')
 	return

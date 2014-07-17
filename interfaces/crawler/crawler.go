@@ -7,6 +7,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/AaronGoldman/ccfs/interfaces"
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 )
@@ -23,17 +24,15 @@ func Start() {
 	http.HandleFunc("/crawler/", webCrawlerHandler)
 	http.HandleFunc("/index/", webIndexHandler)
 	http.HandleFunc("/search/", webSearchHandler)
-
+	seedQueue(interfaces.GetLocalSeed())
 }
 
 // This function handles web requests for the crawler
 func webCrawlerHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.SplitN(r.RequestURI[9:], "/", 2)
 	hkidhex := parts[0]
-	h, hexerr := objects.HcidFromHex(hkidhex)
-	if hexerr == nil {
-		seedQueue(h)
-	}
+	hexerr := seedQueue(hkidhex)
+
 	t, err := template.New("WebIndex template").Parse(`Request Statistics:
 	The HID received is: {{.HkidHex}}{{if .Err}}
 	Error Parsing HID: {{.Err}}{{end}}
@@ -75,12 +74,16 @@ func (targ target) String() string {
 }
 
 // This function seeds the queue from a web request
-func seedQueue(h objects.HID) {
-	crawlList(objects.HCID(h.Bytes()))
-	crawlBlob(objects.HCID(h.Bytes()))
-	crawlCommit(objects.HKID(h.Bytes()))
-	crawlhcidCommit(objects.HCID(h.Bytes()))
-	crawlhcidTag(objects.HCID(h.Bytes()))
+func seedQueue(hkidhex string) (err error) {
+	h, hexerr := objects.HcidFromHex(hkidhex)
+	if hexerr == nil {
+		crawlList(objects.HCID(h.Bytes()))
+		crawlBlob(objects.HCID(h.Bytes()))
+		crawlCommit(objects.HKID(h.Bytes()))
+		crawlhcidCommit(objects.HCID(h.Bytes()))
+		crawlhcidTag(objects.HCID(h.Bytes()))
+	}
+	return hexerr
 }
 
 // This function scrapes a target for new targets to add to the queue

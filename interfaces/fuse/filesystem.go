@@ -7,6 +7,7 @@ import (
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
+	"github.com/AaronGoldman/ccfs/interfaces"
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 )
@@ -36,7 +37,7 @@ func startFSintegration() {
 		ccfsUnmount(mountpoint)
 
 	}() //end func
-	fs.Serve(c, FS_from_HKID_string("c09b2765c6fd4b999d47c82f9cdf7f4b659bf7c29487cc0b357b8fc92ac8ad02", mountpoint))
+	fs.Serve(c, FS_from_HKID_string(interfaces.GetLocalSeed(), mountpoint))
 }
 
 type FS struct {
