@@ -15,19 +15,23 @@ import (
 func webIndexHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("Welcome to the web index!\n")))
 	index := struct {
-		Blobs   interface{}
-		Commits interface{}
-		Tags    interface{}
+		NameSegments interface{}
+		Blobs        interface{}
+		Commits      interface{}
+		Tags         interface{}
 	}{
-		Blobs:   blobIndex,
-		Commits: commitIndex,
-		Tags:    tagIndex,
+		NameSegments: nameSegmentIndex,
+		Blobs:        blobIndex,
+		Commits:      commitIndex,
+		Tags:         tagIndex,
 	}
 
 	t, err := template.New("WebIndex template").Parse(
 		`{{define "sliceTemplate"}}{{range $lice:= .}}
 				{{$lice}}{{end}}{{end}}{{define "mapTemplate"}}{{range $key, $value:= .}}
-				Version: {{$key}} HCID: {{$value}}{{end}}{{end}}{{define "blobIndexEntryTemplate"}}
+				Version: {{$key}} HCID: {{$value}}{{end}}{{end}}{{define "nameSegmentIndexEntryTemplate"}}{{range $key, $value:= .}}
+			Type: {{$key.TypeString}} HID: {{$key.Hash}} Count: {{$value}}{{end}}
+{{end}}{{define "blobIndexEntryTemplate"}}
 		Type: {{.TypeString}}
 		Size: {{.Size}}
 		Name Segment: {{range $key, $value:= .NameSeg}}
@@ -44,7 +48,9 @@ func webIndexHandler(w http.ResponseWriter, r *http.Request) {
 			{{$key}}{{template "sliceTemplate" $value}}{{end}}
 		Collection: {{range $key, $value:= .Version}}
 			Name Segment: {{$key}}{{template "mapTemplate" $value}}{{end}}
-{{end}}Blobs	{{range $key, $value:= .Blobs}}
+{{end}}Name Segments	{{range $key, $value:= .NameSegments}}
+	{{$key}}{{template "nameSegmentIndexEntryTemplate" $value}}{{end}}
+Blobs	{{range $key, $value:= .Blobs}}
 	{{$key}}{{template "blobIndexEntryTemplate" $value}}{{end}}
 Commits	{{range $key, $value:= .Commits}}
 	{{$key}}{{template "commitIndexEntryTemplate" $value}}{{end}}
@@ -254,8 +260,8 @@ func indexNameSegment(typeString, targetHex, referingHex, nameSeg string) {
 var nameSegmentIndex map[string]map[nameSegmentIndexEntry]int
 
 type nameSegmentIndexEntry struct {
-	typeString string
-	hash       string
+	TypeString string
+	Hash       string
 }
 
 var blobIndex map[string]blobIndexEntry
