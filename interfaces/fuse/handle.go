@@ -79,7 +79,9 @@ func (o *OpenFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteR
 }
 
 func (o OpenFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse.Error {
-	log.Println("FileHandle Release requested:\n\tName:", o.name)
+	log.Printf("FileHandle Release requested:\n\tHandle: %+v", o)
+	log.Printf("FileHandle Release requested:\n\tRequest: %+v", request)
+	request.Respond()
 	return nil //fuse.ENOENT
 }
 
@@ -88,6 +90,7 @@ func (o OpenFileHandle) Flush(request *fuse.FlushRequest, intr fs.Intr) fuse.Err
 	log.Printf("FileHandle Flush requested:\n\tHandle: %+v", o)
 	log.Printf("FileHandle Flush requested:\n\tRequest: %+v", request)
 	//o.Publish()
+	request.Respond()
 	return nil
 }
 

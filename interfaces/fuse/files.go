@@ -20,17 +20,45 @@ type File struct {
 	name        string
 	inode       fuse.NodeID
 	//Mtime		time.
+	flags  		fuse.OpenFlags
+	size 		uint64
 }
 
 func (f File) Attr() fuse.Attr {
-	log.Printf("File attributes requested: %s", f.name)
-	return fuse.Attr{
+	log.Printf("File attributes requested: %+v", f)
+	att := fuse.Attr{
 		Inode: uint64(f.inode),
-		Mode:  f.permission,
-		//Mtime: f.Mtime
+		Size: f.size, 
+		Blocks: f.size / 4096,
+		// 	Atime:0001-01-01 00:00:00 +0000 UTC 
+	// 	Mtime:0001-01-01 00:00:00 +0000 UTC 
+	// 	Ctime:0001-01-01 00:00:00 +0000 UTC 
+	// 	Crtime:0001-01-01 00:00:00 +0000 UTC 
+		Mode:  f.permission,		
+		Uid: 1000, //TODO Uid and Gid shouldn't be hardcoded .CCFS_store
+		Gid: 1000,
+		// 	Rdev:0
+		// 	Nlink:0 
+		Flags: uint32(f.flags),
 	}
-	//log.Println("Attr 0444")
-	//return fuse.Attr{Mode: 0444}
+ 
+	log.Printf("file atributes: %+v", att)
+	return att
+// files.go:31: file atributes: 
+// {
+// 	Inode:10526737836144204806 
+// 	Size:0 Blocks:0 				// size should be 
+// 	Atime:0001-01-01 00:00:00 +0000 UTC 
+// 	Mtime:0001-01-01 00:00:00 +0000 UTC 
+// 	Ctime:0001-01-01 00:00:00 +0000 UTC 
+// 	Crtime:0001-01-01 00:00:00 +0000 UTC 
+// 	Mode:-rw-r--r-- 
+// 	Nlink:0 
+// 	Uid:0 
+// 	Gid:0 
+// 	Rdev:0 
+// 	Flags:0
+// }
 }
 
 func (f File) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
@@ -48,7 +76,6 @@ func (f File) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
 //nodeopener interface contains open(). Node may be used for file or directory
 func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr fs.Intr) (fs.Handle, fuse.Error) {
 	log.Printf("Open File")
-	//request.Flags = fuse.OpenFlags(os.O_RDWR)
 	log.Printf("request: %+v", request)
 	//request.dir = 0
 	//   O_RDONLY int = os.O_RDONLY // open the file read-only.
@@ -65,13 +92,13 @@ func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr 
 		log.Printf("get blob error in opening handel %s", err)
 		return nil, fuse.ENOENT
 	}
-/*switch request.Flags{
-		default:
+	// switch request.Flags{
+	// 		default:
+	// 		case O_RDONLY:
 
-		case 
-		case 
+	// 		case:
 
-} */
+	// }
 
 	handle := OpenFileHandle{
 		buffer: b,

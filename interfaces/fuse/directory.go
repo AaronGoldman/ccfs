@@ -24,10 +24,11 @@ type Dir struct {
 	inode fuse.NodeID
 }
 
-func (d Dir) Fsync(r *fuse.FsyncRequest, intr fs.Intr) fuse.Error{
-		r.Respond(); // ????
-		return nil;
+func (d Dir) Fsync(r *fuse.FsyncRequest, intr fs.Intr) fuse.Error {
+	r.Respond() // ????
+	return nil
 }
+
 //constructor
 func (d Dir) newDir(Name string) *Dir {
 	p := Dir{
@@ -183,14 +184,13 @@ func (d Dir) Create(
 	//   O_EXCL   int = os.O_EXCL   // used with O_CREATE, file must not exist
 	//   O_SYNC   int = os.O_SYNC   // open for synchronous I/O.
 	//   O_TRUNC  int = os.O_TRUNC  // if possible, truncate file when opened.
-
-
 	node := File{
 		contentHash: objects.Blob{}.Hash(),
 		permission:  request.Mode, //os.FileMode(0777)
 		parent:      &d,
 		name:        request.Name,
 		inode:       fuse.NodeID(fs.GenerateDynamicInode(uint64(d.inode), request.Name)),
+		size: 				0,
 	}
 	handle := OpenFileHandle{
 		buffer: []byte{},
@@ -198,6 +198,32 @@ func (d Dir) Create(
 		name:   request.Name,
 		inode:  node.inode,
 	}
+
+	switch {
+	default:
+		log.Printf("unexpected requests.flag error:%+v", request.Flags)
+		return nil, nil, fuse.ENOSYS
+	// case O_RDONLY, O_RDWR, O_APPEND, O_SYNC: //OPEN FILE if it exists
+	// 		if err != nil {
+	// 		return nil, fuse.ENOENT
+	// 		}
+	case os.O_EXCL&int(request.Flags) == os.O_EXCL:
+		_, e := d.Lookup(request.Name, intr)
+		if e == nil {
+			return nil, nil, fuse.EEXIST
+		}
+		fallthrough //-- file doesn't exist
+	case os.O_CREATE&int(request.Flags) == os.O_CREATE:
+		return node, handle, nil
+		// case O_WRONLY, O_APPEND: //OPEN AN EMPTY FILE
+		// 		if err == nil {
+		// 	 	return nil, fuse.EEXIST
+		// 		 }
+		//case O_TRUNC:
+		//return ENOSYS
+
+	}
+
 	d.openHandles[handle.name] = true
 	return node, handle, nil
 }
@@ -308,13 +334,21 @@ func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 	} else {
 		//log.Printf("no private key %s:", err)
 	}
+
+	
 	if list_entry.TypeString == "blob" {
+			b, err := services.GetBlob(list_entry.Hash.(objects.HCID))
+		sizeBlob := 0
+		if err == nil{
+			sizeBlob = len(b)
+		}
 		return File{
 			contentHash: list_entry.Hash.(objects.HCID),
 			permission:  perm,
 			name:        name,
 			parent:      &d,
 			inode:       nodeID,
+			size:        uint64(sizeBlob),
 		}, nil
 	}
 	ino := fuse.NodeID(1)
@@ -344,6 +378,13 @@ func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node,
 	if !present {
 		return nil, fuse.ENOENT
 	}
+
+		b, err := services.GetBlob(list_entry.Hash.(objects.HCID))
+		sizeBlob := 0
+		if err == nil{
+			sizeBlob = len(b)
+		}
+
 	if list_entry.TypeString == "blob" {
 		return File{
 			contentHash: list_entry.Hash.(objects.HCID),
@@ -351,6 +392,7 @@ func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node,
 			parent:      &d,
 			name:        name,
 			inode:       nodeID,
+			size: 			uint64(sizeBlob),
 		}, nil
 	}
 	return Dir{
@@ -383,12 +425,18 @@ func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, 
 		log.Printf("no private key %s:", err)
 	}
 	if t.TypeString == "blob" {
+		b, err := services.GetBlob(t.HashBytes.(objects.HCID))
+		sizeBlob := 0
+		if err == nil{
+			sizeBlob = len(b)
+		}
 		return File{
 			contentHash: t.HashBytes.(objects.HCID),
 			permission:  perm,
 			name:        name,
 			parent:      &d,
 			inode:       nodeID,
+			size: 			uint64(sizeBlob),
 		}, nil
 	}
 	return Dir{
