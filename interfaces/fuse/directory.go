@@ -190,7 +190,7 @@ func (d Dir) Create(
 		parent:      &d,
 		name:        request.Name,
 		inode:       fuse.NodeID(fs.GenerateDynamicInode(uint64(d.inode), request.Name)),
-		size: 				0,
+		size:        0,
 	}
 	handle := OpenFileHandle{
 		buffer: []byte{},
@@ -335,11 +335,10 @@ func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 		//log.Printf("no private key %s:", err)
 	}
 
-	
 	if list_entry.TypeString == "blob" {
-			b, err := services.GetBlob(list_entry.Hash.(objects.HCID))
+		b, err := services.GetBlob(list_entry.Hash.(objects.HCID))
 		sizeBlob := 0
-		if err == nil{
+		if err == nil {
 			sizeBlob = len(b)
 		}
 		return File{
@@ -379,11 +378,11 @@ func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node,
 		return nil, fuse.ENOENT
 	}
 
-		b, err := services.GetBlob(list_entry.Hash.(objects.HCID))
-		sizeBlob := 0
-		if err == nil{
-			sizeBlob = len(b)
-		}
+	b, err := services.GetBlob(list_entry.Hash.(objects.HCID))
+	sizeBlob := 0
+	if err == nil {
+		sizeBlob = len(b)
+	}
 
 	if list_entry.TypeString == "blob" {
 		return File{
@@ -392,7 +391,7 @@ func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node,
 			parent:      &d,
 			name:        name,
 			inode:       nodeID,
-			size: 			uint64(sizeBlob),
+			size:        uint64(sizeBlob),
 		}, nil
 	}
 	return Dir{
@@ -427,7 +426,7 @@ func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, 
 	if t.TypeString == "blob" {
 		b, err := services.GetBlob(t.HashBytes.(objects.HCID))
 		sizeBlob := 0
-		if err == nil{
+		if err == nil {
 			sizeBlob = len(b)
 		}
 		return File{
@@ -436,7 +435,7 @@ func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, 
 			name:        name,
 			parent:      &d,
 			inode:       nodeID,
-			size: 			uint64(sizeBlob),
+			size:        uint64(sizeBlob),
 		}, nil
 	}
 	return Dir{

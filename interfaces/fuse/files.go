@@ -20,45 +20,45 @@ type File struct {
 	name        string
 	inode       fuse.NodeID
 	//Mtime		time.
-	flags  		fuse.OpenFlags
-	size 		uint64
+	flags fuse.OpenFlags
+	size  uint64
 }
 
 func (f File) Attr() fuse.Attr {
 	log.Printf("File attributes requested: %+v", f)
 	att := fuse.Attr{
-		Inode: uint64(f.inode),
-		Size: f.size, 
+		Inode:  uint64(f.inode),
+		Size:   f.size,
 		Blocks: f.size / 4096,
-		// 	Atime:0001-01-01 00:00:00 +0000 UTC 
-	// 	Mtime:0001-01-01 00:00:00 +0000 UTC 
-	// 	Ctime:0001-01-01 00:00:00 +0000 UTC 
-	// 	Crtime:0001-01-01 00:00:00 +0000 UTC 
-		Mode:  f.permission,		
-		Uid: 1000, //TODO Uid and Gid shouldn't be hardcoded .CCFS_store
-		Gid: 1000,
+		// 	Atime:0001-01-01 00:00:00 +0000 UTC
+		// 	Mtime:0001-01-01 00:00:00 +0000 UTC
+		// 	Ctime:0001-01-01 00:00:00 +0000 UTC
+		// 	Crtime:0001-01-01 00:00:00 +0000 UTC
+		Mode: f.permission,
+		Uid:  1000, //TODO Uid and Gid shouldn't be hardcoded .CCFS_store
+		Gid:  1000,
 		// 	Rdev:0
-		// 	Nlink:0 
+		// 	Nlink:0
 		Flags: uint32(f.flags),
 	}
- 
+
 	log.Printf("file atributes: %+v", att)
 	return att
-// files.go:31: file atributes: 
-// {
-// 	Inode:10526737836144204806 
-// 	Size:0 Blocks:0 				// size should be 
-// 	Atime:0001-01-01 00:00:00 +0000 UTC 
-// 	Mtime:0001-01-01 00:00:00 +0000 UTC 
-// 	Ctime:0001-01-01 00:00:00 +0000 UTC 
-// 	Crtime:0001-01-01 00:00:00 +0000 UTC 
-// 	Mode:-rw-r--r-- 
-// 	Nlink:0 
-// 	Uid:0 
-// 	Gid:0 
-// 	Rdev:0 
-// 	Flags:0
-// }
+	// files.go:31: file atributes:
+	// {
+	// 	Inode:10526737836144204806
+	// 	Size:0 Blocks:0 				// size should be
+	// 	Atime:0001-01-01 00:00:00 +0000 UTC
+	// 	Mtime:0001-01-01 00:00:00 +0000 UTC
+	// 	Ctime:0001-01-01 00:00:00 +0000 UTC
+	// 	Crtime:0001-01-01 00:00:00 +0000 UTC
+	// 	Mode:-rw-r--r--
+	// 	Nlink:0
+	// 	Uid:0
+	// 	Gid:0
+	// 	Rdev:0
+	// 	Flags:0
+	// }
 }
 
 func (f File) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
