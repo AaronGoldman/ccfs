@@ -31,7 +31,9 @@ keys/*
 bin/*
 mountpoint/*
 
-
+# The Binary
+ccfs
+ccfs.test
 # vim stuff
 
 *.swn
