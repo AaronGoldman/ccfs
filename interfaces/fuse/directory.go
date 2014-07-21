@@ -184,6 +184,7 @@ func (d Dir) Create(
 	//   O_EXCL   int = os.O_EXCL   // used with O_CREATE, file must not exist
 	//   O_SYNC   int = os.O_SYNC   // open for synchronous I/O.
 	//   O_TRUNC  int = os.O_TRUNC  // if possible, truncate file when opened.
+
 	node := File{
 		contentHash: objects.Blob{}.Hash(),
 		permission:  request.Mode, //os.FileMode(0777)
@@ -454,8 +455,9 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	var l objects.List
 	var err error
 	var dirDirs = []fuse.Dirent{}
-
-	if d.content_type == "tag" {
+	switch d.content_type {
+	case "tag":
+		//if d.content_type == "tag" {
 		tags, err := services.GetTags(d.leaf.(objects.HKID))
 		if err != nil {
 			log.Printf("tag %s:", err)
@@ -464,17 +466,24 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 		for _, tag := range tags {
 			name := tag.NameSegment
 			enttype := fuse.DT_Dir
-			if tag.TypeString == "blob" {
+			switch tag.TypeString {
+			case "blob":
+				//if tag.TypeString == "blob" {
 				enttype = fuse.DT_File
+				fallthrough
+			//}
+			case "list", "commit", "tag":
+				dirDirs = append(dirDirs, fuse.Dirent{
+					Inode: fs.GenerateDynamicInode(uint64(d.inode), name),
+					Name:  name,
+					Type:  enttype,
+				})
+			default:
 			}
-			dirDirs = append(dirDirs, fuse.Dirent{
-				Inode: fs.GenerateDynamicInode(uint64(d.inode), name),
-				Name:  name,
-				Type:  enttype,
-			})
 		}
 		return dirDirs, nil
-	} else if d.content_type == "commit" {
+	case "commit":
+		//} else if d.content_type == "commit" {
 		c, err := services.GetCommit(d.leaf.(objects.HKID))
 		if err != nil {
 			log.Printf("commit %s:", err)
@@ -485,14 +494,15 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 			log.Printf("commit list %s:", err)
 			return nil, fuse.ENOENT
 		}
-
-	} else if d.content_type == "list" {
+	case "list":
+		//} else if d.content_type == "list" {
 		l, err = services.GetList(d.leaf.(objects.HCID))
 		if err != nil {
 			log.Printf("list %s:", err)
 			return nil, fuse.ENOENT
 		}
-	} else {
+	default:
+		//} else {
 		return nil, fuse.ENOENT
 	}
 

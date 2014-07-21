@@ -92,13 +92,6 @@ func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr 
 		log.Printf("get blob error in opening handel %s", err)
 		return nil, fuse.ENOENT
 	}
-	// switch request.Flags{
-	// 		default:
-	// 		case O_RDONLY:
-
-	// 		case:
-
-	// }
 
 	handle := OpenFileHandle{
 		buffer: b,
