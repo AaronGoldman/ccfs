@@ -138,7 +138,19 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 					{{template "VersionTemp" .CommitInfo.Version}}
 				{{end}}
 				{{if .TagInfoPresent}}
-					{{.TagInfo}}
+					<dl>
+						<dt>Aliases: </dt>
+						<dd>{{template "NameSegTemp" .TagInfo.NameSeg}}</dd>
+						<dt>Sub Domains: </dt>
+						<dd>
+							<dl>
+								{{range $key, $value := .TagInfo.Version}}
+									<dt>{{$key}}: </dt>
+									<dd>{{template "VersionTemp" $value}}</dd>
+								{{end}}
+							</dl>
+						</dd>
+					</dl>
 				{{end}}
 			</dl>
 		</body>
