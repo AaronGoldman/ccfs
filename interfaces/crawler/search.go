@@ -89,10 +89,38 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 			</br>
 			{{if .Query}} Search results for: {{.Query}} {{end}}
 			</br>
-			{{if .NameSegmentInfoPresent}} {{.NameSegmentInfo}} {{end}}
-			{{if .BlobInfoPresent}} {{.BlobInfo}} {{end}}
+			</br>
+			<dl>
+			{{if .NameSegmentInfoPresent}}
+			<ul>
+			{{range $key, $value:= .NameSegmentInfo}}
+			<li>
+			{{$key.TypeString}}: <a href= "/b/{{$key.Hash}}">{{$key.Hash}}</a>
+			</li>
+			{{end}}
+			</ul>
+			{{end}}
+			{{if .BlobInfoPresent}}
+				</br>
+				{{.BlobInfo.TypeString}}[{{.BlobInfo.Size}}]:
+				<dl>
+					{{range $key, $value := .BlobInfo.NameSeg}}
+					<dt> {{$key}}: </dt>
+						{{range $key1:= $value}}
+						<dd> <a href= "/b/{{$key1}}">{{$key1}}</a> </dd>
+						{{end}}
+					{{end}}
+				</dl>
+				<dl>
+					{{range $key, $value := .BlobInfo.Descendants}}
+					<dt> <a href= "/search/?q={{$value}}"> {{$key}}</a>:
+					 <a href= "/b/{{$value}}">{{$value}}</a></dt>
+					{{end}}
+				</dl>
+			{{end}}
 			{{if .CommitInfoPresent}} {{.CommitInfo}} {{end}}
 			{{if .TagInfoPresent}} {{.TagInfo}} {{end}}
+			</dl>
 		</body>
 	</html>
 			`)

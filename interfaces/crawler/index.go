@@ -73,7 +73,7 @@ type blobIndexEntry struct {
 	TypeString  string
 	Size        int
 	NameSeg     map[ /*nameSeg*/ string] /*referringHID*/ []string
-	Descendants map[ /*referringHCID*/ string] /*versionNumber*/ int64
+	Descendants map[ /*versionNumber*/ int64] /*referringHCID*/ string
 }
 
 func (indexEntry blobIndexEntry) insertSize(size int) blobIndexEntry {
@@ -109,10 +109,10 @@ func (indexEntry blobIndexEntry) insertDescendant(
 	descendantHCID objects.HCID,
 ) blobIndexEntry {
 	if indexEntry.Descendants == nil {
-		indexEntry.Descendants = make(map[string]int64)
+		indexEntry.Descendants = make(map[int64]string)
 	}
-	if _, present := indexEntry.Descendants[descendantHCID.Hex()]; !present {
-		indexEntry.Descendants[descendantHCID.Hex()] = versionNumber
+	if _, present := indexEntry.Descendants[versionNumber]; !present {
+		indexEntry.Descendants[versionNumber] = descendantHCID.Hex()
 	}
 
 	return indexEntry
