@@ -2,26 +2,27 @@ package crawler
 
 import (
 	"fmt"
-	"github.com/AaronGoldman/ccfs/objects"
-	"github.com/AaronGoldman/ccfs/services"
 	"html/template"
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
+
+	"github.com/AaronGoldman/ccfs/objects"
+	"github.com/AaronGoldman/ccfs/services"
 )
 
 func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 
 	ResponseStruct := struct {
-		Query                  string
-		NameSegmentInfo        map[nameSegmentIndexEntry]int
-		NameSegmentInfoPresent bool
-		BlobInfo               blobIndexEntry
-		BlobInfoPresent        bool
-		CommitInfo             commitIndexEntry
-		CommitInfoPresent      bool
-		TagInfo                tagIndexEntry
-		TagInfoPresent         bool
+		Query             string
+		NameSegmentInfos  map[string]map[nameSegmentIndexEntry]int
+		BlobInfo          blobIndexEntry
+		BlobInfoPresent   bool
+		CommitInfo        commitIndexEntry
+		CommitInfoPresent bool
+		TagInfo           tagIndexEntry
+		TagInfoPresent    bool
 	}{}
 
 	parsedURL, err := url.Parse(r.RequestURI)
@@ -29,8 +30,6 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	ResponseStruct.Query = parsedURL.Query().Get("q")
-	log.Println(ResponseStruct.Query)
-	log.Println(len(ResponseStruct.Query))
 	hcid, err := objects.HcidFromHex(ResponseStruct.Query)
 	if err == nil {
 		ResponseStruct.BlobInfo, ResponseStruct.BlobInfoPresent =
@@ -68,11 +67,16 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
-	ResponseStruct.NameSegmentInfo,
-		ResponseStruct.NameSegmentInfoPresent =
-		nameSegmentIndex[ResponseStruct.Query]
-	if !ResponseStruct.NameSegmentInfoPresent {
-		log.Println("Name Segment is not present")
+	nameSegFields := strings.Fields(ResponseStruct.Query)
+	ResponseStruct.NameSegmentInfos = make(map[string]map[nameSegmentIndexEntry]int)
+	for nameSegment, nameSegEntry := range nameSegmentIndex {
+		for _, nameSegField := range nameSegFields {
+			present := strings.Contains(nameSegment, nameSegField)
+			if present {
+				ResponseStruct.NameSegmentInfos[nameSegment] = nameSegEntry
+				break
+			}
+		}
 	}
 
 	t, err := template.New("WebSearch template").Parse(`
@@ -114,15 +118,23 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 			{{end}}
 			</br>
 			<dl>
-				{{if .NameSegmentInfoPresent}}
-					<ul>
-						{{range $key, $value:= .NameSegmentInfo}}
-							<li>
-								{{$key.TypeString}}:
-								<a href= "/b/{{$key.Hash}}">{{$key.Hash}}</a>
-							</li>
-						{{end}}
-					</ul>
+				{{with .NameSegmentInfos}}
+					{{range $key1, $value1:= .}}
+						{{$key1}}
+						<ul>
+							{{range $key, $value:= $value1}}
+								<li>
+									<a href= "/search/?q={{$key.Hash}}">
+									{{$key.TypeString}}
+									</a>:
+									<a href= "/b/{{$key.Hash}}">
+									{{$key.Hash}}
+									</a>
+									{{$value}}
+								</li>
+							{{end}}
+						</ul>
+					{{end}}
 				{{end}}
 				{{if .BlobInfoPresent}}
 					</br>

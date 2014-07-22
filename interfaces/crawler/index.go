@@ -36,6 +36,8 @@ func webIndexHandler(w http.ResponseWriter, r *http.Request) {
 		Size: {{.Size}}
 		Name Segment: {{range $key, $value:= .NameSeg}}
 			{{$key}}{{template "sliceTemplate" $value}}{{end}}
+		Referring Commits: {{range $key:= .RefCommits}}
+			{{$key}}{{end}}
 		Collection: {{.Collection}}
 		Descendants: {{range $key, $value:= .Descendants}}
 			Version: {{$value}} HCID: {{$key}}{{end}}
@@ -71,9 +73,10 @@ Tags		{{range $key, $value:= .Tags}}
 }
 
 type blobIndexEntry struct {
-	TypeString  string
-	Size        int
-	NameSeg     map[ /*nameSeg*/ string] /*referringHID*/ []string
+	TypeString string
+	Size       int
+	NameSeg    map[ /*nameSeg*/ string] /*referringHCID*/ []string
+	RefCommits/*referringHICD*/ []string
 	Collection  string
 	Descendants map[ /*versionNumber*/ int64] /*referringHCID*/ string
 }
@@ -108,6 +111,14 @@ func (indexEntry blobIndexEntry) insertNameSegment(
 
 func (indexEntry blobIndexEntry) insertCollection(collectionKey string) blobIndexEntry {
 	indexEntry.Collection = collectionKey
+	return indexEntry
+}
+
+func (indexEntry blobIndexEntry) insertRefCommits(refCommit string) blobIndexEntry {
+	indexEntry.RefCommits = append(
+		indexEntry.RefCommits,
+		refCommit,
+	)
 	return indexEntry
 }
 
@@ -309,6 +320,9 @@ func indexCommit(inCommit objects.Commit) {
 		blobIndex[inCommit.Hkid.Hex()].insertType("Repository")
 	blobIndex[hashHex] =
 		blobIndex[hashHex].insertCollection(inCommit.Hkid.Hex())
+	blobIndex[inCommit.ListHash.Hex()] =
+		blobIndex[inCommit.ListHash.Hex()].insertRefCommits(hashHex)
+
 	if commitIndex == nil {
 		commitIndex = make(map[string]commitIndexEntry)
 	}
