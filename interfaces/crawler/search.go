@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"unicode"
 
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
@@ -38,15 +39,16 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println("HID is not present")
 		} else {
 			switch ResponseStruct.BlobInfo.TypeString {
-			case "list":
-			case "commit":
+			case "Blob":
+			case "List":
+			case "Commit":
 				commit, err := services.GetCommitForHcid(hcid)
 				if err == nil {
 					ResponseStruct.CommitInfo,
 						ResponseStruct.CommitInfoPresent =
 						commitIndex[commit.Hkid.Hex()]
 				}
-			case "tag":
+			case "Tag":
 				tag, err := services.GetTagForHcid(hcid)
 				if err == nil {
 					ResponseStruct.TagInfo, ResponseStruct.TagInfoPresent =
@@ -59,7 +61,7 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 				ResponseStruct.TagInfo, ResponseStruct.TagInfoPresent =
 					tagIndex[ResponseStruct.Query]
 			default:
-				log.Printf("Unrecognized Type",
+				log.Printf("Unrecognized Type %s",
 					ResponseStruct.BlobInfo.TypeString,
 				)
 			}
@@ -67,7 +69,7 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
-	nameSegFields := strings.Fields(ResponseStruct.Query)
+	nameSegFields := strings.FieldsFunc(ResponseStruct.Query, isSeperator)
 	ResponseStruct.NameSegmentInfos = make(map[string]map[nameSegmentIndexEntry]int)
 	for nameSegment, nameSegEntry := range nameSegmentIndex {
 		for _, nameSegField := range nameSegFields {
@@ -79,7 +81,11 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	t, err := template.New("WebSearch template").Parse(`
+	t, err := template.New("WebSearch template").Funcs(
+		template.FuncMap{
+			"getCuratorsofBlob": getCuratorsofBlob,
+		},
+	).Parse(`
 	{{define "NameSegTemp"}}
 		<dl>
 			{{range $key, $value := .}}
@@ -99,6 +105,17 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 				</dt>
 			{{end}}
 		</dl>
+	{{end}}
+	{{define "BlobInfoTemp"}}
+		{{.TypeString}}[{{.Size}}]:
+			{{with .SignedBy}}
+				<a href= "/search/?q={{.}}">{{.}}</a>:
+			{{end}}
+		{{template "NameSegTemp" .NameSeg}}
+			{{range $key, $value := getCuratorsofBlob .Query}}
+				Curators: <a href= "/{{$value}}/{{$key}}">{{$key}}</a>
+			{{end}}
+		{{template "VersionTemp" .Descendants}}
 	{{end}}
 	<html>
 		<head>
@@ -138,12 +155,7 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 				{{end}}
 				{{if .BlobInfoPresent}}
 					</br>
-					{{.BlobInfo.TypeString}}[{{.BlobInfo.Size}}]:
-					{{with .BlobInfo.Collection}}
-					<a href= "/search/?q={{.}}">{{.}}</a>:
-					{{end}}
-					{{template "NameSegTemp" .BlobInfo.NameSeg}}
-					{{template "VersionTemp" .BlobInfo.Descendants}}
+					{{template "BlobInfoTemp" .BlobInfo}}
 				{{end}}
 				{{if .CommitInfoPresent}}
 					{{template "NameSegTemp" .CommitInfo.NameSeg}}
@@ -180,4 +192,44 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		t.Execute(w, ResponseStruct)
 	}
+}
+
+func getCuratorsofBlob(hcidString string) map[string]string {
+	info, present := blobIndex[hcidString]
+	if !present {
+		return make(map[string]string)
+	}
+	curators := make(map[string]string)
+
+	for _, hidValue := range info.RefCommits {
+		hidInfo, present := blobIndex[hidValue]
+		if !present {
+			continue
+		}
+		curators[hidInfo.SignedBy] = "r"
+	}
+
+	for _, hidValues := range info.NameSeg {
+		for _, hidValue := range hidValues {
+			segInfo, present := blobIndex[hidValue]
+			if !present {
+				continue
+			}
+			switch segInfo.TypeString {
+			case "List":
+				for curator, t := range getCuratorsofBlob(hidValue) {
+					curators[curator] = t
+				}
+			case "Tag":
+				curators[segInfo.SignedBy] = "d"
+			default:
+				log.Printf("cannot switch on typestring %s", segInfo.TypeString)
+			}
+		}
+	}
+	return curators
+}
+
+func isSeperator(c rune) bool {
+	return !unicode.IsLetter(c) && !unicode.IsNumber(c)
 }

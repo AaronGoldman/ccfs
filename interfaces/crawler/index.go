@@ -38,7 +38,7 @@ func webIndexHandler(w http.ResponseWriter, r *http.Request) {
 			{{$key}}{{template "sliceTemplate" $value}}{{end}}
 		Referring Commits: {{range $key:= .RefCommits}}
 			{{$key}}{{end}}
-		Collection: {{.Collection}}
+		Signed By: {{.SignedBy}}
 		Descendants: {{range $key, $value:= .Descendants}}
 			Version: {{$value}} HCID: {{$key}}{{end}}
 {{end}}{{define "commitIndexEntryTemplate"}}
@@ -76,8 +76,8 @@ type blobIndexEntry struct {
 	TypeString string
 	Size       int
 	NameSeg    map[ /*nameSeg*/ string] /*referringHCID*/ []string
-	RefCommits/*referringHICD*/ []string
-	Collection  string
+	RefCommits/*referringHCID*/ []string
+	SignedBy    string
 	Descendants map[ /*versionNumber*/ int64] /*referringHCID*/ string
 }
 
@@ -110,7 +110,7 @@ func (indexEntry blobIndexEntry) insertNameSegment(
 }
 
 func (indexEntry blobIndexEntry) insertCollection(collectionKey string) blobIndexEntry {
-	indexEntry.Collection = collectionKey
+	indexEntry.SignedBy = collectionKey
 	return indexEntry
 }
 
@@ -132,7 +132,6 @@ func (indexEntry blobIndexEntry) insertDescendant(
 	if _, present := indexEntry.Descendants[versionNumber]; !present {
 		indexEntry.Descendants[versionNumber] = descendantHCID.Hex()
 	}
-
 	return indexEntry
 }
 
