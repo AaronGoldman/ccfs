@@ -215,6 +215,7 @@ func (d Dir) Create(
 		}
 		fallthrough //-- file doesn't exist
 	case os.O_CREATE&int(request.Flags) == os.O_CREATE:
+		d.openHandles[handle.name] = true
 		return node, handle, nil
 		// case O_WRONLY, O_APPEND: //OPEN AN EMPTY FILE
 		// 		if err == nil {
@@ -222,11 +223,8 @@ func (d Dir) Create(
 		// 		 }
 		//case O_TRUNC:
 		//return ENOSYS
-
 	}
-
-	d.openHandles[handle.name] = true
-	return node, handle, nil
+	//return node, handle, nil
 }
 
 func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error) {

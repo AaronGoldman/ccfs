@@ -45,6 +45,14 @@ func (l List) String() string {
 	return s[:len(s)-1]
 }
 
+func (l List) Log() {
+	log.Printf(
+		"List %s\n-----BEGIN LIST-------\n%q\n-------END LIST-------",
+		l.Hash(),
+		l,
+	)
+}
+
 func (l List) Bytes() []byte {
 	return []byte(l.String())
 }

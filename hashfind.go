@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"hash"
 	"io"
 	"log"
 	"os"
@@ -40,7 +39,7 @@ func (hashfinder) hashfile(filepath string) []byte {
 	defer fi.Close()
 
 	buf := make([]byte, 1024)
-	var h hash.Hash = sha256.New()
+	var h = sha256.New()
 	for {
 		n, err := fi.Read(buf)
 		if err != nil && err != io.EOF {
@@ -53,7 +52,7 @@ func (hashfinder) hashfile(filepath string) []byte {
 		}
 		h.Write(buf[:n])
 	}
-	sbuf := make([]byte, 0)
+	var sbuf []byte
 	sbuf = h.Sum(sbuf)
 	return sbuf
 }

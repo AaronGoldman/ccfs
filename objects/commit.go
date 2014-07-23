@@ -7,13 +7,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"hash"
 	"log"
 	"strconv"
 	"strings"
 	"time"
 )
 
+//Commit is the type for defining a repository at a moment in time
 type Commit struct {
 	ListHash  HCID
 	Version   int64
@@ -22,16 +22,19 @@ type Commit struct {
 	Signature []byte //131 byte max
 }
 
+//Hash gets the HCID for the Commit
 func (c Commit) Hash() HCID {
-	var h hash.Hash = sha256.New()
+	h := sha256.New()
 	h.Write(c.Bytes())
 	return h.Sum(nil)
 }
 
+//Bytes gets the data in a Commit in the form of a []byte
 func (c Commit) Bytes() []byte {
 	return []byte(c.String())
 }
 
+//String gets the data in a Commit in the form of a string
 func (c Commit) String() string {
 	return fmt.Sprintf("%s,\n%d,\n%s,\n%s,\n%s",
 		c.ListHash.Hex(),
@@ -41,6 +44,16 @@ func (c Commit) String() string {
 		hex.EncodeToString(c.Signature))
 }
 
+//Log sends a go string escaped Commit to the log
+func (c Commit) Log() {
+	log.Printf(
+		"list %s\n-----BEGIN COMMIT-------\n%q\n-------END COMMIT-------",
+		c.Hash(),
+		c,
+	)
+}
+
+//Verify returns wether the Commit has a valid Signature
 func (c Commit) Verify() bool {
 	ObjectHash := c.genCommitHash(c.ListHash, c.Version, c.Parents, c.Hkid)
 	pubkey := ecdsa.PublicKey(geterPoster.getPiblicKeyForHkid(c.Hkid))
@@ -55,6 +68,7 @@ func (c Commit) Verify() bool {
 	return ecdsa.Verify(&pubkey, ObjectHash, r, s)
 }
 
+//Update the Commit to piont at the list who's hash is passed in
 func (c Commit) Update(listHash HCID) Commit {
 	c.Parents = parents{c.Hash()}
 	c.Version = time.Now().UnixNano()
@@ -64,6 +78,7 @@ func (c Commit) Update(listHash HCID) Commit {
 	return c
 }
 
+//Merge the Commit with the slice of Commit passed in
 func (c Commit) Merge(pCommits []Commit, listHash HCID) Commit {
 	c.Parents = parents{c.Hash()}
 	for _, pCommit := range pCommits {
@@ -94,7 +109,7 @@ func (c Commit) genCommitHash(
 	cparents parents,
 	hkid HKID,
 ) (ObjectHash []byte) {
-	var h hash.Hash = sha256.New()
+	var h = sha256.New()
 	h.Write([]byte(fmt.Sprintf("%s,\n%d,\n%s,\n%s",
 		listHash,
 		version,
@@ -105,6 +120,7 @@ func (c Commit) genCommitHash(
 	return
 }
 
+//NewCommit is factory producing a Commit with the given listhash and HKID
 func NewCommit(listHash HCID, hkid HKID) (c Commit) {
 	c.ListHash = listHash
 	c.Version = time.Now().UnixNano()
@@ -114,6 +130,7 @@ func NewCommit(listHash HCID, hkid HKID) (c Commit) {
 	return
 }
 
+//CommitFromBytes build a Commit form a slice of byte or error
 func CommitFromBytes(bytes []byte) (c Commit, err error) {
 	//build object
 	commitStrings := strings.Split(string(bytes), ",\n")

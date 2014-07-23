@@ -8,14 +8,18 @@ import (
 	"math/big"
 )
 
+//HID is a Hash IDentifier
 type HID interface {
 	Byteser
 	Hexer
 }
+
+//Byteser is a object that can be exported as a slice of byte
 type Byteser interface {
 	Bytes() []byte
 }
 
+//Hexer is a object that can be exported as a string of hex
 type Hexer interface {
 	Hex() string
 }

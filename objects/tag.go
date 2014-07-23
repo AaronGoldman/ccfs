@@ -46,7 +46,13 @@ func (t Tag) String() string {
 		hex.EncodeToString(t.Signature),
 	)
 }
-
+func (t Tag) Log() {
+	log.Printf(
+		"Posting tag %s\n-----BEGIN TAG--------\n%q\n-------END TAG--------",
+		t.Hash(),
+		t,
+	)
+}
 func (t Tag) Verify() bool {
 	if t.Hkid == nil {
 		return false

@@ -12,7 +12,17 @@ import (
 
 //Get retrieves the content objects using HID and path
 func Get(objecthash objects.HID, path string) (b objects.Blob, err error) {
-	typeString := "commit"
+	b, err = get(objecthash, path, "commit")
+	return
+}
+
+func GetD(objecthash objects.HID, path string) (b objects.Blob, err error) {
+	b, err = get(objecthash, path, "tag")
+	return
+}
+
+func get(objecthash objects.HID, path string, typeString string) (b objects.Blob, err error) {
+	//typeString := "commit"
 	err = nil
 	nameSegments := []string{"", path}
 	for {

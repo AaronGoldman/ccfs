@@ -78,6 +78,7 @@ func TestPostBlob(t *testing.T) {
 		"976762085068519188612732562106886379081213385", 10)
 	testpath := "TestPostBlob"
 	indata := []byte("TestPostData")
+	services.PostBlob(objects.Blob{})
 	services.Post(testhkid, testpath, objects.Blob(indata))
 	outdata, err := services.Get(testhkid, testpath)
 	if !bytes.Equal(indata, outdata) || err != nil {
@@ -269,7 +270,7 @@ func TestGetBlob(t *testing.T) {
 	//hkidFromDString("4629814823893296480016411334808793836186124559723200"+
 	//	"9799621767537249764640887064630013835561124248209118706504211519889067517"+
 	//	"10824965155500230480521264034469", 10) //store the key
-	setup_for_gets()
+	setupForGets()
 
 	dabytes, err := hex.DecodeString("1312ac161875b270da2ae4e1471ba94a" +
 		"9883419250caa4c2f1fd80a91b37907e")
@@ -368,7 +369,7 @@ func Testbadfrombytes(t *testing.T) {
 	}
 }
 
-func setup_for_gets() {
+func setupForGets() {
 	hkidT := objects.HkidFromDString("39968110670682397993178679825250942322686997267223"+
 		"4437068973021071131498376777586055610149840018574420844767320660902612889"+
 		"4016152514163591905578729891874833", 10)
