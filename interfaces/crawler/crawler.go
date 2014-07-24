@@ -15,7 +15,7 @@ import (
 var queuedTargets map[string]bool
 var targetQueue chan target
 
-// This function starts up the crawler for the CCFS
+// Start is the function that starts up the crawler for the CCFS
 func Start() {
 	fmt.Printf("Crawler Starting\n")
 	queuedTargets = make(map[string]bool)
