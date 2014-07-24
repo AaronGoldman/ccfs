@@ -1,4 +1,4 @@
-// kademliaservice
+//Package kademliadht is the kademliaservice
 package kademliadht
 
 import (
@@ -121,10 +121,10 @@ func (k kademliaservice) getobject(values url.Values) (data []byte, err error) {
 	data, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return data, err
-	} else {
-		//log.Printf("[msg] %s", data)
-		return data, nil
 	}
+	//log.Printf("[msg] %s", data)
+	return data, nil
+
 }
 
 func (k kademliaservice) postobject(values url.Values, b []byte) (data []byte, err error) {
@@ -138,9 +138,8 @@ func (k kademliaservice) postobject(values url.Values, b []byte) (data []byte, e
 	data, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return data, err
-	} else {
-		return data, nil
 	}
+	return data, nil
 }
 
 func kademliaservicefactory() kademliaservice {
@@ -152,4 +151,5 @@ func init() {
 	_ = Instance
 }
 
+//Instance is the instance of the kademliaservice
 var Instance kademliaservice

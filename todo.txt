@@ -7,3 +7,8 @@
  |_| fix tests for ragged lists (Aaron Goldman)
  |_| fix relitive urls in libs tests
 |_| content refresher
+split dir in to three diferent types
+	type directory interface {}
+	type list struct {}
+	type repository struct {}
+	type domain struct {}

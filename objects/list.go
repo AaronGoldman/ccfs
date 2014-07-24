@@ -3,7 +3,6 @@ package objects
 import (
 	"crypto/sha256"
 	"fmt"
-	"hash"
 	"log"
 	"sort"
 	"strings"
@@ -26,7 +25,7 @@ func (l List) Remove(nameSegment string) List {
 	return l
 }
 
-func (l List) Hash_for_namesegment(namesegment string) (string, HID) {
+func (l List) HashForNamesegment(namesegment string) (string, HID) {
 	objectHash := l[namesegment].Hash
 	typeString := l[namesegment].TypeString
 	return typeString, objectHash
@@ -58,7 +57,7 @@ func (l List) Bytes() []byte {
 }
 
 func (l List) Hash() HCID {
-	var h hash.Hash = sha256.New()
+	h := sha256.New()
 	h.Write(l.Bytes())
 	return h.Sum(nil)
 }

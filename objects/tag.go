@@ -7,7 +7,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"hash"
 	"log"
 	"strconv"
 	"strings"
@@ -25,7 +24,7 @@ type Tag struct {
 }
 
 func (t Tag) Hash() HCID {
-	var h hash.Hash = sha256.New()
+	h := sha256.New()
 	h.Write(t.Bytes())
 	return h.Sum(nil)
 }
@@ -154,7 +153,7 @@ func NewTag(
 
 func (t Tag) genTagHash(taghash HID, TypeString string, nameSegment string,
 	version int64, tparent parents, hkid HKID) []byte {
-	var h hash.Hash = sha256.New()
+	h := sha256.New()
 	h.Write(
 		[]byte(fmt.Sprintf("%s,\n%s,\n%s,\n%d,\n%s,\n%s",
 			taghash.Hex(),

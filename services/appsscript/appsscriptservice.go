@@ -131,7 +131,7 @@ func (a appsscriptservice) GetKey(h objects.HKID) (objects.Blob, error) {
 	return data, err
 }
 
-var Instance appsscriptservice = appsscriptservice{}
+var Instance = appsscriptservice{}
 
 func init() {
 	//Registerblobgeter(appsscriptserviceInstance)

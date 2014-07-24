@@ -20,7 +20,7 @@ func BlobServerStart() {
 	http.ListenAndServe(":8080", nil)
 }
 
-//RepoServerStart start a server for full CCFS queries HKID/path
+//CollectionServerStart starts a server for full CCFS queries HKID/path
 func CollectionServerStart() {
 	http.HandleFunc("/r/", func(w http.ResponseWriter, r *http.Request) {
 		parts := strings.SplitN(r.RequestURI[3:], "/", 2)
@@ -38,10 +38,9 @@ func CollectionServerStart() {
 				if err == nil {
 					w.Write(b.Bytes())
 					return
-				} else {
-					http.Error(w, fmt.Sprint(
-						"HTTP Error 500 Internal server error\n\n", err), 500)
 				}
+				http.Error(w, fmt.Sprint(
+					"HTTP Error 500 Internal server error\n\n", err), 500)
 			}
 		}
 		w.Write([]byte(fmt.Sprintf("Invalid HKID\nerr: %v", err)))
@@ -63,10 +62,9 @@ func CollectionServerStart() {
 				if err == nil {
 					w.Write(b.Bytes())
 					return
-				} else {
-					http.Error(w, fmt.Sprint(
-						"HTTP Error 500 Internal server error\n\n", err), 500)
 				}
+				http.Error(w, fmt.Sprint(
+					"HTTP Error 500 Internal server error\n\n", err), 500)
 			}
 		}
 		w.Write([]byte(fmt.Sprintf("Invalid HKID\nerr: %v", err)))

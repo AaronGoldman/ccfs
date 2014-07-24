@@ -130,7 +130,7 @@ func BenchmarkLowLevelPath(b *testing.B) {
 			b.FailNow()
 		}
 		//get tag
-		_, testTagHash := testlist.Hash_for_namesegment("testTag")
+		_, testTagHash := testlist.HashForNamesegment("testTag")
 		testTag, err := services.GetTag(testTagHash.Bytes(), "testBlob")
 		//log.Printf("authentic tag:%v\n", testTag.Verifiy())
 		if !testTag.Verify() {
