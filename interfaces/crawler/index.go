@@ -34,13 +34,14 @@ func webIndexHandler(w http.ResponseWriter, r *http.Request) {
 {{end}}{{define "blobIndexEntryTemplate"}}
 		Type: {{.TypeString}}
 		Size: {{.Size}}
+		HCID: {{.HCID}}
 		Name Segment: {{range $key, $value:= .NameSeg}}
 			{{$key}}{{template "sliceTemplate" $value}}{{end}}
 		Referring Commits: {{range $key:= .RefCommits}}
 			{{$key}}{{end}}
 		Signed By: {{.SignedBy}}
 		Descendants: {{range $key, $value:= .Descendants}}
-			Version: {{$value}} HCID: {{$key}}{{end}}
+			Version: {{$key}} HCID: {{$value}}{{end}}
 {{end}}{{define "commitIndexEntryTemplate"}}
 		Aliases: {{range $key, $value:= .NameSeg}}
 			{{$key}}{{template "sliceTemplate" $value}}{{end}}
@@ -75,6 +76,7 @@ Tags		{{range $key, $value:= .Tags}}
 type blobIndexEntry struct {
 	TypeString string
 	Size       int
+	HCID       string
 	NameSeg    map[ /*nameSeg*/ string] /*referringHCID*/ []string
 	RefCommits/*referringHCID*/ []string
 	SignedBy    string
@@ -145,7 +147,7 @@ func insertDescendantS(
 	}
 	for _, entryParent := range parents {
 		if _, present := blobIndex[entryParent.Hex()]; !present {
-			blobIndex[entryParent.Hex()] = blobIndexEntry{}
+			blobIndex[entryParent.Hex()] = blobIndexEntry{HCID: entryParent.Hex()}
 		}
 		blobIndex[entryParent.Hex()] =
 			blobIndex[entryParent.Hex()].insertDescendant(version, descendant)
@@ -240,7 +242,7 @@ func indexNameSegment(typeString, targetHex, referingHex, nameSeg string) {
 			blobIndex = make(map[string]blobIndexEntry)
 		}
 		if _, present := blobIndex[targetHex]; !present {
-			blobIndex[targetHex] = blobIndexEntry{}
+			blobIndex[targetHex] = blobIndexEntry{HCID: targetHex}
 		}
 		blobIndex[targetHex] = blobIndex[targetHex].insertNameSegment(
 			nameSeg,
@@ -281,7 +283,7 @@ type nameSegmentIndexEntry struct {
 	Hash       string
 }
 
-var blobIndex map[string]blobIndexEntry
+var blobIndex map[ /*HCID*/ string]blobIndexEntry
 
 func indexBlob(inBlob objects.Blob) {
 	if blobIndex == nil {
@@ -289,7 +291,7 @@ func indexBlob(inBlob objects.Blob) {
 	}
 	hashHex := inBlob.Hash().Hex()
 	if _, present := blobIndex[hashHex]; !present {
-		blobIndex[hashHex] = blobIndexEntry{}
+		blobIndex[hashHex] = blobIndexEntry{HCID: hashHex}
 	}
 	blobIndex[hashHex] = blobIndex[hashHex].insertSize(len(inBlob))
 	blobIndex[hashHex] = blobIndex[hashHex].insertType("Blob")
@@ -309,7 +311,7 @@ func indexList(inList objects.List) {
 	}
 }
 
-var commitIndex map[string]commitIndexEntry
+var commitIndex map[ /*Hkid*/ string]commitIndexEntry
 
 func indexCommit(inCommit objects.Commit) {
 	indexBlob(inCommit.Bytes())
@@ -319,6 +321,10 @@ func indexCommit(inCommit objects.Commit) {
 		blobIndex[inCommit.Hkid.Hex()].insertType("Repository")
 	blobIndex[hashHex] =
 		blobIndex[hashHex].insertCollection(inCommit.Hkid.Hex())
+	if _, present := blobIndex[inCommit.ListHash.Hex()]; !present {
+		blobIndex[inCommit.ListHash.Hex()] =
+			blobIndexEntry{HCID: inCommit.ListHash.Hex()}
+	}
 	blobIndex[inCommit.ListHash.Hex()] =
 		blobIndex[inCommit.ListHash.Hex()].insertRefCommits(hashHex)
 
@@ -336,7 +342,7 @@ func indexCommit(inCommit objects.Commit) {
 	insertDescendantS(inCommit.Parents, inCommit.Hash(), inCommit.Version)
 }
 
-var tagIndex map[string]tagIndexEntry
+var tagIndex map[ /*Hkid*/ string]tagIndexEntry
 
 func indexTag(inTag objects.Tag) {
 	indexBlob(inTag.Bytes())

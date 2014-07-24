@@ -83,7 +83,8 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 
 	t, err := template.New("WebSearch template").Funcs(
 		template.FuncMap{
-			"getCuratorsofBlob": getCuratorsofBlob,
+			"GetCuratorsofBlob": GetCuratorsofBlob,
+			"GetPathsForHCID":   GetPathsForHCID,
 		},
 	).Parse(`
 	{{define "NameSegTemp"}}
@@ -112,10 +113,16 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 				<a href= "/search/?q={{.}}">{{.}}</a>:
 			{{end}}
 		{{template "NameSegTemp" .NameSeg}}
-			{{range $key, $value := getCuratorsofBlob .Query}}
-				Curators: <a href= "/{{$value}}/{{$key}}">{{$key}}</a>
-			{{end}}
 		{{template "VersionTemp" .Descendants}}
+		{{range $key, $value := GetCuratorsofBlob .HCID}}
+			Curators: <a href= "/{{$value}}/{{$key}}">{{$key}}</a>
+		{{end}}
+		<dl>
+			Paths:
+			{{range $key, $value := GetPathsForHCID .HCID}}
+				<dt><a href= "/{{$key}}">{{$key}}</a></dt>
+			{{end}}
+		</dl>
 	{{end}}
 	<html>
 		<head>
@@ -194,19 +201,19 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getCuratorsofBlob(hcidString string) map[string]string {
+func GetCuratorsofBlob(hcidString string) map[string]string {
+	curators := make(map[string]string)
 	info, present := blobIndex[hcidString]
 	if !present {
 		return make(map[string]string)
 	}
-	curators := make(map[string]string)
 
-	for _, hidValue := range info.RefCommits {
-		hidInfo, present := blobIndex[hidValue]
+	for _, RefCommitHCID := range info.RefCommits {
+		entry, present := blobIndex[RefCommitHCID]
 		if !present {
 			continue
 		}
-		curators[hidInfo.SignedBy] = "r"
+		curators[entry.SignedBy] = "r"
 	}
 
 	for _, hidValues := range info.NameSeg {
@@ -217,8 +224,8 @@ func getCuratorsofBlob(hcidString string) map[string]string {
 			}
 			switch segInfo.TypeString {
 			case "List":
-				for curator, t := range getCuratorsofBlob(hidValue) {
-					curators[curator] = t
+				for key, value := range GetCuratorsofBlob(hidValue) {
+					curators[key] = value
 				}
 			case "Tag":
 				curators[segInfo.SignedBy] = "d"
@@ -228,6 +235,42 @@ func getCuratorsofBlob(hcidString string) map[string]string {
 		}
 	}
 	return curators
+}
+
+func GetPathsForHCID(blobHCID string) map[string]bool {
+
+	tempPaths := map[string]bool{}
+	blobPath, present := blobIndex[blobHCID]
+	log.Printf("%s", blobPath.TypeString)
+	if !present {
+		log.Printf("Blob is not present: %s", blobHCID)
+		return map[string]bool{}
+	}
+	switch blobPath.TypeString {
+	case "Commit":
+		//commitVersion := commitIndex[blobPath.SignedBy].Version
+		return map[string]bool{"r/" + blobPath.SignedBy: true}
+	case "Tag":
+		//TagVersion := tagIndex[blobPath.SignedBy].Version
+		return map[string]bool{"d/" + blobPath.SignedBy: true}
+	default:
+	}
+	for blobName, referingHCIDs := range blobPath.NameSeg {
+		for _, referingHCID := range referingHCIDs {
+			paths := GetPathsForHCID(referingHCID)
+			for path, version := range paths {
+				tempPaths[path+"/"+blobName] = version
+			}
+		}
+	}
+
+	for _, refCommits := range blobPath.RefCommits {
+		paths := GetPathsForHCID(refCommits)
+		for path, version := range paths {
+			tempPaths[path] = version
+		}
+	}
+	return tempPaths
 }
 
 func isSeperator(c rune) bool {
