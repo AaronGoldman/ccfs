@@ -309,7 +309,7 @@ func TestGetCommit(t *testing.T) {
 		"976762085068519188612732562106886379081213385", 10)
 	outdata, err := services.Get(testhkid, "TestPostCommit")
 	outlist, err := objects.ListFromBytes(outdata)
-	typeString, hash := outlist.Hash_for_namesegment("TestPostBlob")
+	typeString, hash := outlist.HashForNamesegment("TestPostBlob")
 	//truthdata := []byte("90014ae279fa5034a51def77132457cd" +
 	//	"66403facc3d88b54bd3e84ecade8f633,blob,TestPostBlob")
 	if typeString != "blob" ||

@@ -27,10 +27,9 @@ func GetBlob(h objects.HCID) (objects.Blob, error) {
 			if err == nil {
 				datach <- b
 				return
-			} else {
-				errorch <- err
-				return
 			}
+			errorch <- err
+			return
 		}(rangeblobgeterInstance, datach, errorch, h)
 	}
 	for {
@@ -43,13 +42,13 @@ func GetBlob(h objects.HCID) (objects.Blob, error) {
 		case err := <-errorch:
 			if err.Error() == "GetBlob Timeout" {
 				return nil, err
-			} else {
-				log.Println(err)
 			}
+			log.Println(err)
 		}
 	}
 }
 
+//PostList is a wraper around PostBlob for readability
 func PostList(l objects.List) (err error) {
 	return PostBlob(objects.Blob(l.Bytes()))
 }
@@ -69,10 +68,9 @@ func GetCommit(h objects.HKID) (objects.Commit, error) {
 			if err == nil {
 				datach <- c
 				return
-			} else {
-				errorch <- err
-				return
 			}
+			errorch <- err
+			return
 		}(rangecommitgeterInstance, datach, errorch, h)
 	}
 	for {
@@ -85,9 +83,8 @@ func GetCommit(h objects.HKID) (objects.Commit, error) {
 		case err := <-errorch:
 			if err.Error() == "GetCommit Timeout" {
 				return objects.Commit{}, err
-			} else {
-				log.Println(err)
 			}
+			log.Println(err)
 		}
 	}
 }
@@ -108,10 +105,9 @@ func GetTag(h objects.HKID, namesegment string) (objects.Tag, error) {
 			if err == nil {
 				datach <- t
 				return
-			} else {
-				errorch <- err
-				return
 			}
+			errorch <- err
+			return
 		}(rangetaggeterInstance, datach, errorch, h, namesegment)
 	}
 	for {
@@ -124,9 +120,8 @@ func GetTag(h objects.HKID, namesegment string) (objects.Tag, error) {
 		case err := <-errorch:
 			if err.Error() == "GetTag Timeout" {
 				return objects.Tag{}, err
-			} else {
-				log.Println(err)
 			}
+			log.Println(err)
 		}
 	}
 }
@@ -148,10 +143,9 @@ func GetTags(h objects.HKID) (tags []objects.Tag, err error) {
 					datach <- tag
 				}
 				return
-			} else {
-				errorch <- err
-				return
 			}
+			errorch <- err
+			return
 		}(rangetagsgeterInstance, datach, errorch, h)
 	}
 	for {
@@ -166,12 +160,10 @@ func GetTags(h objects.HKID) (tags []objects.Tag, err error) {
 			if err.Error() == "GetTags Timeout" {
 				if len(tags) > 0 {
 					return tags, nil
-				} else {
-					return tags, err
 				}
-			} else {
-				log.Println(err)
+				return tags, err
 			}
+			log.Println(err)
 		}
 	}
 }
@@ -191,10 +183,9 @@ func GetKey(h objects.HKID) (*objects.PrivateKey, error) {
 			if err == nil {
 				datach <- k
 				return
-			} else {
-				errorch <- err
-				return
 			}
+			errorch <- err
+			return
 		}(rangekeygeterInstance, datach, errorch, h)
 	}
 	for {
@@ -203,20 +194,18 @@ func GetKey(h objects.HKID) (*objects.PrivateKey, error) {
 			privkey, err := objects.PrivteKeyFromBytes(b)
 			if bytes.Equal(privkey.Hkid(), h) && privkey.Verify() {
 				return privkey, err
-			} else {
-				log.Println("Key Verifiy Failed")
 			}
+			log.Println("Key Verifiy Failed")
 		case err := <-errorch:
 			if err.Error() == "GetKey Timeout" {
 				return nil, err
-			} else {
-				log.Println(err)
 			}
+			log.Println(err)
 		}
 	}
 }
 
-//release blob to storage
+//PostBlob releases a blob to storage
 func PostBlob(b objects.Blob) (err error) {
 	var firsterr error
 	for _, service := range blobposters {
@@ -229,7 +218,7 @@ func PostBlob(b objects.Blob) (err error) {
 	//return localfileserviceInstance.PostBlob(b)
 }
 
-//release commit to storage
+//PostCommit releases a commit to storage
 func PostCommit(c objects.Commit) (err error) {
 	var firsterr error
 	for _, service := range commitposters {
@@ -242,7 +231,7 @@ func PostCommit(c objects.Commit) (err error) {
 	//return localfileserviceInstance.PostCommit(c)
 }
 
-//release key to storage
+//PostKey releases a key to storage
 func PostKey(p *objects.PrivateKey) (err error) {
 	var firsterr error
 	for _, service := range keyposters {
@@ -255,7 +244,7 @@ func PostKey(p *objects.PrivateKey) (err error) {
 	//return localfileserviceInstance.PostKey(p)
 }
 
-//release tag to storage
+//PostTag releases a tag to storage
 func PostTag(t objects.Tag) (err error) {
 	var firsterr error
 	for _, service := range tagposters {

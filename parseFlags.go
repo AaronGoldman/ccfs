@@ -87,39 +87,39 @@ func parseFlagsAndTakeAction() {
 			}
 		case *insertDomain:
 			fmt.Println("Insert HKID as a hexadecimal number:")
-			var hex string = *hkid
+			hex := *hkid
 			if *hkid == "" {
 				hex, _ = in.ReadString('\n')
 				hex = strings.Trim(hex, "\n")
 			}
 			log.Print(len(hex))
-			foreign_hkid, err := objects.HkidFromHex(hex)
+			foreignHkid, err := objects.HkidFromHex(hex)
 			if err != nil {
 				log.Printf("Somethng went wrong in insertDomain %s", err)
 				os.Exit(2)
 			}
 			log.Printf("hkid: %s\n", h)
-			err = services.InsertDomain(h, fmt.Sprintf("%s/%s", collectionPath, collectionName), foreign_hkid)
+			err = services.InsertDomain(h, fmt.Sprintf("%s/%s", collectionPath, collectionName), foreignHkid)
 			if err != nil {
 				log.Println(err)
 				return
 			}
 		case *insertRepository:
 			fmt.Println("Insert HKID as a hexadecimal number:")
-			var hex string = *hkid
+			hex := *hkid
 			if *hkid == "" {
 				hex, _ = in.ReadString('\n')
 				hex = strings.Trim(hex, "\n")
 			}
 			fmt.Printf("%s", hex)
-			foreign_hkid, err := objects.HkidFromHex(hex)
+			foreignHkid, err := objects.HkidFromHex(hex)
 			if err != nil {
 				log.Printf("Somethng went wrong in insertRepo %s", err)
 				os.Exit(2)
 
 			}
 			fmt.Printf("hkid: %s", h)
-			err = services.InsertRepo(h, fmt.Sprintf("%s/%s", collectionPath, collectionName), foreign_hkid)
+			err = services.InsertRepo(h, fmt.Sprintf("%s/%s", collectionPath, collectionName), foreignHkid)
 			if err != nil {
 				log.Println(err)
 				return

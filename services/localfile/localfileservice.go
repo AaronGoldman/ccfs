@@ -139,7 +139,8 @@ func (lfs localfileservice) latestVersion(matches []string) string {
 	return match
 }
 
-var Instance localfileservice = localfileservice{}
+//Instance is the instance of the localfileservice
+var Instance = localfileservice{}
 
 func init() {
 	services.Registerblobgeter(Instance)

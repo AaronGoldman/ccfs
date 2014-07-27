@@ -8,7 +8,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
-	"hash"
 	"log"
 	"math/big"
 )
@@ -24,7 +23,7 @@ func (p PublicKey) Bytes() []byte {
 
 //Hkid returns the hkid for the public key.
 func (p PublicKey) Hkid() HKID {
-	var h hash.Hash = sha256.New()
+	h := sha256.New()
 	h.Write(p.Bytes())
 	return h.Sum(make([]byte, 0))
 }
@@ -32,19 +31,19 @@ func (p PublicKey) Hkid() HKID {
 //Hkid returns the hkid that for private key.
 //this is the hcid of your public key
 func (p PrivateKey) Hkid() HKID {
-	var h hash.Hash = sha256.New()
+	h := sha256.New()
 	h.Write(elliptic.Marshal(p.PublicKey.Curve, p.PublicKey.X, p.PublicKey.Y))
 	return h.Sum(make([]byte, 0))
 }
 
 //Hash returns the hcid for the PrivateKey
 func (p PrivateKey) Hash() HCID {
-	var h hash.Hash = sha256.New()
+	h := sha256.New()
 	h.Write(p.Bytes())
 	return h.Sum(nil)
 }
 
-//returns true if PrivateKey and PrivateKey are a pair.
+//Verify returns true if PrivateKey and PrivateKey are a pair.
 func (p PrivateKey) Verify() bool {
 	ObjectHash := make([]byte, 32)
 	_, err := rand.Read(ObjectHash)
