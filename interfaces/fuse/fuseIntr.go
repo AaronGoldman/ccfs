@@ -8,12 +8,13 @@ package fuse
 import (
 	"log"
 	"os"
-
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
+	
 )
 
 func Start() {
+	
 	go startFSintegration()
 }
 

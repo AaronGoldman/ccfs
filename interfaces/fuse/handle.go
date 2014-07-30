@@ -4,7 +4,7 @@ package fuse
 
 import (
 	"log"
-
+	//"fmt"
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 	"github.com/AaronGoldman/ccfs/objects"
@@ -18,9 +18,13 @@ type OpenFileHandle struct {
 	inode  fuse.NodeID //we're not using this field yet
 }
 
+// func (o OpenFileHandle) String() string {
+// 		return fmt.Sprintf("%s", o)
+// }
+
 //handleReader interface
 func (o OpenFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadResponse, intr fs.Intr) fuse.Error {
-	logRequestObject(request, o)
+	//logRequestObject(request, o)
 	start := request.Offset
 	stop := start + int64(request.Size)
 	bufptr := o.buffer
@@ -40,7 +44,7 @@ func (o OpenFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadRespo
 }
 
 func (o *OpenFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteResponse, intr fs.Intr) fuse.Error {
-	logRequestObject(request, o)
+	//logRequestObject(request, o)
 	start := request.Offset
 	writeData := request.Data
 
@@ -71,14 +75,14 @@ func (o *OpenFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteR
 }
 
 func (o OpenFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse.Error {
-	logRequestObject(request, o)
+	//logRequestObject(request, o)
 	request.Respond()
 	return nil //fuse.ENOENT
 }
 
 //func (o OpenfileHandle)
 func (o OpenFileHandle) Flush(request *fuse.FlushRequest, intr fs.Intr) fuse.Error {
-	logRequestObject(request, o)
+	//logRequestObject(request, o)
 	//o.Publish()
 	request.Respond()
 	return nil

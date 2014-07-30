@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 	//"time"
-
+	//"fmt"
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 	"github.com/AaronGoldman/ccfs/objects"
@@ -23,6 +23,10 @@ type File struct {
 	flags fuse.OpenFlags
 	size  uint64
 }
+
+// func (f File) String() string {
+// 		return fmt.Sprintf("%s", f)
+// }
 
 func (f File) Attr() fuse.Attr {
 	log.Printf("File attributes requested: %+v", f)
@@ -75,7 +79,7 @@ func (f File) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
 
 //nodeopener interface contains open(). Node may be used for file or directory
 func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr fs.Intr) (fs.Handle, fuse.Error) {
-	logRequestObject(request, f)
+	//logRequestObject(request, f)
 	//request.dir = 0
 	//   O_RDONLY int = os.O_RDONLY // open the file read-only.
 	//   O_WRONLY int = os.O_WRONLY // open the file write-only.

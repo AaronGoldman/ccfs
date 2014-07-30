@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
+	
 )
 
 type Dir struct {
@@ -46,17 +46,21 @@ func (d Dir) newDir(Name string) *Dir {
 }
 
 //func (d Dir) Remove(*fuse.RemoveRequest, Intr) fuse.Error
-func logRequestObject(r, o fmt.Stringer){
-		log.Printf("request: %+v\n object: %+v", r, o)
-		return  
-}
+// func (d Dir) String() string {
+// 		return fmt.Sprintf("%s", d)
+// }
+
+// func logRequestObject(r, o fmt.Stringer){
+// 		log.Printf("request: %+v\n object: %+v", r, o)
+// 		return  
+// }
 
 func (d Dir) Rename(
 	r *fuse.RenameRequest,
 	newDir fs.Node,
 	intr fs.Intr,
 ) fuse.Error {
-	logRequestObject(r, d)
+	//logRequestObject(r, d)
 	//find content_type
 	if r.OldName != r.NewName {
 		d.name = r.NewName
@@ -176,7 +180,7 @@ func (d Dir) Create(
 	response *fuse.CreateResponse,
 	intr fs.Intr,
 ) (fs.Node, fs.Handle, fuse.Error) {
-	logRequestObject(request, d)
+	//logRequestObject(request, d)
 
 	//   O_RDONLY int = os.O_RDONLY // open the file read-only.
 	//   O_WRONLY int = os.O_WRONLY // open the file write-only.
@@ -324,7 +328,7 @@ func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 		return nil, fuse.ENOENT
 	}
 	//getKey to figure out permissions of the child
-	_, keyErr = services.GetKey(c.Hkid)
+	_, keyErr := services.GetKey(c.Hkid)
 	//perm := fuse.Attr{Mode: 0555}//default read permissions
 	perm := os.FileMode(0777)
 
@@ -415,7 +419,7 @@ func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, 
 		return nil, fuse.ENOENT
 	}
 	//getKey to figure out permissions of the child
-	_, keyErr = services.GetKey(t.Hkid)
+	_, keyErr := services.GetKey(t.Hkid)
 	perm := os.FileMode(0555) //default read permissions
 	if keyErr == nil {
 		perm = os.FileMode(0755)
@@ -451,7 +455,7 @@ func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, 
 func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	//log.Printf("ReadDir requested:\n\tName:%s", d.name)
 	var l objects.List
-	var err error
+	var listErr error
 	var dirDirs = []fuse.Dirent{}
 	switch d.content_type {
 	case "tag":
