@@ -24,20 +24,25 @@ type Hexer interface {
 	Hex() string
 }
 
+//HCID is the type to represent content by it's cryptographic hash
 type HCID []byte
 
+//Bytes returns a slise of byte representing the hash
 func (hcid HCID) Bytes() []byte {
 	return hcid
 }
 
+//Hex returns a string containing a hexadecimal representation if the hash
 func (hcid HCID) Hex() string {
 	return hex.EncodeToString(hcid)
 }
 
+//String returns a string containing a hexadecimal representation if the hash
 func (hcid HCID) String() string {
 	return hcid.Hex()
 }
 
+//HcidFromHex return an HCID if the string contains 64 digits of Hex
 func HcidFromHex(s string) (HCID, error) {
 	dabytes, err := hex.DecodeString(s)
 	if err == nil {

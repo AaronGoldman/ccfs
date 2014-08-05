@@ -11,7 +11,7 @@ import (
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 
-	"github.com/davecheney/profile"
+	//"github.com/davecheney/profile"
 )
 
 //testing push with new origin
@@ -39,7 +39,7 @@ func startFSintegration() {
 		ccfsUnmount(mountpoint)
 
 	}() //end func
-	defer profile.Start(profile.CPUProfile).Stop()
+	//defer profile.Start(profile.CPUProfile).Stop()
 	fs.Serve(c, FS_from_HKID_string(interfaces.GetLocalSeed(), mountpoint))
 }
 

@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
-	
 )
 
 type Dir struct {
@@ -46,21 +46,30 @@ func (d Dir) newDir(Name string) *Dir {
 }
 
 //func (d Dir) Remove(*fuse.RemoveRequest, Intr) fuse.Error
-// func (d Dir) String() string {
-// 		return fmt.Sprintf("%s", d)
-// }
+func (d Dir) String() string {
+	return fmt.Sprintf(
+		"[%s]%s %s\nmode:%s parent:%s\nid:%v",
+		d.content_type,
+		d.name,
+		d.leaf,
+		d.permission,
+		d.parent,
+		d.inode,
+	)
+}
 
-// func logRequestObject(r, o fmt.Stringer){
-// 		log.Printf("request: %+v\n object: %+v", r, o)
-// 		return  
-// }
+func logRequestObject(r, o fmt.Stringer) {
+	log.Printf("request: %+v", r)
+	log.Printf("object: %+v", o)
+	return
+}
 
 func (d Dir) Rename(
 	r *fuse.RenameRequest,
 	newDir fs.Node,
 	intr fs.Intr,
 ) fuse.Error {
-	//logRequestObject(r, d)
+	logRequestObject(r, d)
 	//find content_type
 	if r.OldName != r.NewName {
 		d.name = r.NewName
@@ -180,7 +189,7 @@ func (d Dir) Create(
 	response *fuse.CreateResponse,
 	intr fs.Intr,
 ) (fs.Node, fs.Handle, fuse.Error) {
-	//logRequestObject(request, d)
+	logRequestObject(request, d)
 
 	//   O_RDONLY int = os.O_RDONLY // open the file read-only.
 	//   O_WRONLY int = os.O_WRONLY // open the file write-only.
@@ -311,7 +320,7 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 
 func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
 
-	c, CommitErr:= services.GetCommit(d.leaf.(objects.HKID))
+	c, CommitErr := services.GetCommit(d.leaf.(objects.HKID))
 	if CommitErr != nil {
 		log.Printf("commit %s:", CommitErr)
 		return nil, nil
@@ -336,7 +345,7 @@ func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 		log.Printf("error not nil; change file Mode %s:", keyErr)
 		//perm =  fuse.Attr{Mode: 0755}
 		perm = os.FileMode(0555)
-	} 
+	}
 
 	if list_entry.TypeString == "blob" {
 		b, blobErr := services.GetBlob(list_entry.Hash.(objects.HCID))
@@ -473,7 +482,7 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 				enttype = fuse.DT_File
 				fallthrough
 
-		case "list", "commit", "tag":
+			case "list", "commit", "tag":
 				dirDirs = append(dirDirs, fuse.Dirent{
 					Inode: fs.GenerateDynamicInode(uint64(d.inode), name),
 					Name:  name,
@@ -514,13 +523,13 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 			}
 			dirDirs = append(dirDirs, append_to_list)
 		} else {
-				append_to_list := fuse.Dirent{
+			append_to_list := fuse.Dirent{
 				Inode: fs.GenerateDynamicInode(uint64(d.inode), name),
 				Name:  name,
 				Type:  fuse.DT_Dir}
-				dirDirs = append(dirDirs, append_to_list)
+			dirDirs = append(dirDirs, append_to_list)
 		}
-	} 
+	}
 
 	//loop through openHandles
 	for openHandle, _ := range d.openHandles {
