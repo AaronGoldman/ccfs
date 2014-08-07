@@ -133,7 +133,7 @@ func (p parents) String() string {
 
 //GeterPoster is a struct of functions for use with objects
 type GeterPoster struct {
-	getPiblicKeyForHkid  func(hkid HKID) PublicKey
+	getPublicKeyForHkid  func(hkid HKID) PublicKey
 	getPrivateKeyForHkid func(hkid HKID) (k *PrivateKey, err error)
 	PostKey              func(p *PrivateKey) error
 	PostBlob             func(b Blob) error
@@ -143,12 +143,12 @@ var geterPoster GeterPoster
 
 //RegisterGeterPoster ads a given GeterPoster for use with objects
 func RegisterGeterPoster(
-	getPiblicKeyForHkid func(hkid HKID) PublicKey,
+	getPublicKeyForHkid func(hkid HKID) PublicKey,
 	getPrivateKeyForHkid func(hkid HKID) (k *PrivateKey, err error),
 	PostKey func(p *PrivateKey) error,
 	PostBlob func(b Blob) error,
 ) {
-	geterPoster.getPiblicKeyForHkid = getPiblicKeyForHkid
+	geterPoster.getPublicKeyForHkid = getPublicKeyForHkid
 	geterPoster.getPrivateKeyForHkid = getPrivateKeyForHkid
 	geterPoster.PostKey = PostKey
 	geterPoster.PostBlob = PostBlob

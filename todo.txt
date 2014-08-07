@@ -1,5 +1,6 @@
  _
 |_| ccfs
+ |_| Call Stop on all the started servises and interfaces
  |_| GetTags(h objects.HKID) ([]objects.Tag, error)
   |_| appsscript
   |_| googledrive
