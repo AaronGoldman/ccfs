@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+//Tag is a individualy vertioned reference to a content object
 type Tag struct {
 	HashBytes   HID
 	TypeString  string
@@ -23,18 +24,20 @@ type Tag struct {
 	Signature   []byte
 }
 
+//Hash caculates the HCID of the tag
 func (t Tag) Hash() HCID {
 	h := sha256.New()
 	h.Write(t.Bytes())
 	return h.Sum(nil)
 }
 
+//Bytes builds text representation of the tag as a slice of byte
 func (t Tag) Bytes() []byte {
 	return []byte(t.String())
 }
 
+//Sting builds text representation of the tag
 func (t Tag) String() string {
-
 	return fmt.Sprintf("%s,\n%s,\n%s,\n%d,\n%s,\n%s,\n%s",
 		t.HashBytes.Hex(),
 		t.TypeString,
@@ -45,6 +48,8 @@ func (t Tag) String() string {
 		hex.EncodeToString(t.Signature),
 	)
 }
+
+//Log sends the tag to the log with a header and footer
 func (t Tag) Log() {
 	log.Printf(
 		"Posting tag %s\n-----BEGIN TAG--------\n%q\n-------END TAG--------",
@@ -52,6 +57,8 @@ func (t Tag) Log() {
 		t,
 	)
 }
+
+//Verify that the signature is valid
 func (t Tag) Verify() bool {
 	if t.Hkid == nil {
 		return false
@@ -66,6 +73,7 @@ func (t Tag) Verify() bool {
 	return ecdsa.Verify(&tPublicKey, ObjectHash, r, s)
 }
 
+//Update the named content
 func (t Tag) Update(hashBytes HID, typeString string) Tag {
 	t.Parents = parents{t.Hash()}
 	t.HashBytes = hashBytes
@@ -92,6 +100,7 @@ func (t Tag) Update(hashBytes HID, typeString string) Tag {
 	return t
 }
 
+//Delete the named content
 func (t Tag) Delete() Tag {
 	t = NewTag(
 		Blob{}.Hash(),     //HashBytes HID
@@ -103,6 +112,7 @@ func (t Tag) Delete() Tag {
 	return t
 }
 
+//Merge updates the content and add extra the tags to the parents
 func (t Tag) Merge(tags []Tag, hashBytes HID, typeString string) Tag {
 	tParents := parents{t.Hash()}
 	for _, pTag := range tags {
@@ -118,6 +128,7 @@ func (t Tag) Merge(tags []Tag, hashBytes HID, typeString string) Tag {
 	return t
 }
 
+//NewTag build a new tag with the inital content
 func NewTag(
 	HashBytes HID,
 	TypeString string,
@@ -167,6 +178,7 @@ func (t Tag) genTagHash(taghash HID, TypeString string, nameSegment string,
 	return h.Sum(nil)
 }
 
+//TagFromBytes parses a slice of byte to a tag
 func TagFromBytes(bytes []byte) (t Tag, err error) {
 	//build object
 	tagStrings := strings.Split(string(bytes), ",\n")

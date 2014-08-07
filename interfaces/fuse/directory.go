@@ -165,6 +165,7 @@ func (d Dir) Attr() fuse.Attr {
 
 func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 	log.Printf("Directory Lookup:\n\tName: %s\n\tHID: %s", name, d.leaf.Hex())
+	log.Printf("%v", d)
 	new_nodeID := fuse.NodeID(fs.GenerateDynamicInode(uint64(d.inode), name))
 
 	switch d.content_type {

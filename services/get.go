@@ -16,7 +16,7 @@ func Get(objecthash objects.HID, path string) (b objects.Blob, err error) {
 	return
 }
 
-//Get retrieves the content objects using HID and path
+//GetD retrieves the content objects using HID of a domain and path
 func GetD(objecthash objects.HID, path string) (b objects.Blob, err error) {
 	b, err = get(objecthash, path, "tag")
 	return
@@ -101,6 +101,7 @@ func get(objecthash objects.HID, path string, typeString string) (b objects.Blob
 	}
 }
 
+//GetList retreves a list parces it and reterns it or an error
 func GetList(objectHash objects.HCID) (l objects.List, err error) {
 	listbytes, err := GetBlob(objectHash)
 
@@ -114,6 +115,7 @@ func GetList(objectHash objects.HCID) (l objects.List, err error) {
 	return
 }
 
+//GetCommitForHcid retreves a spasific commit by its HCID
 func GetCommitForHcid(hash objects.HCID) (commit objects.Commit, err error) {
 	commitbytes, err := GetBlob(hash)
 	if err != nil {
@@ -126,7 +128,7 @@ func GetCommitForHcid(hash objects.HCID) (commit objects.Commit, err error) {
 	return
 }
 
-//hcidTag, tagErr := services.GetTagForHcid(targ.hash.(objects.HCID))
+//GetTagForHcid retreves a spasific tag by its HCID
 func GetTagForHcid(hash objects.HCID) (tag objects.Tag, err error) {
 	tagbytes, err := GetBlob(hash)
 	if err != nil {
@@ -139,7 +141,7 @@ func GetTagForHcid(hash objects.HCID) (tag objects.Tag, err error) {
 	return
 }
 
-//getPiblicKeyForHkid uses the lookup services to get a public key for an hkid
+//GetPublicKeyForHkid uses the lookup services to get a public key for an hkid
 func GetPublicKeyForHkid(hkid objects.HKID) objects.PublicKey {
 	marshaledKey, err := GetBlob(objects.HCID(hkid))
 	if err != nil {
@@ -154,7 +156,7 @@ func GetPublicKeyForHkid(hkid objects.HKID) objects.PublicKey {
 	return objects.PublicKey(pubKey)
 }
 
-//getPrivateKeyForHkid uses the lookup services to get a private key for an hkid
+//GetPrivateKeyForHkid uses the lookup services to get a private key for an hkid
 func GetPrivateKeyForHkid(hkid objects.HKID) (k *objects.PrivateKey, err error) {
 	k, err = GetKey(hkid)
 	return k, err

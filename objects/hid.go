@@ -54,8 +54,10 @@ func HcidFromHex(s string) (HCID, error) {
 	return nil, err
 }
 
+//HKID is the hash of a public key stored in a slice of byte
 type HKID []byte
 
+//Bytes reterns the HKID in the form of a slice of byte
 func (hkid HKID) Bytes() []byte {
 	return hkid
 }
@@ -69,6 +71,7 @@ func (hkid HKID) String() string {
 	return hkid.Hex()
 }
 
+//GenHKID returns a new HKID and posts the key to the blob store
 func GenHKID() HKID {
 	privkey := KeyGen()
 	err := geterPoster.PostKey(privkey)
@@ -83,6 +86,7 @@ func GenHKID() HKID {
 	return privkey.Hkid()
 }
 
+//HkidFromHex gives you an HKID form a hex string
 func HkidFromHex(s string) (HKID, error) {
 	dabytes, err := hex.DecodeString(s)
 	if err == nil {
@@ -91,6 +95,7 @@ func HkidFromHex(s string) (HKID, error) {
 	return nil, err
 }
 
+//HkidFromD builds a HKID using a number in a big int
 func HkidFromD(D big.Int) HKID {
 	priv, err := PrivteKeyFromD(D)
 	key := elliptic.Marshal(priv.PublicKey.Curve,
@@ -107,6 +112,7 @@ func HkidFromD(D big.Int) HKID {
 	return hkid
 }
 
+//HkidFromDString builds a HKID using a number in base in a string
 func HkidFromDString(str string, base int) HKID {
 	D, success := new(big.Int).SetString(str, base)
 	if !success {
@@ -125,6 +131,7 @@ func (p parents) String() string {
 	return parentString[1:]
 }
 
+//GeterPoster is a struct of functions for use with objects
 type GeterPoster struct {
 	getPiblicKeyForHkid  func(hkid HKID) PublicKey
 	getPrivateKeyForHkid func(hkid HKID) (k *PrivateKey, err error)
@@ -134,6 +141,7 @@ type GeterPoster struct {
 
 var geterPoster GeterPoster
 
+//RegisterGeterPoster ads a given GeterPoster for use with objects
 func RegisterGeterPoster(
 	getPiblicKeyForHkid func(hkid HKID) PublicKey,
 	getPrivateKeyForHkid func(hkid HKID) (k *PrivateKey, err error),

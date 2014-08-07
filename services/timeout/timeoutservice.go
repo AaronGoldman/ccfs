@@ -33,6 +33,7 @@ func (timeoutservice) GetKey(objects.HKID) (objects.Blob, error) {
 	return objects.Blob{}, fmt.Errorf("GetKey Timeout")
 }
 
+//Instance is the instance of the timeoutservice
 var Instance timeoutservice
 
 func init() {
