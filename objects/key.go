@@ -13,8 +13,10 @@ import (
 	"math/big"
 )
 
+//PrivateKey wrapper around the ecdsa.PrivateKey type
 type PrivateKey ecdsa.PrivateKey
 
+//PublicKey wrapper around the ecdsa.PrivateKey type
 type PublicKey ecdsa.PublicKey
 
 //Bytes returns the marshaled public key as a slice of byte.
@@ -74,6 +76,7 @@ func PrivteKeyFromBytes(b []byte) (priv *PrivateKey, err error) {
 	return priv, nil
 }
 
+//PrivteKeyFromD makes a private key from a big int and reterns it
 func PrivteKeyFromD(D big.Int) (*PrivateKey, error) {
 	priv, err := PrivteKeyFromBytes(D.Bytes())
 	return priv, err
@@ -84,6 +87,7 @@ func PrivteKeyFromD(D big.Int) (*PrivateKey, error) {
 	//return priv
 }
 
+//KeyGen makes a private new key and reterns it
 func KeyGen() *PrivateKey {
 	priv, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	if err != nil {

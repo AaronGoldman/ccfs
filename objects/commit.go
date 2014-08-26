@@ -57,7 +57,7 @@ func (c Commit) Log() {
 //Verify returns wether the Commit has a valid Signature
 func (c Commit) Verify() bool {
 	ObjectHash := c.genCommitHash(c.ListHash, c.Version, c.Parents, c.Hkid)
-	pubkey := ecdsa.PublicKey(geterPoster.getPiblicKeyForHkid(c.Hkid))
+	pubkey := ecdsa.PublicKey(geterPoster.getPublicKeyForHkid(c.Hkid))
 	if pubkey.Curve == nil || pubkey.X == nil || pubkey.Y == nil {
 		return false
 	}

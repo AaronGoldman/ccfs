@@ -14,7 +14,7 @@ import (
 
 func init() {
 	objects.RegisterGeterPoster(
-		services.GetPiblicKeyForHkid,
+		services.GetPublicKeyForHkid,
 		services.GetPrivateKeyForHkid,
 		localfile.Instance.PostKey,
 		localfile.Instance.PostBlob,

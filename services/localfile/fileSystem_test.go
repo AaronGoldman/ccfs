@@ -15,14 +15,16 @@ import (
 	"github.com/AaronGoldman/ccfs/objects"
 )
 
+const mountpoint = "../../mountpoint"
+
 var answerKey = []struct {
 	fileName    string
 	fileContent string
 }{
-	{"bin/mountpoint/TestPostBlob", "TestPostData"},
-	{"bin/mountpoint/TestPostCommit/TestPostBlob", "TestPostCommitBlobData"},
-	{"bin/mountpoint/TestPostList/TestPostList2/TestPostBlob", "TestPostListListBlobData"},
-	{"bin/mountpoint/TestPostTag/TestPostBlob", "TestPostTagBlobData"},
+	{mountpoint + "/TestPostBlob", "TestPostData"},
+	{mountpoint + "/TestPostCommit/TestPostBlob", "TestPostCommitBlobData"},
+	{mountpoint + "/TestPostList/TestPostList2/TestPostBlob", "TestPostListListBlobData"},
+	{mountpoint + "/TestPostTag/TestPostBlob", "TestPostTagBlobData"},
 }
 
 func TestMountRepo(t *testing.T) {
@@ -32,7 +34,7 @@ func TestCLCreateDomain(t *testing.T) {
 	//t.Skip("skip create domain")
 	log.SetFlags(log.Lshortfile)
 	wd, _ := os.Getwd()
-	path := filepath.Join(wd, "bin/mountpoint")
+	path := filepath.Join(wd, mountpoint)
 	os.MkdirAll(fmt.Sprintf("%s/TestPostNewTag", path), 0777)
 	list, _ := ioutil.ReadDir(fmt.Sprintf("%s/TestPostNewTag", path))
 	if len(list) != 0 {
@@ -49,7 +51,7 @@ func TestCLCreateRepo(t *testing.T) {
 	//t.Skip("skip create repo")
 	log.SetFlags(log.Lshortfile)
 	wd, _ := os.Getwd()
-	path := filepath.Join(wd, "bin/mountpoint")
+	path := filepath.Join(wd, mountpoint)
 	os.MkdirAll(fmt.Sprintf("%s/TestPostNewCommit", path), 0777)
 	list, _ := ioutil.ReadDir(fmt.Sprintf("%s/TestPostNewCommit", path))
 	if len(list) != 0 {
@@ -66,7 +68,7 @@ func TestCLInsertDomain(t *testing.T) {
 	t.Skip("skip insert domain")
 	log.SetFlags(log.Lshortfile)
 	wd, _ := os.Getwd()
-	path := filepath.Join(wd, "bin/mountpoint")
+	path := filepath.Join(wd, mountpoint)
 	os.MkdirAll(fmt.Sprintf("%s/TestPostTag", path), 0777)
 	list, _ := ioutil.ReadDir(fmt.Sprintf("%s/TestPostTag", path))
 	if len(list) != 0 {
@@ -84,7 +86,7 @@ func TestCLInsertRepo(t *testing.T) {
 	t.Skip("skip insert repo")
 	log.SetFlags(log.Lshortfile)
 	wd, _ := os.Getwd()
-	path := filepath.Join(wd, "bin/mountpoint")
+	path := filepath.Join(wd, mountpoint)
 	os.MkdirAll(fmt.Sprintf("%s/TestPostCommit", path), 0777)
 	list, _ := ioutil.ReadDir(fmt.Sprintf("%s/TestPostCommit", path))
 	if len(list) != 0 {
@@ -128,10 +130,10 @@ func BenchmarkReadFileSystemInterface(b *testing.B) {
 		fileName    string
 		fileContent string
 	}{
-		{"bin/mountpoint/TestPostBlob", "TestPostData"},
-		{"bin/mountpoint/TestPostCommit/TestPostBlob", "TestPostCommitBlobData"},
-		{"bin/mountpoint/TestPostTag/TestPostBlob", "TestPostTagBlobData"},
-		{"bin/mountpoint/TestPostList/TestPostList2/TestPostBlob", "TestPostListListBlobData"},
+		{mountpoint + "/TestPostBlob", "TestPostData"},
+		{mountpoint + "/TestPostCommit/TestPostBlob", "TestPostCommitBlobData"},
+		{mountpoint + "/TestPostTag/TestPostBlob", "TestPostTagBlobData"},
+		{mountpoint + "/TestPostList/TestPostList2/TestPostBlob", "TestPostListListBlobData"},
 	}
 	for i := 0; i < b.N; i++ {
 		for _, answer := range answerKey {

@@ -42,12 +42,12 @@ func init() {
 func BenchmarkStoreOne(b *testing.B) {
 	log.SetFlags(log.Lshortfile)
 	for i := 0; i < b.N; i++ {
-		err := os.MkdirAll("../bin/", 0764)
-		err = ioutil.WriteFile("../bin/storeone", []byte("storeone"), 0664)
+		err := os.MkdirAll("bin/", 0764)
+		err = ioutil.WriteFile("bin/storeone", []byte("storeone"), 0664)
 		if err != nil {
 			log.Panic(err)
 		}
-		_, err = ioutil.ReadFile("../bin/storeone")
+		_, err = ioutil.ReadFile("bin/storeone")
 		if err != nil {
 			log.Panic(err)
 		}
@@ -106,8 +106,9 @@ func BenchmarkLowLevelPath(b *testing.B) {
 		}
 
 		//get commit
-		hkid, _ := hex.DecodeString("1312ac161875b270da2ae4e1471ba94a" +
-			"9883419250caa4c2f1fd80a91b37907e")
+		hkid, _ := hex.DecodeString(
+			"1312ac161875b270da2ae4e1471ba94a9883419250caa4c2f1fd80a91b37907e",
+		)
 		testcommit, err := services.GetCommit(hkid)
 		if err != nil {
 			log.Panic(err)

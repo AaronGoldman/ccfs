@@ -132,6 +132,7 @@ func (a appsscriptservice) GetKey(h objects.HKID) (objects.Blob, error) {
 	return data, err
 }
 
+//Instance is the instance of the appsscriptservice
 var Instance = appsscriptservice{}
 
 func init() {

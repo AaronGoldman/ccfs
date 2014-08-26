@@ -23,54 +23,55 @@ func BlobServerStart() {
 
 //CollectionServerStart starts a server for full CCFS queries HKID/path
 func CollectionServerStart() {
-	http.HandleFunc("/r/", func(w http.ResponseWriter, r *http.Request) {
-		parts := strings.SplitN(r.RequestURI[3:], "/", 2)
-		hkidhex := parts[0]
-		path := ""
-		if len(parts) > 1 {
-			path = parts[1]
-		}
-		err := error(nil)
-		if len(hkidhex) == 64 {
-			h, err := objects.HkidFromHex(hkidhex)
+	http.HandleFunc("/r/", webRepositoryHandler)
+	http.HandleFunc("/d/", webDomainHandler)
+}
+
+func webRepositoryHandler(w http.ResponseWriter, r *http.Request) {
+	parts := strings.SplitN(r.RequestURI[3:], "/", 2)
+	hkidhex := parts[0]
+	path := ""
+	if len(parts) > 1 {
+		path = parts[1]
+	}
+	err := error(nil)
+	if len(hkidhex) == 64 {
+		h, err := objects.HkidFromHex(hkidhex)
+		if err == nil {
+			b, err := services.Get(h, path)
 			if err == nil {
-				b, err := services.Get(h, path)
-				//log.Printf("\n\t%s\n", path)
-				if err == nil {
-					w.Write(b.Bytes())
-					return
-				}
-				http.Error(w, fmt.Sprint(
-					"HTTP Error 500 Internal server error\n\n", err), 500)
+				w.Write(b.Bytes())
+				return
 			}
+			http.Error(w, fmt.Sprint(
+				"HTTP Error 500 Internal server error\n\n", err), 500)
 		}
-		w.Write([]byte(fmt.Sprintf("Invalid HKID\nerr: %v", err)))
-		return
-	})
-	http.HandleFunc("/d/", func(w http.ResponseWriter, r *http.Request) {
-		parts := strings.SplitN(r.RequestURI[3:], "/", 2)
-		hkidhex := parts[0]
-		path := ""
-		if len(parts) > 1 {
-			path = parts[1]
-		}
-		err := error(nil)
-		if len(hkidhex) == 64 {
-			h, err := objects.HkidFromHex(hkidhex)
+	}
+	w.Write([]byte(fmt.Sprintf("Invalid HKID\nerr: %v", err)))
+	return
+}
+func webDomainHandler(w http.ResponseWriter, r *http.Request) {
+	parts := strings.SplitN(r.RequestURI[3:], "/", 2)
+	hkidhex := parts[0]
+	path := ""
+	if len(parts) > 1 {
+		path = parts[1]
+	}
+	err := error(nil)
+	if len(hkidhex) == 64 {
+		h, err := objects.HkidFromHex(hkidhex)
+		if err == nil {
+			b, err := services.GetD(h, path)
 			if err == nil {
-				b, err := services.GetD(h, path)
-				//log.Printf("\n\t%s\n", path)
-				if err == nil {
-					w.Write(b.Bytes())
-					return
-				}
-				http.Error(w, fmt.Sprint(
-					"HTTP Error 500 Internal server error\n\n", err), 500)
+				w.Write(b.Bytes())
+				return
 			}
+			http.Error(w, fmt.Sprint(
+				"HTTP Error 500 Internal server error\n\n", err), 500)
 		}
-		w.Write([]byte(fmt.Sprintf("Invalid HKID\nerr: %v", err)))
-		return
-	})
+	}
+	w.Write([]byte(fmt.Sprintf("Invalid HKID\nerr: %v", err)))
+	return
 }
 
 func composeQuery(typestring string, hash objects.HKID, namesegment string) (message string) {
