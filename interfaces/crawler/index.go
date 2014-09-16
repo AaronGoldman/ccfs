@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	//	"strings"
+	"strings"
 	"text/template"
 
 	"github.com/AaronGoldman/ccfs/objects"
@@ -19,11 +19,13 @@ func webIndexHandler(w http.ResponseWriter, r *http.Request) {
 		Blobs        interface{}
 		Commits      interface{}
 		Tags         interface{}
+		Texts        interface{}
 	}{
 		NameSegments: nameSegmentIndex,
 		Blobs:        blobIndex,
 		Commits:      commitIndex,
 		Tags:         tagIndex,
+		Texts:        textIndex,
 	}
 
 	t, err := template.New("WebIndex template").Parse(
@@ -60,6 +62,10 @@ Commits	{{range $key, $value:= .Commits}}
 	{{$key}}{{template "commitIndexEntryTemplate" $value}}{{end}}
 Tags		{{range $key, $value:= .Tags}}
 	{{$key}}{{template "tagIndexEntryTemplate" $value}}{{end}}
+Texts {{range $key, $value := .Texts}}
+	{{$key}}
+		{{range $values:= $value}}
+			{{$values}}{{end}}{{end}}
 `)
 	if err != nil {
 		log.Println(err)
@@ -89,6 +95,9 @@ func (indexEntry blobIndexEntry) insertSize(size int) blobIndexEntry {
 }
 
 func (indexEntry blobIndexEntry) insertType(typeString string) blobIndexEntry {
+	if indexEntry.TypeString != "" && typeString == "blob" {
+		return indexEntry
+	}
 	indexEntry.TypeString = typeString
 	return indexEntry
 }
@@ -283,6 +292,29 @@ type nameSegmentIndexEntry struct {
 	Hash       string
 }
 
+var textIndex map[ /*Tokens in blob*/ string][]objects.HCID /*HCIDs containing token*/
+
+//type textIndexEntry struct {
+//	blobToken string
+//	blobHCID objects.HCID
+//}
+func indexText(inBlob objects.Blob) {
+	if textIndex == nil {
+		textIndex = make(map[string][]objects.HCID)
+	}
+	tokens := strings.FieldsFunc(string(inBlob), isSeperator)
+	for _, token := range tokens {
+		if _, present := textIndex[token]; !present {
+			textIndex[token] = []objects.HCID{inBlob.Hash()}
+		} else {
+			textIndex[token] = append(
+				textIndex[token],
+				inBlob.Hash(),
+			)
+		}
+	}
+}
+
 var blobIndex map[ /*HCID*/ string]blobIndexEntry
 
 func indexBlob(inBlob objects.Blob) {
@@ -295,6 +327,9 @@ func indexBlob(inBlob objects.Blob) {
 	}
 	blobIndex[hashHex] = blobIndex[hashHex].insertSize(len(inBlob))
 	blobIndex[hashHex] = blobIndex[hashHex].insertType("Blob")
+
+	indexText(inBlob)
+
 }
 
 func indexList(inList objects.List) {
