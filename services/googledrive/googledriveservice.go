@@ -1,3 +1,4 @@
+//Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
 package googledrive
 
 import (
@@ -11,13 +12,13 @@ import (
 	"github.com/AaronGoldman/ccfs/objects"
 )
 
-func (gds googledriveservice) getChildWithTitle(parentId string, title string) (string, error) {
+func (gds googledriveservice) getChildWithTitle(parentID string, title string) (string, error) {
 	if gds.driveService == nil {
 		log.Println("drive.Service not initialized")
 		return "", fmt.Errorf("drive.Service not initialized")
 	}
-	//log.Println(parentId, "\n\t", title)
-	r, err := gds.driveService.Children.List(parentId).Q(fmt.Sprintf("title = '%s'", title)).Do()
+	//log.Println(parentID, "\n\t", title)
+	r, err := gds.driveService.Children.List(parentID).Q(fmt.Sprintf("title = '%s'", title)).Do()
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return "", err
@@ -29,12 +30,12 @@ func (gds googledriveservice) getChildWithTitle(parentId string, title string) (
 }
 
 // AllChildren fetches all the children of a given folder
-func (gds googledriveservice) AllChildren(d *drive.Service, folderId string, qString string) ([]*drive.ChildReference,
+func (gds googledriveservice) AllChildren(d *drive.Service, folderID string, qString string) ([]*drive.ChildReference,
 	error) {
 	var cs []*drive.ChildReference
 	pageToken := ""
 	for {
-		q := d.Children.List(folderId).Q(qString)
+		q := d.Children.List(folderID).Q(qString)
 		// If we have a pageToken set, apply it to the query
 		if pageToken != "" {
 			q = q.PageToken(pageToken)
@@ -56,13 +57,13 @@ func (gds googledriveservice) AllChildren(d *drive.Service, folderId string, qSt
 // DownloadFile downloads the content of a given file object
 func (gds googledriveservice) DownloadFile(f *drive.File) ([]byte, error) {
 	// t parameter should use an oauth.Transport
-	downloadUrl := f.DownloadUrl
-	if downloadUrl == "" {
+	downloadURL := f.DownloadUrl
+	if downloadURL == "" {
 		// If there is no downloadUrl, there is no body
 		fmt.Printf("An error occurred: File is not downloadable")
 		return []byte{}, nil
 	}
-	req, err := http.NewRequest("GET", downloadUrl, nil)
+	req, err := http.NewRequest("GET", downloadURL, nil)
 	if err != nil {
 		fmt.Printf("An error occurred: %v\n", err)
 		return []byte{}, err
@@ -83,10 +84,10 @@ func (gds googledriveservice) DownloadFile(f *drive.File) ([]byte, error) {
 }
 
 type googledriveservice struct {
-	blobsFolderId   string
-	commitsFolderId string
-	tagsFolderId    string
-	keysFolderId    string
+	blobsFolderID   string
+	commitsFolderID string
+	tagsFolderID    string
+	keysFolderID    string
 	transport       *oauth.Transport
 	driveService    *drive.Service
 }
@@ -95,8 +96,8 @@ func (gds googledriveservice) GetBlob(h objects.HCID) (objects.Blob, error) {
 	if gds.driveService == nil {
 		return nil, fmt.Errorf("Drive Service not initialized")
 	}
-	fileId, err := gds.getChildWithTitle(gds.blobsFolderId, h.Hex())
-	f, err := gds.driveService.Files.Get(fileId).Do()
+	fileID, err := gds.getChildWithTitle(gds.blobsFolderID, h.Hex())
+	f, err := gds.driveService.Files.Get(fileID).Do()
 	fileString, err := gds.DownloadFile(f)
 	if err != nil {
 		log.Printf("An error occurred: %v\n", err)
@@ -108,8 +109,8 @@ func (gds googledriveservice) GetCommit(h objects.HKID) (c objects.Commit, err e
 	if gds.driveService == nil {
 		return objects.Commit{}, fmt.Errorf("Drive Service not initialized")
 	}
-	thisCommitFolderId, err := gds.getChildWithTitle(gds.commitsFolderId, h.Hex())
-	r, err := gds.driveService.Children.List(thisCommitFolderId).Do()
+	thisCommitFolderID, err := gds.getChildWithTitle(gds.commitsFolderID, h.Hex())
+	r, err := gds.driveService.Children.List(thisCommitFolderID).Do()
 	if err != nil {
 		log.Fatalf("Error: %v\n", err)
 	}
@@ -136,9 +137,9 @@ func (gds googledriveservice) GetTag(h objects.HKID, namesegment string) (t obje
 	if gds.driveService == nil {
 		return objects.Tag{}, fmt.Errorf("Drive Service not initialized")
 	}
-	hkidTagFolderId, err := gds.getChildWithTitle(gds.tagsFolderId, h.Hex())
-	nameSegmentTagFolderId, err := gds.getChildWithTitle(hkidTagFolderId, namesegment)
-	r, err := gds.driveService.Children.List(nameSegmentTagFolderId).Do()
+	hkidTagFolderID, err := gds.getChildWithTitle(gds.tagsFolderID, h.Hex())
+	nameSegmentTagFolderID, err := gds.getChildWithTitle(hkidTagFolderID, namesegment)
+	r, err := gds.driveService.Children.List(nameSegmentTagFolderID).Do()
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return objects.Tag{}, err
@@ -167,8 +168,8 @@ func (gds googledriveservice) GetKey(h objects.HKID) (b objects.Blob, err error)
 	if gds.driveService == nil {
 		return nil, fmt.Errorf("Drive Service not initialized")
 	}
-	fileId, err := gds.getChildWithTitle(gds.keysFolderId, h.Hex())
-	f, err := gds.driveService.Files.Get(fileId).Do()
+	fileID, err := gds.getChildWithTitle(gds.keysFolderID, h.Hex())
+	f, err := gds.driveService.Files.Get(fileID).Do()
 	fileString, err := gds.DownloadFile(f)
 	if err != nil {
 		log.Printf("An error occurred: %v\n", err)
@@ -235,11 +236,11 @@ func googledriveserviceFactory() googledriveservice {
 	//get the ID's of the object folders'
 	httpClient := gds.transport.Client()
 	gds.driveService, err = drive.New(httpClient)
-	ccfsFolderId, err := gds.getChildWithTitle("root", "ccfs")
-	gds.blobsFolderId, err = gds.getChildWithTitle(ccfsFolderId, "blobs")
-	gds.commitsFolderId, err = gds.getChildWithTitle(ccfsFolderId, "commits")
-	gds.tagsFolderId, err = gds.getChildWithTitle(ccfsFolderId, "tags")
-	gds.keysFolderId, err = gds.getChildWithTitle(ccfsFolderId, "keys")
+	ccfsFolderID, err := gds.getChildWithTitle("root", "ccfs")
+	gds.blobsFolderID, err = gds.getChildWithTitle(ccfsFolderID, "blobs")
+	gds.commitsFolderID, err = gds.getChildWithTitle(ccfsFolderID, "commits")
+	gds.tagsFolderID, err = gds.getChildWithTitle(ccfsFolderID, "tags")
+	gds.keysFolderID, err = gds.getChildWithTitle(ccfsFolderID, "keys")
 
 	log.Printf(
 		"\n\tblobsFolderId: %v"+
@@ -248,10 +249,10 @@ func googledriveserviceFactory() googledriveservice {
 			"\n\tkeysFolderId: %v"+
 			"\n\tdriveService: %v"+
 			"\n\ttransport: %v\n",
-		gds.blobsFolderId,
-		gds.commitsFolderId,
-		gds.tagsFolderId,
-		gds.keysFolderId,
+		gds.blobsFolderID,
+		gds.commitsFolderID,
+		gds.tagsFolderID,
+		gds.keysFolderID,
 		gds.driveService,
 		gds.transport,
 	)
@@ -259,6 +260,7 @@ func googledriveserviceFactory() googledriveservice {
 	return gds
 }
 
+//Instance is the instance of the googledriveservice
 var Instance googledriveservice
 
 func init() {

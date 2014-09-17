@@ -1,3 +1,4 @@
+//Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
 package localfile
 
 import (
@@ -139,7 +140,8 @@ func (lfs localfileservice) latestVersion(matches []string) string {
 	return match
 }
 
-var Instance localfileservice = localfileservice{}
+//Instance is the instance of the localfileservice
+var Instance = localfileservice{}
 
 func init() {
 	services.Registerblobgeter(Instance)

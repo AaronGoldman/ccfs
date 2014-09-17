@@ -1,3 +1,4 @@
+//Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
 package timeout
 
 import (
@@ -33,6 +34,7 @@ func (timeoutservice) GetKey(objects.HKID) (objects.Blob, error) {
 	return objects.Blob{}, fmt.Errorf("GetKey Timeout")
 }
 
+//Instance is the instance of the timeoutservice
 var Instance timeoutservice
 
 func init() {

@@ -1,3 +1,4 @@
+//Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
 //Directory
 
 package fuse
@@ -31,6 +32,7 @@ func (d Dir) Fsync(r *fuse.FsyncRequest, intr fs.Intr) fuse.Error {
 
 //constructor
 func (d Dir) newDir(Name string) *Dir {
+	log.Printf("newdir called:%s", Name)
 	p := Dir{
 		leaf:         objects.Blob{}.Hash(),
 		permission:   d.permission,
@@ -44,13 +46,31 @@ func (d Dir) newDir(Name string) *Dir {
 	return &p
 }
 
+//func (d Dir) Remove(*fuse.RemoveRequest, Intr) fuse.Error
+func (d Dir) String() string {
+	return fmt.Sprintf(
+		"[%s]%s %s\nmode:%s parent:%s\nid:%v",
+		d.content_type,
+		d.name,
+		d.leaf,
+		d.permission,
+		d.parent,
+		d.inode,
+	)
+}
+
+func logRequestObject(r, o fmt.Stringer) {
+	log.Printf("request: %+v", r)
+	log.Printf("object: %+v", o)
+	return
+}
+
 func (d Dir) Rename(
 	r *fuse.RenameRequest,
 	newDir fs.Node,
 	intr fs.Intr,
 ) fuse.Error {
-	log.Printf("Rename request: %+v", r)
-	log.Printf("rename request: rename dir - %+v", d)
+	logRequestObject(r, d)
 	//find content_type
 	if r.OldName != r.NewName {
 		d.name = r.NewName
@@ -60,9 +80,9 @@ func (d Dir) Rename(
 	switch d.content_type {
 
 	case "list":
-		l, err := services.GetList(d.leaf.(objects.HCID))
-		if err != nil {
-			return err
+		l, listErr := services.GetList(d.leaf.(objects.HCID))
+		if listErr != nil {
+			return listErr
 		}
 		newList := l.Add(r.NewName, l[r.OldName].Hash, l[r.OldName].TypeString)
 		newList = l.Remove(r.OldName)
@@ -73,18 +93,18 @@ func (d Dir) Rename(
 		)
 		el := services.PostList(newList)
 		if el != nil {
-			return err
+			return listErr
 		}
 		d.Publish(d.leaf.(objects.HCID), d.name, d.content_type)
 
 	case "commit":
-		c, err := services.GetCommit(d.leaf.(objects.HKID))
-		if err != nil {
-			return err
+		c, CommitErr := services.GetCommit(d.leaf.(objects.HKID))
+		if CommitErr != nil {
+			return CommitErr
 		}
-		l, err := services.GetList(c.ListHash)
-		if err != nil {
-			return err
+		l, ListErr := services.GetList(c.ListHash)
+		if ListErr != nil {
+			return ListErr
 		}
 		newList := l.Add(r.NewName, l[r.OldName].Hash, l[r.OldName].TypeString)
 		newList = l.Remove(r.OldName)
@@ -97,7 +117,7 @@ func (d Dir) Rename(
 		)
 		el := services.PostList(newList)
 		if el != nil {
-			return err
+			return ListErr
 		}
 		log.Printf(
 			"Posting commit %s\n-----BEGIN COMMIT-----\n%s\n-------END COMMIT-----",
@@ -106,14 +126,14 @@ func (d Dir) Rename(
 		)
 		ec := services.PostCommit(newCommit)
 		if ec != nil {
-			return err
+			return ListErr
 		}
 
 	case "tag":
 
-		oldTag, err := services.GetTag(d.leaf.(objects.HKID), r.OldName)
+		oldTag, tagErr := services.GetTag(d.leaf.(objects.HKID), r.OldName)
 		var newTag objects.Tag
-		if err == nil {
+		if tagErr == nil {
 			newTag = objects.NewTag(
 				oldTag.HashBytes,
 				oldTag.TypeString,
@@ -132,7 +152,7 @@ func (d Dir) Rename(
 		)
 		et := services.PostTag(newTag)
 		if et != nil {
-			return err
+			return tagErr
 		}
 	} //end switch
 
@@ -146,20 +166,21 @@ func (d Dir) Attr() fuse.Attr {
 
 func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 	log.Printf("Directory Lookup:\n\tName: %s\n\tHID: %s", name, d.leaf.Hex())
+	log.Printf("%v", d)
 	new_nodeID := fuse.NodeID(fs.GenerateDynamicInode(uint64(d.inode), name))
 
 	switch d.content_type {
 	default:
 		return nil, nil
 	case "commit":
-		node, err := d.LookupCommit(name, intr, new_nodeID)
-		return node, err
+		node, CommitErr := d.LookupCommit(name, intr, new_nodeID)
+		return node, CommitErr
 	case "list":
-		node, err := d.LookupList(name, intr, new_nodeID)
-		return node, err
+		node, listErr := d.LookupList(name, intr, new_nodeID)
+		return node, listErr
 	case "tag":
-		node, err := d.LookupTag(name, intr, new_nodeID)
-		return node, err
+		node, tagErr := d.LookupTag(name, intr, new_nodeID)
+		return node, tagErr
 	}
 
 }
@@ -170,12 +191,8 @@ func (d Dir) Create(
 	response *fuse.CreateResponse,
 	intr fs.Intr,
 ) (fs.Node, fs.Handle, fuse.Error) {
-	log.Printf("create node")
-	log.Printf("permission: %s", request.Mode)
-	log.Printf("name: %s", request.Name)
-	//request.Flags = fuse.OpenFlags(os.O_RDWR)
-	//request.Dir = 1
-	log.Printf("flags: %s", request.Flags)
+	logRequestObject(request, d)
+
 	//   O_RDONLY int = os.O_RDONLY // open the file read-only.
 	//   O_WRONLY int = os.O_WRONLY // open the file write-only.
 	//   O_RDWR   int = os.O_RDWR   // open the file read-write.
@@ -209,8 +226,8 @@ func (d Dir) Create(
 	// 		return nil, fuse.ENOENT
 	// 		}
 	case os.O_EXCL&int(request.Flags) == os.O_EXCL:
-		_, e := d.Lookup(request.Name, intr)
-		if e == nil {
+		_, LookupErr := d.Lookup(request.Name, intr)
+		if LookupErr == nil {
 			return nil, nil, fuse.EEXIST
 		}
 		fallthrough //-- file doesn't exist
@@ -234,13 +251,13 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 		log.Printf("unknown type: %s", d.content_type)
 		return fmt.Errorf("unknown type: %s", d.content_type)
 	case "commit":
-		c, err := services.GetCommit(d.leaf.(objects.HKID))
-		if err != nil {
-			return err
+		c, CommitErr := services.GetCommit(d.leaf.(objects.HKID))
+		if CommitErr != nil {
+			return CommitErr
 		}
-		l, err := services.GetList(c.ListHash)
-		if err != nil {
-			return err
+		l, listErr := services.GetList(c.ListHash)
+		if listErr != nil {
+			return listErr
 		}
 		newList := l.Add(name, h, typeString)
 
@@ -252,7 +269,7 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 		)
 		el := services.PostList(newList)
 		if el != nil {
-			return err
+			return listErr
 		}
 		log.Printf(
 			"Posting commit %s\n-----BEGIN COMMIT-----\n%s\n-------END COMMIT-----",
@@ -261,13 +278,13 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 		)
 		ec := services.PostCommit(newCommit)
 		if ec != nil {
-			return err
+			return listErr
 		}
 		return nil
 	case "tag":
-		t, err := services.GetTag(d.leaf.(objects.HKID), name)
+		t, tagErr := services.GetTag(d.leaf.(objects.HKID), name)
 		var newTag objects.Tag
-		if err == nil {
+		if tagErr == nil {
 			newTag = t.Update(h, typeString)
 		} else {
 			log.Printf("Tag %s\\%s Not Found", d.leaf, name)
@@ -280,13 +297,13 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 		)
 		et := services.PostTag(newTag)
 		if et != nil {
-			return err
+			return tagErr
 		}
 		return nil
 	case "list":
-		l, err := services.GetList(d.leaf.(objects.HCID))
-		if err != nil {
-			return err
+		l, listErr := services.GetList(d.leaf.(objects.HCID))
+		if listErr != nil {
+			return listErr
 		}
 		newList := l.Add(name, h, typeString)
 		log.Printf(
@@ -296,7 +313,7 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 		)
 		el := services.PostList(newList)
 		if el != nil {
-			return err
+			return listErr
 		}
 		d.parent.Publish(newList.Hash(), d.name, "list")
 		return nil
@@ -305,15 +322,15 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 
 func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
 
-	c, err := services.GetCommit(d.leaf.(objects.HKID))
-	if err != nil {
-		log.Printf("commit %s:", err)
+	c, CommitErr := services.GetCommit(d.leaf.(objects.HKID))
+	if CommitErr != nil {
+		log.Printf("commit %s:", CommitErr)
 		return nil, nil
 	}
 	//get list hash
-	l, err := services.GetList(c.ListHash) //l is the list object
-	if err != nil {
-		log.Printf("commit list retieval error %s:", err)
+	l, listErr := services.GetList(c.ListHash) //l is the list object
+	if listErr != nil {
+		log.Printf("commit list retieval error %s:", listErr)
 		return nil, nil
 	}
 
@@ -322,22 +339,20 @@ func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 		return nil, fuse.ENOENT
 	}
 	//getKey to figure out permissions of the child
-	_, err = services.GetKey(c.Hkid)
+	_, keyErr := services.GetKey(c.Hkid)
 	//perm := fuse.Attr{Mode: 0555}//default read permissions
 	perm := os.FileMode(0777)
 
-	if err != nil {
-		log.Printf("error not nil; change file Mode %s:", err)
+	if keyErr != nil {
+		log.Printf("error not nil; change file Mode %s:", keyErr)
 		//perm =  fuse.Attr{Mode: 0755}
 		perm = os.FileMode(0555)
-	} else {
-		//log.Printf("no private key %s:", err)
 	}
 
 	if list_entry.TypeString == "blob" {
-		b, err := services.GetBlob(list_entry.Hash.(objects.HCID))
+		b, blobErr := services.GetBlob(list_entry.Hash.(objects.HCID))
 		sizeBlob := 0
-		if err == nil {
+		if blobErr == nil {
 			sizeBlob = len(b)
 		}
 		return File{
@@ -367,9 +382,9 @@ func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 }
 
 func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
-	l, err := services.GetList(d.leaf.(objects.HCID))
-	if err != nil {
-		log.Printf("get list %s:", err)
+	l, listErr := services.GetList(d.leaf.(objects.HCID))
+	if listErr != nil {
+		log.Printf("get list %s:", listErr)
 		return nil, nil
 	}
 	list_entry, present := l[name] //go through list entries and is it maps to the string you passed in present == 1
@@ -377,9 +392,9 @@ func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node,
 		return nil, fuse.ENOENT
 	}
 
-	b, err := services.GetBlob(list_entry.Hash.(objects.HCID))
+	b, blobErr := services.GetBlob(list_entry.Hash.(objects.HCID))
 	sizeBlob := 0
-	if err == nil {
+	if blobErr == nil {
 		sizeBlob = len(b)
 	}
 
@@ -407,25 +422,25 @@ func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node,
 
 func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
 
-	t, err := services.GetTag(d.leaf.(objects.HKID), name) //leaf is HID
+	t, tagErr := services.GetTag(d.leaf.(objects.HKID), name) //leaf is HID
 	// no blobs because blobs are for file structure
 
-	if err != nil {
-		log.Printf("not a tag Err:%s", err)
+	if tagErr != nil {
+		log.Printf("not a tag Err:%s", tagErr)
 		return nil, fuse.ENOENT
 	}
 	//getKey to figure out permissions of the child
-	_, err = services.GetKey(t.Hkid)
+	_, keyErr := services.GetKey(t.Hkid)
 	perm := os.FileMode(0555) //default read permissions
-	if err == nil {
+	if keyErr == nil {
 		perm = os.FileMode(0755)
 	} else {
-		log.Printf("no private key %s:", err)
+		log.Printf("no private key %s:", keyErr)
 	}
 	if t.TypeString == "blob" {
-		b, err := services.GetBlob(t.HashBytes.(objects.HCID))
+		b, blobErr := services.GetBlob(t.HashBytes.(objects.HCID))
 		sizeBlob := 0
-		if err == nil {
+		if blobErr == nil {
 			sizeBlob = len(b)
 		}
 		return File{
@@ -451,14 +466,14 @@ func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, 
 func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	//log.Printf("ReadDir requested:\n\tName:%s", d.name)
 	var l objects.List
-	var err error
+	var listErr error
 	var dirDirs = []fuse.Dirent{}
 	switch d.content_type {
 	case "tag":
 		//if d.content_type == "tag" {
-		tags, err := services.GetTags(d.leaf.(objects.HKID))
-		if err != nil {
-			log.Printf("tag %s:", err)
+		tags, tagErr := services.GetTags(d.leaf.(objects.HKID))
+		if tagErr != nil {
+			log.Printf("tag %s:", tagErr)
 			return nil, fuse.ENOENT
 		}
 		for _, tag := range tags {
@@ -466,10 +481,9 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 			enttype := fuse.DT_Dir
 			switch tag.TypeString {
 			case "blob":
-				//if tag.TypeString == "blob" {
 				enttype = fuse.DT_File
 				fallthrough
-			//}
+
 			case "list", "commit", "tag":
 				dirDirs = append(dirDirs, fuse.Dirent{
 					Inode: fs.GenerateDynamicInode(uint64(d.inode), name),
@@ -482,25 +496,23 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 		return dirDirs, nil
 	case "commit":
 		//} else if d.content_type == "commit" {
-		c, err := services.GetCommit(d.leaf.(objects.HKID))
-		if err != nil {
-			log.Printf("commit %s:", err)
+		c, CommitErr := services.GetCommit(d.leaf.(objects.HKID))
+		if CommitErr != nil {
+			log.Printf("commit %s:", CommitErr)
 			return nil, fuse.ENOENT
 		}
-		l, err = services.GetList(c.ListHash)
-		if err != nil {
-			log.Printf("commit list %s:", err)
+		l, listErr = services.GetList(c.ListHash)
+		if listErr != nil {
+			log.Printf("commit list %s:", listErr)
 			return nil, fuse.ENOENT
 		}
 	case "list":
-		//} else if d.content_type == "list" {
-		l, err = services.GetList(d.leaf.(objects.HCID))
-		if err != nil {
-			log.Printf("list %s:", err)
+		l, listErr = services.GetList(d.leaf.(objects.HCID))
+		if listErr != nil {
+			log.Printf("list %s:", listErr)
 			return nil, fuse.ENOENT
 		}
 	default:
-		//} else {
 		return nil, fuse.ENOENT
 	}
 
@@ -512,8 +524,6 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 				Type:  fuse.DT_File,
 			}
 			dirDirs = append(dirDirs, append_to_list)
-			// we need to append this to list + work on the next if(commit/list/tag? )
-			// Type for the other one will be fuse.DT_DIR
 		} else {
 			append_to_list := fuse.Dirent{
 				Inode: fs.GenerateDynamicInode(uint64(d.inode), name),
@@ -521,8 +531,7 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 				Type:  fuse.DT_Dir}
 			dirDirs = append(dirDirs, append_to_list)
 		}
-	} // end if range
-	//	log.Printf("return dirDirs: %s", dirDirs)
+	}
 
 	//loop through openHandles
 	for openHandle, _ := range d.openHandles {

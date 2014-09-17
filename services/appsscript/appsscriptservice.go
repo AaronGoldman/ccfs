@@ -1,3 +1,4 @@
+//Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
 package appsscript
 
 import (
@@ -131,7 +132,8 @@ func (a appsscriptservice) GetKey(h objects.HKID) (objects.Blob, error) {
 	return data, err
 }
 
-var Instance appsscriptservice = appsscriptservice{}
+//Instance is the instance of the appsscriptservice
+var Instance = appsscriptservice{}
 
 func init() {
 	//Registerblobgeter(appsscriptserviceInstance)

@@ -1,3 +1,4 @@
+//Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
 // multicastservice_test
 package multicast
 
@@ -90,24 +91,24 @@ func TestMulticastservice_GetTag(t *testing.T) {
 	//hkid := HKID{}
 	hkid := objects.HkidFromDString("6450698573071574057685373503239926609554390924514830851922442833127942726436428023022500281659846836919706975681006884631876585143520956760217923400876937896", 10)
 	b := objects.Blob([]byte("blob found"))
-	tag_t := objects.NewTag(b.Hash(), "blob", "BlobinTag", hkid)
-	localfile.Instance.PostTag(tag_t)
+	tagT := objects.NewTag(b.Hash(), "blob", "BlobinTag", hkid)
+	localfile.Instance.PostTag(tagT)
 	go func() {
 		time.Sleep(1 * time.Millisecond)
 		mcaddr, _ := net.ResolveUDPAddr("udp", "127.0.0.1:8000")
-		Instance.receivemessage(fmt.Sprintf("{\"type\":\"tag\", \"hkid\": \"%s\", \"namesegment\": \"%s\", \"URL\": \"/t/%s/%s/%d\"}", hkid, tag_t.NameSegment, hkid, tag_t.NameSegment, tag_t.Version), mcaddr)
+		Instance.receivemessage(fmt.Sprintf("{\"type\":\"tag\", \"hkid\": \"%s\", \"namesegment\": \"%s\", \"URL\": \"/t/%s/%s/%d\"}", hkid, tagT.NameSegment, hkid, tagT.NameSegment, tagT.Version), mcaddr)
 	}()
 
-	output, err := Instance.GetTag(tag_t.Hkid(), tag_t.NameSegment)
+	output, err := Instance.GetTag(tagT.Hkid(), tagT.NameSegment)
 
 	if err != nil {
 		t.Errorf("Get Tag Failed \nError:%s", err)
 	} else if !output.Verify() {
 		//!bytes.Equal(output.Hash(), tag_t.Hash()) {
-		t.Errorf("Get Tag Failed \nExpected:%s \nGot: %s", tag_t, output)
+		t.Errorf("Get Tag Failed \nExpected:%s \nGot: %s", tagT, output)
 	}
-	if output.Version != tag_t.Version {
-		log.Printf("Tag is stale %d", tag_t.Version-output.Version)
+	if output.Version != tagT.Version {
+		log.Printf("Tag is stale %d", tagT.Version-output.Version)
 	}
 }
 

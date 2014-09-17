@@ -1,4 +1,5 @@
-// multicastservice.go
+//Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
+//Package multicast multicastservice.go
 package multicast
 
 import (
@@ -263,10 +264,8 @@ func (m multicastservice) geturl(url string) (data []byte, err error) {
 	if err != nil {
 		log.Printf("The ReadAll error is %s", err)
 		return data, err
-	} else {
-		return data, nil
 	}
-
+	return data, nil
 }
 
 func multicastservicefactory() (m multicastservice) {
@@ -291,6 +290,7 @@ func multicastservicefactory() (m multicastservice) {
 	}
 }
 
+//Instance is the instance of the multicastservice
 var Instance multicastservice
 
 func init() {

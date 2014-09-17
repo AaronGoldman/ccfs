@@ -1,4 +1,8 @@
+//Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
+
 // services.go
+//Package services is the common function for all the ccfs services
+
 package services
 
 import (
@@ -15,15 +19,34 @@ var commitposters = []commitposter{}
 var tagposters = []tagposter{}
 var keyposters = []keyposter{}
 
-func Registerblobgeter(service blobgeter)       { blobgeters = append(blobgeters, service) }
-func Registercommitgeter(service commitgeter)   { commitgeters = append(commitgeters, service) }
-func Registertaggeter(service taggeter)         { taggeters = append(taggeters, service) }
-func Registertagsgeter(service tagsgeter)       { tagsgeters = append(tagsgeters, service) }
-func Registerkeygeter(service keygeter)         { keygeters = append(keygeters, service) }
-func Registerblobposter(service blobposter)     { blobposters = append(blobposters, service) }
+//Registerblobgeter adds the pased in blobgeter to the blobgeters that are muxed
+func Registerblobgeter(service blobgeter) { blobgeters = append(blobgeters, service) }
+
+//Registercommitgeter adds the pased in commitgeter to the commitgeters that are muxed
+func Registercommitgeter(service commitgeter) { commitgeters = append(commitgeters, service) }
+
+//Registertaggeter adds the pased in taggeter to the taggeters that are muxed
+func Registertaggeter(service taggeter) { taggeters = append(taggeters, service) }
+
+//Registertagsgeter adds the pased in tagsgeter to the tagsgeters that are muxed
+func Registertagsgeter(service tagsgeter) { tagsgeters = append(tagsgeters, service) }
+
+//Registerkeygeter adds the pased in keygeter to the keygeters that are muxed
+func Registerkeygeter(service keygeter) { keygeters = append(keygeters, service) }
+
+//Registerblobposter adds the pased in blobposter to the blobposters that are muxed
+func Registerblobposter(service blobposter) { blobposters = append(blobposters, service) }
+
+//Registercommitposter adds the pased in commitposter to the commitposters that are muxed
 func Registercommitposter(service commitposter) { commitposters = append(commitposters, service) }
-func Registertagposter(service tagposter)       { tagposters = append(tagposters, service) }
-func Registerkeyposter(service keyposter)       { keyposters = append(keyposters, service) }
+
+//Registertagposter adds the pased in tagposter to the tagposters that are muxed
+func Registertagposter(service tagposter) { tagposters = append(tagposters, service) }
+
+//Registerkeyposter adds the pased in keyposter to the keyposters that are muxed
+func Registerkeyposter(service keyposter) { keyposters = append(keyposters, service) }
+
+//Registercontentservice Registers the service with all the content services
 func Registercontentservice(service contentservice) {
 	Registerblobgeter(service)
 	Registercommitgeter(service)

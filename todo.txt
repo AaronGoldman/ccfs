@@ -1,9 +1,15 @@
  _
 |_| ccfs
+ |_| Call Stop on all the started servises and interfaces
  |_| GetTags(h objects.HKID) ([]objects.Tag, error)
   |_| appsscript
   |_| googledrive
   |_| multicast
  |_| fix tests for ragged lists (Aaron Goldman)
  |_| fix relitive urls in libs tests
-|_| content refresher
+ |_| content refresher
+ |_| split dir in to three diferent types
+  |_| type directory interface {}
+   |_| type list struct {}
+   |_| type repository struct {}
+   |_| type domain struct {}

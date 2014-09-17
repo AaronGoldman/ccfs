@@ -1,8 +1,10 @@
+//Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
 //files
 
 package fuse
 
 import (
+	"fmt"
 	"log"
 	"os"
 	//"time"
@@ -22,6 +24,19 @@ type File struct {
 	//Mtime		time.
 	flags fuse.OpenFlags
 	size  uint64
+}
+
+func (f File) String() string {
+	return fmt.Sprintf(
+		"[%d]%s %s\nmode:%s flags:%s id:%v \n\tparent:%s",
+		f.size,
+		f.name,
+		f.contentHash,
+		f.permission,
+		f.flags,
+		f.inode,
+		f.parent,
+	)
 }
 
 func (f File) Attr() fuse.Attr {
@@ -66,8 +81,8 @@ func (f File) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
 	if f.contentHash == nil { // default file
 		return []byte("hello, world\n"), nil
 	}
-	b, err := services.GetBlob(f.contentHash) //
-	if err != nil {
+	b, blobErr := services.GetBlob(f.contentHash) //
+	if blobErr != nil {
 		return nil, fuse.ENOENT
 	}
 	return b, nil
@@ -75,8 +90,7 @@ func (f File) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
 
 //nodeopener interface contains open(). Node may be used for file or directory
 func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr fs.Intr) (fs.Handle, fuse.Error) {
-	log.Printf("Open File")
-	log.Printf("request: %+v", request)
+	logRequestObject(request, f)
 	//request.dir = 0
 	//   O_RDONLY int = os.O_RDONLY // open the file read-only.
 	//   O_WRONLY int = os.O_WRONLY // open the file write-only.
@@ -87,9 +101,9 @@ func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr 
 	//   O_SYNC   int = os.O_SYNC   // open for synchronous I/O.
 	//   O_TRUNC  int = os.O_TRUNC  // if possible, truncate file when opened.
 
-	b, err := services.GetBlob(f.contentHash) //
-	if err != nil {
-		log.Printf("get blob error in opening handel %s", err)
+	b, blobErr := services.GetBlob(f.contentHash) //
+	if blobErr != nil {
+		log.Printf("get blob error in opening handel %s", blobErr)
 		return nil, fuse.ENOENT
 	}
 

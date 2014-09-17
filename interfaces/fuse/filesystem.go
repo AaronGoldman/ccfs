@@ -1,3 +1,4 @@
+//Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
 package fuse
 
 import (
@@ -10,6 +11,8 @@ import (
 	"github.com/AaronGoldman/ccfs/interfaces"
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
+
+	//"github.com/davecheney/profile"
 )
 
 //testing push with new origin
@@ -37,6 +40,7 @@ func startFSintegration() {
 		ccfsUnmount(mountpoint)
 
 	}() //end func
+	//defer profile.Start(profile.CPUProfile).Stop()
 	fs.Serve(c, FS_from_HKID_string(interfaces.GetLocalSeed(), mountpoint))
 }
 
