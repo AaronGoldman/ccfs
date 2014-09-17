@@ -64,7 +64,7 @@ func (t Tag) Verify() bool {
 	if t.Hkid == nil {
 		return false
 	}
-	tPublicKey := ecdsa.PublicKey(geterPoster.getPiblicKeyForHkid(t.Hkid))
+	tPublicKey := ecdsa.PublicKey(geterPoster.getPublicKeyForHkid(t.Hkid))
 	r, s := elliptic.Unmarshal(elliptic.P521(), t.Signature)
 	ObjectHash := t.genTagHash(t.HashBytes, t.TypeString, t.NameSegment,
 		t.Version, t.Parents, t.Hkid)
