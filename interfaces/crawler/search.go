@@ -24,6 +24,7 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 		CommitInfoPresent bool
 		TagInfo           tagIndexEntry
 		TagInfoPresent    bool
+		Text              map[string][]string
 	}{}
 
 	parsedURL, err := url.Parse(r.RequestURI)
@@ -69,14 +70,34 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
-	nameSegFields := strings.FieldsFunc(ResponseStruct.Query, isSeperator)
+	queryTokens := strings.FieldsFunc(ResponseStruct.Query, isSeperator)
 	ResponseStruct.NameSegmentInfos = make(map[string]map[nameSegmentIndexEntry]int)
 	for nameSegment, nameSegEntry := range nameSegmentIndex {
-		for _, nameSegField := range nameSegFields {
-			present := strings.Contains(nameSegment, nameSegField)
-			if present {
+		for _, queryToken := range queryTokens {
+			if present := strings.Contains(nameSegment, queryToken); present {
 				ResponseStruct.NameSegmentInfos[nameSegment] = nameSegEntry
 				break
+			}
+		}
+	}
+
+	tempMap := make(map[string][]objects.HCID)
+	for _, queryToken := range queryTokens {
+		if _, present := textIndex[queryToken]; present {
+			tempMap[queryToken] = textIndex[queryToken]
+		}
+	}
+
+	ResponseStruct.Text = make(map[string][]string)
+	for token, tempHCIDs := range tempMap {
+		for _, tempHCID := range tempHCIDs {
+			if _, present := ResponseStruct.Text[tempHCID.Hex()]; !present {
+				ResponseStruct.Text[tempHCID.Hex()] = []string{token}
+			} else {
+				ResponseStruct.Text[tempHCID.Hex()] = append(
+					ResponseStruct.Text[tempHCID.Hex()],
+					token,
+				)
 			}
 		}
 	}
@@ -159,6 +180,23 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 							{{end}}
 						</ul>
 					{{end}}
+				{{end}}
+
+				{{with .Text}}
+				<br>
+				Full Text Search Results:
+					<ul>
+						{{range $key1, $value1:= .}}
+						<a href= "/b/{{$key1}}">
+							{{$key1}}
+							</a>
+							{{range $key:= $value1}}
+								<li>
+									{{$key}}
+								</li>
+							{{end}}
+						{{end}}
+					</ul>
 				{{end}}
 				{{if .BlobInfoPresent}}
 					</br>
