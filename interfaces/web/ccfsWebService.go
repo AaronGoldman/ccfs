@@ -11,12 +11,26 @@ import (
 
 //BlobServerStart starts a server for the content services
 func BlobServerStart() {
-	http.Handle("/b/", http.StripPrefix("/b/",
-		http.FileServer(http.Dir("bin/blobs"))))
-	http.Handle("/t/", http.StripPrefix("/t/",
-		http.FileServer(http.Dir("bin/tags"))))
-	http.Handle("/c/", http.StripPrefix("/c/",
-		http.FileServer(http.Dir("bin/commits"))))
+	http.Handle(
+		"/b/",
+		http.StripPrefix(
+			"/b/",
+			http.FileServer(http.Dir("bin/blobs")),
+		),
+	)
+	http.Handle(
+		"/t/",
+		http.StripPrefix(
+			"/t/",
+			http.FileServer(http.Dir("bin/tags")),
+		),
+	)
+	http.Handle(
+		"/c/",
+		http.StripPrefix("/c/",
+			http.FileServer(http.Dir("bin/commits")),
+		),
+	)
 	http.ListenAndServe(":8080", nil)
 }
 

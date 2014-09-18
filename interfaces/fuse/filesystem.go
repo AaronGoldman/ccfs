@@ -68,6 +68,14 @@ func (fs_obj FS) Root() (fs.Node, fuse.Error) { //returns a directory
 		perm = 0777
 	}
 
+	//return Repository{
+	//	contents:   fs_obj.hkid,
+	//	inode:      1,
+	//	name:       "",
+	//	parent:     nil,
+	//	permission: perm,
+	//}
+
 	return Dir{
 		//path: "/",
 		//trunc:        fs_obj.hkid,

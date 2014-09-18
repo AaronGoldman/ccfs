@@ -6,10 +6,20 @@
   |_| googledrive
   |_| multicast
  |_| fix tests for ragged lists (Aaron Goldman)
- |_| fix relitive urls in libs tests
+ |x| fix relitive urls in libs tests
  |_| content refresher
  |_| split dir in to three diferent types
   |_| type directory interface {}
    |_| type list struct {}
    |_| type repository struct {}
    |_| type domain struct {}
+ _
+|_| Mallika Sen
+ |_|
+|_| Thomas Saekao
+ |_|
+|_| Ikenna Uzoije
+ |_|
+|_| Chris Beaulieu
+ |_| add name and email to contributors file
+ |_|

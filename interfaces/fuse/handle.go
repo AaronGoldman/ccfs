@@ -12,6 +12,19 @@ import (
 	"github.com/AaronGoldman/ccfs/services"
 )
 
+type readHandle struct {
+	data []byte
+}
+
+func ReadHandle(data []byte) fs.Handle {
+	return &readHandle{data}
+}
+
+func (h *readHandle) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
+	log.Printf("ReadHandle ReadAll %s", h)
+	return h.data, nil
+}
+
 type OpenFileHandle struct {
 	buffer []byte
 	parent *Dir

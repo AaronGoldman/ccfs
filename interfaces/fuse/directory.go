@@ -13,6 +13,42 @@ import (
 	"github.com/AaronGoldman/ccfs/services"
 )
 
+type Repository struct {
+	contents   objects.HKID
+	inode      fuse.NodeID
+	name       string
+	parent     *directory
+	permission os.FileMode
+}
+type Domain struct {
+	contents   objects.HKID
+	inode      fuse.NodeID
+	name       string
+	parent     *directory
+	permission os.FileMode
+}
+type Folder struct {
+	contents   objects.HCID
+	inode      fuse.NodeID
+	name       string
+	parent     *directory
+	permission os.FileMode
+}
+
+func (self Folder) Attr() fuse.Attr {
+	return fuse.Attr{
+		Inode: uint64(self.inode),
+		Mode:  os.ModeDir | self.permission,
+	}
+}
+
+type directory interface {
+	fs.Node
+	fs.NodeCreater
+	fs.NodeStringLookuper
+	fs.NodeRenamer
+}
+
 type Dir struct {
 	leaf         objects.HID
 	permission   os.FileMode
@@ -160,7 +196,24 @@ func (d Dir) Rename(
 
 func (d Dir) Attr() fuse.Attr {
 	log.Printf("Directory attributes requested\n\tName:%s", d.name)
-	return fuse.Attr{Inode: uint64(d.inode), Mode: os.ModeDir | d.permission}
+	return fuse.Attr{
+		Inode: uint64(d.inode),
+		Mode:  os.ModeDir | d.permission,
+	}
+	// {
+	// 	Inode:10526737836144204806
+	// 	Size:0 Blocks:0 				// size should be
+	// 	Atime:0001-01-01 00:00:00 +0000 UTC
+	// 	Mtime:0001-01-01 00:00:00 +0000 UTC
+	// 	Ctime:0001-01-01 00:00:00 +0000 UTC
+	// 	Crtime:0001-01-01 00:00:00 +0000 UTC
+	// 	Mode:-rw-r--r--
+	// 	Nlink:0
+	// 	Uid:0
+	// 	Gid:0
+	// 	Rdev:0
+	// 	Flags:0
+	// }
 }
 
 func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
@@ -203,7 +256,7 @@ func (d Dir) Create(
 
 	node := File{
 		contentHash: objects.Blob{}.Hash(),
-		permission:  request.Mode, //os.FileMode(0777)
+		permission:  os.FileMode(0777), //request.Mode,
 		parent:      &d,
 		name:        request.Name,
 		inode:       fuse.NodeID(fs.GenerateDynamicInode(uint64(d.inode), request.Name)),
