@@ -1,4 +1,8 @@
+//Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
+
+// services.go
 //Package services is the common function for all the ccfs services
+
 package services
 
 import (
