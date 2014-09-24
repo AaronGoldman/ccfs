@@ -50,16 +50,16 @@ func TestFileFunctions(t *testing.T) {
 		t.Errorf("Testing Directory Existence Error - %s /n", err)
 	}
 	for _, fileInfo := range fileInfos {
-		if fileInfo == testFile {
+		if fileInfo.Name() == testFile {
 			t.Errorf("File Creation Error - File Already Exists")
 			return
 		}
 	}
-	path := filepath.Join(mountpoint, testfile)
+	path := filepath.Join(mountpoint, testFile)
 	ioutil.WriteFile(path, []byte(""), 0777)
 	fileFound := false
 	for _, fileInfo := range fileInfos {
-		if fileInfo == testFile {
+		if fileInfo.Name() == testFile {
 			fileFound = true
 		}
 	}
@@ -70,19 +70,19 @@ func TestFileFunctions(t *testing.T) {
 
 	inBytes := []byte("Test Data")
 	ioutil.WriteFile(path, inBytes, 0777)
-	outBytes, err := ioutil.ReadFile(path, []byte{}, 0777)
+	outBytes, err := ioutil.ReadFile(path)
 	if err != nil {
-		t.errorf("Read File Error - %s", err)
+		t.Errorf("Read File Error - %s", err)
 		return
 	}
 	if !bytes.Equal(inBytes, outBytes) {
-		t.errorf("Data Write Error - Data Read Not Equal to Data Written")
+		t.Errorf("Data Write Error - Data Read Not Equal to Data Written")
 		return
 	}
 
 	err = os.Remove(path)
 	if err != nil {
-		t.errorf("File Deletion Error - %s", err)
+		t.Errorf("File Deletion Error - %s", err)
 		return
 	}
 
