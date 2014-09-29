@@ -29,20 +29,11 @@ func parseFlagsAndTakeAction() {
 
 	flag.Parse()
 
-	if flag.NFlag() == 0 {
-		//flagged = false
-		*serve = true
-		//*mount = true
-	}
-
 	if *serve {
 		web.Start()
-		//go BlobServerStart()
-		//go RepoServerStart()
 	}
 	if *mount {
 		fuse.Start()
-		//go startFSintegration()
 	}
 
 	if *path != "" {
