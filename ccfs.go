@@ -4,6 +4,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 
@@ -48,6 +49,23 @@ func main() {
 
 func command_line_interface() {
 	in := bufio.NewReader(os.Stdin)
-	_, _ = in.ReadString('\n')
+
+	continueCLI := true
+
+	for continueCLI {
+		line, err := in.ReadString('\n')
+		if err != nil {
+			fmt.Printf("[CLI] %s", err)
+		}
+
+		switch line {
+		case "quit\n":
+			continueCLI = false
+
+		default:
+			fmt.Printf("Type quit to quit\n")
+		}
+
+	}
 	return
 }
