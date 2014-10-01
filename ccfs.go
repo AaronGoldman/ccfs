@@ -7,16 +7,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-
-	//"github.com/AaronGoldman/ccfs/interfaces/crawler"
-	//"github.com/AaronGoldman/ccfs/objects"
-	//"github.com/AaronGoldman/ccfs/services"
-	//"github.com/AaronGoldman/ccfs/services/localfile"
-	//"github.com/AaronGoldman/ccfs/services/timeout"
-	//"github.com/AaronGoldman/ccfs/services/appsscript"
-	//"github.com/AaronGoldman/ccfs/services/googledrive"
-	//"github.com/AaronGoldman/ccfs/services/kademliadht"
-	//"github.com/AaronGoldman/ccfs/services/multicast"
 )
 
 func init() {
@@ -26,12 +16,6 @@ func init() {
 func main() {
 	log.SetFlags(log.Lshortfile)
 	start()
-
-	//services.Registerblobgeter(appsscript.Instance)
-	//services.Registerblobgeter(googledrive.Instance)
-	//services.Registerblobgeter(kademliadht.Instance)
-	//services.Registerblobgeter(multicast.Instance)
-
 	command_line_interface()
 	return
 }

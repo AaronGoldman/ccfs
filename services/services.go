@@ -2,7 +2,6 @@
 
 // services.go
 //Package services is the common function for all the ccfs services
-
 package services
 
 import (
@@ -126,32 +125,6 @@ func Registerkeyposter(service keyposter) {
 func DeRegisterkeyposter(service keyposter) {
 	delete(keyposters, service.GetId())
 }
-
-//Registercontentservice Registers the service with all the content services
-//func Registercontentservice(service contentservice) {
-//	Registerblobgeter(service)
-//	Registercommitgeter(service)
-//	Registertaggeter(service)
-//	Registertagsgeter(service)
-//	Registerkeygeter(service)
-//	Registerblobposter(service)
-//	Registercommitposter(service)
-//	Registertagposter(service)
-//	Registerkeyposter(service)
-//}
-
-//type contentservice interface {
-//	idgeter
-//	blobgeter
-//	commitgeter
-//	taggeter
-//	tagsgeter
-//	keygeter
-//	blobposter
-//	commitposter
-//	tagposter
-//	keyposter
-//}
 
 type idgeter interface {
 	GetId() string

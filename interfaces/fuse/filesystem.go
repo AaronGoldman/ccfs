@@ -4,15 +4,12 @@ package fuse
 import (
 	"log"
 	"os"
-	//"os/signal"
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 	"github.com/AaronGoldman/ccfs/interfaces"
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
-
-	//"github.com/davecheney/profile"
 )
 
 var instance FS
