@@ -9,7 +9,19 @@ import (
 	"github.com/AaronGoldman/ccfs/services"
 )
 
+func Start() {
+	services.Registerblobgeter(Instance)
+	services.Registercommitgeter(Instance)
+	services.Registertaggeter(Instance)
+	services.Registertagsgeter(Instance)
+	services.Registerkeygeter(Instance)
+}
+
 type timeoutservice struct{}
+
+func (timeoutservice) GetId() string {
+	return "timeout"
+}
 
 func (timeoutservice) GetBlob(objects.HCID) (objects.Blob, error) {
 	time.Sleep(time.Second)
@@ -36,10 +48,3 @@ func (timeoutservice) GetKey(objects.HKID) (objects.Blob, error) {
 
 //Instance is the instance of the timeoutservice
 var Instance timeoutservice
-
-func init() {
-	services.Registerblobgeter(Instance)
-	services.Registercommitgeter(Instance)
-	services.Registertaggeter(Instance)
-	services.Registerkeygeter(Instance)
-}

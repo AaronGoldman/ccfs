@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/AaronGoldman/ccfs/interfaces/crawler"
 	"github.com/AaronGoldman/ccfs/interfaces/fuse"
 	"github.com/AaronGoldman/ccfs/interfaces/web"
 	"github.com/AaronGoldman/ccfs/objects"
@@ -31,6 +32,7 @@ func parseFlagsAndTakeAction() {
 
 	if *serve {
 		web.Start()
+		crawler.Start()
 	}
 	if *mount {
 		fuse.Start()

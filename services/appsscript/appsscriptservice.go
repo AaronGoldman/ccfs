@@ -13,6 +13,10 @@ import (
 
 type appsscriptservice struct{}
 
+func (a appsscriptservice) GetId() string {
+	return "appsscript"
+}
+
 func (a appsscriptservice) GetBlob(h objects.HCID) (b objects.Blob, err error) {
 	quarryurl := fmt.Sprintf(
 		"%s%s%s%s%s%s",

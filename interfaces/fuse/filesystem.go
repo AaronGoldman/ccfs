@@ -4,7 +4,7 @@ package fuse
 import (
 	"log"
 	"os"
-	"os/signal"
+	//"os/signal"
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
@@ -14,6 +14,8 @@ import (
 
 	//"github.com/davecheney/profile"
 )
+
+var instance FS
 
 //testing push with new origin
 func startFSintegration() {
@@ -30,18 +32,16 @@ func startFSintegration() {
 		return
 	}
 
-	go func() { //defining, calling and throwing to a different thread!
-		ch := make(chan os.Signal, 1)
-		signal.Notify(ch, os.Interrupt, os.Kill)
-		sig := <-ch //c is the name of the channel. usually there would be a target to receive the channel before the <-, but we don't need to use one
-		log.Printf("Got signal: %s", sig)
-		log.Printf("Exit unmount")
-		//cmd := exec.Command("fusermount", "-u", mountpoint)
-		ccfsUnmount(mountpoint)
-
-	}() //end func
 	//defer profile.Start(profile.CPUProfile).Stop()
-	fs.Serve(c, FS_from_HKID_string(interfaces.GetLocalSeed(), mountpoint))
+	instance = FS_from_HKID_string(interfaces.GetLocalSeed(), mountpoint)
+	fs.Serve(c, instance)
+}
+
+func Stop() {
+	if running {
+		ccfsUnmount(instance.mountpoint)
+		running = false
+	}
 }
 
 type FS struct {

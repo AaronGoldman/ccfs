@@ -12,6 +12,10 @@ import (
 	"github.com/AaronGoldman/ccfs/objects"
 )
 
+func (gds googledriveservice) GetId() string {
+	return "googledrive"
+}
+
 func (gds googledriveservice) getChildWithTitle(parentID string, title string) (string, error) {
 	if gds.driveService == nil {
 		log.Println("drive.Service not initialized")

@@ -16,6 +16,10 @@ type kademliaservice struct {
 	url string
 }
 
+func (k kademliaservice) GetId() string {
+	return "kademliadht"
+}
+
 func (k kademliaservice) GetBlob(h objects.HCID) (b objects.Blob, err error) {
 	values := url.Values{}
 	values.Add("type", "blob")
@@ -78,7 +82,7 @@ func (k kademliaservice) PostBlob(b objects.Blob) (err error) {
 func (k kademliaservice) PostTag(t objects.Tag) (err error) {
 	values := url.Values{}
 	values.Add("type", "tag")
-	values.Add("hkid", t.Hkid().Hex())
+	values.Add("hkid", t.Hkid.Hex())
 	values.Add("namesegment", t.NameSegment)
 	_, err = k.postobject(values, t.Bytes())
 	if err != nil {
@@ -91,7 +95,7 @@ func (k kademliaservice) PostTag(t objects.Tag) (err error) {
 func (k kademliaservice) PostCommit(c objects.Commit) (err error) {
 	values := url.Values{}
 	values.Add("type", "commit")
-	values.Add("hkid", c.Hkid().Hex())
+	values.Add("hkid", c.Hkid.Hex())
 	data, err := k.postobject(values, c.Bytes())
 	if err != nil {
 		log.Println(err)

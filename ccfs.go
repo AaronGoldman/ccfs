@@ -8,11 +8,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/AaronGoldman/ccfs/interfaces/crawler"
-	"github.com/AaronGoldman/ccfs/objects"
-	"github.com/AaronGoldman/ccfs/services"
-	"github.com/AaronGoldman/ccfs/services/localfile"
-	"github.com/AaronGoldman/ccfs/services/timeout"
+	//"github.com/AaronGoldman/ccfs/interfaces/crawler"
+	//"github.com/AaronGoldman/ccfs/objects"
+	//"github.com/AaronGoldman/ccfs/services"
+	//"github.com/AaronGoldman/ccfs/services/localfile"
+	//"github.com/AaronGoldman/ccfs/services/timeout"
 	//"github.com/AaronGoldman/ccfs/services/appsscript"
 	//"github.com/AaronGoldman/ccfs/services/googledrive"
 	//"github.com/AaronGoldman/ccfs/services/kademliadht"
@@ -27,22 +27,11 @@ func main() {
 	log.SetFlags(log.Lshortfile)
 	start()
 
-	services.Registercontentservice(localfile.Instance)
-	services.Registerblobgeter(timeout.Instance)
-	services.Registertagsgeter(timeout.Instance)
 	//services.Registerblobgeter(appsscript.Instance)
 	//services.Registerblobgeter(googledrive.Instance)
 	//services.Registerblobgeter(kademliadht.Instance)
 	//services.Registerblobgeter(multicast.Instance)
 
-	objects.RegisterGeterPoster(
-		services.GetPublicKeyForHkid,
-		services.GetPrivateKeyForHkid,
-		services.PostKey,
-		services.PostBlob,
-	)
-	parseFlagsAndTakeAction()
-	crawler.Start()
 	command_line_interface()
 	return
 }
@@ -61,6 +50,7 @@ func command_line_interface() {
 		switch line {
 		case "quit\n":
 			continueCLI = false
+			stopAll()
 
 		default:
 			fmt.Printf("Type quit to quit\n")

@@ -12,8 +12,24 @@ import (
 	"github.com/AaronGoldman/ccfs/services"
 )
 
+func Start() {
+	services.Registerblobgeter(Instance)
+	services.Registercommitgeter(Instance)
+	services.Registertaggeter(Instance)
+	services.Registertagsgeter(Instance)
+	services.Registerkeygeter(Instance)
+	services.Registerblobposter(Instance)
+	services.Registercommitposter(Instance)
+	services.Registertagposter(Instance)
+	services.Registerkeyposter(Instance)
+}
+
 //localfileservice is an
 type localfileservice struct{}
+
+func (lfs localfileservice) GetId() string {
+	return "localfile"
+}
 
 func (lfs localfileservice) PostBlob(b objects.Blob) (err error) {
 	filepath := fmt.Sprintf("bin/blobs/%s", b.Hash().Hex())
@@ -33,6 +49,7 @@ func (lfs localfileservice) PostTag(t objects.Tag) (err error) {
 	err = ioutil.WriteFile(filepath, t.Bytes(), 0664)
 	return
 }
+
 func (lfs localfileservice) PostCommit(c objects.Commit) (err error) {
 	lfs.PostBlob(objects.Blob(c.Bytes()))
 	filepath := fmt.Sprintf("bin/commits/%s/%d", c.Hkid.Hex(), c.Version)
@@ -142,14 +159,3 @@ func (lfs localfileservice) latestVersion(matches []string) string {
 
 //Instance is the instance of the localfileservice
 var Instance = localfileservice{}
-
-func init() {
-	services.Registerblobgeter(Instance)
-	services.Registerblobposter(Instance)
-	services.Registercommitgeter(Instance)
-	services.Registercommitposter(Instance)
-	services.Registertaggeter(Instance)
-	services.Registertagposter(Instance)
-	services.Registerkeygeter(Instance)
-	services.Registerkeyposter(Instance)
-}

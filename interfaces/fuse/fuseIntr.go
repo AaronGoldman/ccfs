@@ -14,8 +14,11 @@ import (
 	"bazil.org/fuse/fs"
 )
 
+var running bool
+
 func Start() {
 	go startFSintegration()
+	running = true
 }
 
 func ccfsUnmount(mountpoint string) {

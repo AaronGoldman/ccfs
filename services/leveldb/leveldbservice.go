@@ -7,6 +7,10 @@ import (
 
 //type leveldbservice struct{}
 
+//func (l leveldbservice) GetId() string {
+//	return "leveldb"
+//}
+
 //func (l leveldbservice) GetBlob(h HCID) (b blob, err error)                   { return b, err }
 //func (l leveldbservice) GetCommit(h HKID) (c commit, err error)               { return c, err }
 //func (l leveldbservice) GetTag(h HKID, namesegment string) (t tag, err error) { return t, err }

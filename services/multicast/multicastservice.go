@@ -29,6 +29,10 @@ type multicastservice struct {
 	waitingforkey    map[string]chan objects.Blob
 }
 
+func (m multicastservice) GetId() string {
+	return "multicast"
+}
+
 func (m multicastservice) GetBlob(h objects.HCID) (b objects.Blob, err error) {
 	message := fmt.Sprintf("{\"type\":\"blob\", \"hcid\": \"%s\"}", h.Hex())
 	blobchannel := make(chan objects.Blob, 1)
