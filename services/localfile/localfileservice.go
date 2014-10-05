@@ -25,6 +25,18 @@ func Start() {
 	services.Registerkeyposter(Instance)
 }
 
+func Stop() {
+	services.DeRegisterblobgeter(Instance)
+	services.DeRegistercommitgeter(Instance)
+	services.DeRegistertaggeter(Instance)
+	services.DeRegistertagsgeter(Instance)
+	services.DeRegisterkeygeter(Instance)
+	services.DeRegisterblobposter(Instance)
+	services.DeRegistercommitposter(Instance)
+	services.DeRegistertagposter(Instance)
+	services.DeRegisterkeyposter(Instance)
+}
+
 //localfileservice is an
 type localfileservice struct{}
 

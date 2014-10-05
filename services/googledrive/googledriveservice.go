@@ -1,4 +1,5 @@
 //Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
+
 package googledrive
 
 import (
@@ -10,7 +11,26 @@ import (
 	"code.google.com/p/goauth2/oauth"
 	"code.google.com/p/google-api-go-client/drive/v2"
 	"github.com/AaronGoldman/ccfs/objects"
+	"github.com/AaronGoldman/ccfs/services"
 )
+
+//Instance is the instance of the googledriveservice
+var Instance googledriveservice
+
+func Start() {
+	Instance = googledriveserviceFactory()
+	services.Registerblobgeter(Instance)
+	services.Registercommitgeter(Instance)
+	services.Registertaggeter(Instance)
+	services.Registerkeygeter(Instance)
+}
+
+func Stop() {
+	services.DeRegisterblobgeter(Instance)
+	services.DeRegistercommitgeter(Instance)
+	services.DeRegistertaggeter(Instance)
+	services.DeRegisterkeygeter(Instance)
+}
 
 func (gds googledriveservice) GetId() string {
 	return "googledrive"
@@ -262,11 +282,4 @@ func googledriveserviceFactory() googledriveservice {
 	)
 
 	return gds
-}
-
-//Instance is the instance of the googledriveservice
-var Instance googledriveservice
-
-func init() {
-	//googledriveserviceInstance = googledriveserviceFactory()
 }

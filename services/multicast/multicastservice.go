@@ -1,4 +1,5 @@
 //Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
+
 //Package multicast multicastservice.go
 package multicast
 
@@ -12,8 +13,28 @@ import (
 	"time"
 
 	"github.com/AaronGoldman/ccfs/objects"
+	"github.com/AaronGoldman/ccfs/services"
 	"github.com/AaronGoldman/ccfs/services/localfile"
 )
+
+//Instance is the instance of the multicastservice
+var Instance multicastservice
+
+func Start() {
+	Instance = multicastservicefactory()
+	Instance.listenmessage()
+	services.Registerblobgeter(Instance)
+	services.Registercommitgeter(Instance)
+	services.Registertaggeter(Instance)
+	services.Registerkeygeter(Instance)
+}
+
+func Stop() {
+	services.DeRegisterblobgeter(Instance)
+	services.DeRegistercommitgeter(Instance)
+	services.DeRegistertaggeter(Instance)
+	services.DeRegisterkeygeter(Instance)
+}
 
 type tagfields struct {
 	hkid        objects.HKID
@@ -43,7 +64,7 @@ func (m multicastservice) GetBlob(h objects.HCID) (b objects.Blob, err error) {
 		return b, err
 
 	case <-time.After(150 * time.Millisecond):
-		log.Printf("Timing out now")
+		//log.Printf("Timing out now")
 		return b, fmt.Errorf("GetBlob on Multicast service timed out")
 	}
 
@@ -60,7 +81,7 @@ func (m multicastservice) GetCommit(h objects.HKID) (c objects.Commit, err error
 		return c, err
 
 	case <-time.After(150 * time.Millisecond):
-		log.Printf("Timing out now")
+		//log.Printf("Timing out now")
 		return c, fmt.Errorf("GetCommit on Multicast service timed out")
 	}
 
@@ -84,7 +105,7 @@ func (m multicastservice) GetTag(
 		return t, err
 
 	case <-time.After(150 * time.Millisecond):
-		log.Printf("Timing out now")
+		//log.Printf("Timing out now")
 		return t, fmt.Errorf("GetTag on Multicast service timed out")
 	}
 
@@ -100,7 +121,7 @@ func (m multicastservice) GetKey(h objects.HKID) (b objects.Blob, err error) {
 		return b, err
 
 	case <-time.After(12000 * time.Millisecond):
-		log.Printf("Timing out now")
+		//log.Printf("Timing out now")
 		return b, fmt.Errorf("GetKey on Multicast service timed out")
 	}
 
@@ -292,12 +313,4 @@ func multicastservicefactory() (m multicastservice) {
 		waitingforcommit: map[string]chan objects.Commit{},
 		waitingforkey:    map[string]chan objects.Blob{},
 	}
-}
-
-//Instance is the instance of the multicastservice
-var Instance multicastservice
-
-func init() {
-	Instance = multicastservicefactory()
-	Instance.listenmessage()
 }

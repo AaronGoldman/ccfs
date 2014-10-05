@@ -11,7 +11,36 @@ import (
 	"net/url"
 
 	"github.com/AaronGoldman/ccfs/objects"
+	"github.com/AaronGoldman/ccfs/services"
 )
+
+//Instance is the instance of the kademliaservice
+var Instance kademliaservice
+
+func Start() {
+	Instance = kademliaservicefactory()
+	services.Registerblobgeter(Instance)
+	services.Registercommitgeter(Instance)
+	services.Registertaggeter(Instance)
+	//services.Registertagsgeter(Instance)
+	services.Registerkeygeter(Instance)
+	services.Registerblobposter(Instance)
+	services.Registercommitposter(Instance)
+	services.Registertagposter(Instance)
+	services.Registerkeyposter(Instance)
+}
+
+func Stop() {
+	services.DeRegisterblobgeter(Instance)
+	services.DeRegistercommitgeter(Instance)
+	services.DeRegistertaggeter(Instance)
+	//services.DeRegistertagsgeter(Instance)
+	services.DeRegisterkeygeter(Instance)
+	services.DeRegisterblobposter(Instance)
+	services.DeRegistercommitposter(Instance)
+	services.DeRegistertagposter(Instance)
+	services.DeRegisterkeyposter(Instance)
+}
 
 type kademliaservice struct {
 	url string
@@ -151,11 +180,3 @@ func (k kademliaservice) postobject(values url.Values, b []byte) (data []byte, e
 func kademliaservicefactory() kademliaservice {
 	return kademliaservice{url: "http://128.61.21.129:5000/?"}
 }
-
-func init() {
-	Instance = kademliaservicefactory()
-	_ = Instance
-}
-
-//Instance is the instance of the kademliaservice
-var Instance kademliaservice

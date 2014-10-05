@@ -7,7 +7,11 @@ import (
 
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
+	"github.com/AaronGoldman/ccfs/services/appsscript"
+	//"github.com/AaronGoldman/ccfs/services/googledrive"
+	"github.com/AaronGoldman/ccfs/services/kademliadht"
 	"github.com/AaronGoldman/ccfs/services/localfile"
+	"github.com/AaronGoldman/ccfs/services/multicast"
 	"github.com/AaronGoldman/ccfs/services/timeout"
 )
 
@@ -31,6 +35,10 @@ func start() {
 
 	localfile.Start()
 	timeout.Start()
+	multicast.Start()
+	kademliadht.Start()
+	_ = appsscript.Start
+	//googledrive.Start()
 	parseFlagsAndTakeAction()
 
 }

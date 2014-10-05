@@ -18,6 +18,14 @@ func Start() {
 	services.Registerkeygeter(Instance)
 }
 
+func Stop() {
+	services.DeRegisterblobgeter(Instance)
+	services.DeRegistercommitgeter(Instance)
+	services.DeRegistertaggeter(Instance)
+	services.DeRegistertagsgeter(Instance)
+	services.DeRegisterkeygeter(Instance)
+}
+
 type timeoutservice struct{}
 
 func (timeoutservice) GetId() string {
