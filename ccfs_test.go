@@ -10,12 +10,13 @@ import (
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 	"github.com/AaronGoldman/ccfs/services/localfile"
-	_ "github.com/AaronGoldman/ccfs/services/timeout"
+	"github.com/AaronGoldman/ccfs/services/timeout"
 )
 
 func init() {
 	log.SetFlags(log.Lshortfile)
-	services.Registercontentservice(localfile.Instance)
+	localfile.Start()
+	timeout.Start()
 	objects.RegisterGeterPoster(
 		services.GetPublicKeyForHkid,
 		services.GetPrivateKeyForHkid,
