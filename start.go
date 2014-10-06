@@ -40,5 +40,4 @@ func start() {
 	_ = appsscript.Start
 	//googledrive.Start()
 	parseFlagsAndTakeAction()
-
 }

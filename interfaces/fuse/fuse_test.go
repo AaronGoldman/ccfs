@@ -28,6 +28,20 @@ func TestWrightFile(t *testing.T) {
 	}
 }
 
+func TestWrightFileOS(t *testing.T) {
+	filename := mountpoint + "/TestFileOS.txt"
+	file, err := os.Open(filename)
+	if err != nil {
+		t.Errorf("Could Not Open File - %s", err)
+	}
+	data := []byte("Test File Data")
+	dataWritten, err := file.Write(data)
+	if err != nil {
+		t.Errorf("Could Write To File - %s", err)
+	}
+	t.Logf("Bytes written to file: %d", dataWritten)
+}
+
 func TestReadFile(t *testing.T) {
 	path := mountpoint + "/TestFile.txt"
 	data, err := ioutil.ReadFile(path)

@@ -238,6 +238,10 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 
 }
 
+func (d Dir) RemoveHandle(name string) {
+	delete(d.openHandles, name)
+}
+
 //creates new file only
 func (d Dir) Create(
 	request *fuse.CreateRequest,
