@@ -30,14 +30,28 @@ func TestWrightFile(t *testing.T) {
 
 func TestWrightFileOS(t *testing.T) {
 	filename := mountpoint + "/TestFileOS.txt"
-	file, err := os.Open(filename)
+
+	file, err := os.Create(filename) //Open(filename)
 	if err != nil {
-		t.Errorf("Could Not Open File - %s", err)
+		t.Errorf("Could Not Create File - %s", err)
 	}
+	//file, err = os.Open(filename)
+	//if err != nil {
+	//	t.Errorf("Could Not Open File - %s", err)
+	//}else{
+	//	fileInfo, fileInfoError:= file.Stat()
+	//	if(fileInfoError != nil){
+	//		t.Errorf("Error retrieving file information - %s", err)
+	//	} else{
+	//		t.Logf("File Name: %s", fileInfo.Name)
+	//		t.Logf("File Size: %v", fileInfo.Size)
+	//		t.Logf("File Mode: %v", fileInfo.Mode)
+	//	}
+	//}
 	data := []byte("Test File Data")
 	dataWritten, err := file.Write(data)
 	if err != nil {
-		t.Errorf("Could Write To File - %s", err)
+		t.Errorf("Could Not Write To File - %s", err)
 	}
 	t.Logf("Bytes written to file: %d", dataWritten)
 }

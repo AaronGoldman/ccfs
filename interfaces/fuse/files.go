@@ -100,10 +100,10 @@ func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr 
 	//   O_EXCL   int = os.O_EXCL   // used with O_CREATE, file must not exist
 	//   O_SYNC   int = os.O_SYNC   // open for synchronous I/O.
 	//   O_TRUNC  int = os.O_TRUNC  // if possible, truncate file when opened.
-
+	log.Printf("\nFile Open Request+++++++++++++++++++++++++++++++++++++++++\n")
 	b, blobErr := services.GetBlob(f.contentHash) //
 	if blobErr != nil {
-		log.Printf("get blob error in opening handel %s", blobErr)
+		log.Printf("get blob error in opening handle %s", blobErr)
 		return nil, fuse.ENOENT
 	}
 
@@ -114,5 +114,7 @@ func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr 
 		inode:  f.inode,
 	}
 	f.parent.openHandles[handle.name] = true
+	//response.Handle = fuse.HandleID(handle.inode)
+	//response.Flags = fuse.OpenResponseFlags(request.Flags)
 	return handle, nil
 }

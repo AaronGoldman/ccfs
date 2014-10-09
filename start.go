@@ -36,7 +36,7 @@ func start() {
 	localfile.Start()
 	timeout.Start()
 	multicast.Start()
-	kademliadht.Start()
+	_ = kademliadht.Start
 	_ = appsscript.Start
 	//googledrive.Start()
 	parseFlagsAndTakeAction()

@@ -266,6 +266,7 @@ func (d Dir) Create(
 		name:        request.Name,
 		inode:       fuse.NodeID(fs.GenerateDynamicInode(uint64(d.inode), request.Name)),
 		size:        0,
+		flags:       fuse.OpenReadWrite,
 	}
 	handle := OpenFileHandle{
 		buffer: []byte{},

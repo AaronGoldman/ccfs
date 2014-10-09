@@ -8,11 +8,13 @@ import (
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
+	"bazil.org/fuse/fs/fstestutil"
 )
 
 var running bool
 
 func Start() {
+	fstestutil.DebugByDefault()
 	go startFSintegration()
 	running = true
 }
