@@ -5,6 +5,9 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/AaronGoldman/ccfs/interfaces/crawler"
+	"github.com/AaronGoldman/ccfs/interfaces/fuse"
+	"github.com/AaronGoldman/ccfs/interfaces/web"
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 	"github.com/AaronGoldman/ccfs/services/appsscript"
@@ -33,11 +36,26 @@ func start() {
 		services.PostBlob,
 	)
 
+	Flags, Command := parseFlags()
 	localfile.Start()
 	timeout.Start()
 	multicast.Start()
-	kademliadht.Start()
-	_ = appsscript.Start
-	//googledrive.Start()
-	parseFlagsAndTakeAction()
+	if *Flags.serve {
+		web.Start()
+		crawler.Start()
+	}
+	if *Flags.mount {
+		fuse.Start()
+	}
+	if *Flags.dht {
+		kademliadht.Start()
+	}
+	if *Flags.apps {
+		appsscript.Start()
+	}
+	//if *Flags.drive {
+	//	googledrive.Start()
+	//}
+
+	addCurators(Command)
 }
