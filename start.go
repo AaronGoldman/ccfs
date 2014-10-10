@@ -40,6 +40,7 @@ func start() {
 	localfile.Start()
 	timeout.Start()
 	multicast.Start()
+
 	if *Flags.serve {
 		web.Start()
 		crawler.Start()
