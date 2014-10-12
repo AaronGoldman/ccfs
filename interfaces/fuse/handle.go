@@ -46,7 +46,7 @@ func (o OpenFileHandle) String() string {
 
 //handleReader interface
 func (o OpenFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadResponse, intr fs.Intr) fuse.Error {
-	logRequestObject(request, o)
+	log.Printf("request: %+v\nobject: %+v", request, o)
 	start := request.Offset
 	stop := start + int64(request.Size)
 	bufptr := o.buffer
@@ -66,7 +66,7 @@ func (o OpenFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadRespo
 }
 
 func (o *OpenFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteResponse, intr fs.Intr) fuse.Error {
-	logRequestObject(request, o)
+	log.Printf("request: %+v\nobject: %+v", request, o)
 	start := request.Offset
 	writeData := request.Data
 
@@ -97,7 +97,7 @@ func (o *OpenFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteR
 }
 
 func (o OpenFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse.Error {
-	logRequestObject(request, o)
+	log.Printf("request: %+v\nobject: %+v", request, o)
 	o.parent.RemoveHandle(o.name)
 	request.Respond()
 	return nil //fuse.ENOENT
@@ -105,7 +105,7 @@ func (o OpenFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse
 
 //func (o OpenfileHandle)
 func (o OpenFileHandle) Flush(request *fuse.FlushRequest, intr fs.Intr) fuse.Error {
-	logRequestObject(request, o)
+	log.Printf("request: %+v\nobject: %+v", request, o)
 	o.Publish()
 	request.Respond()
 	return nil
