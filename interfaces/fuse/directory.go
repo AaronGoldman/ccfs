@@ -62,6 +62,11 @@ type Dir struct {
 }
 
 func (d Dir) Fsync(r *fuse.FsyncRequest, intr fs.Intr) fuse.Error {
+	select {
+	case <-intr:
+		return fuse.EINTR
+	default:
+	}
 	r.Respond() // ????
 	return nil
 }
@@ -95,18 +100,17 @@ func (d Dir) String() string {
 	)
 }
 
-func logRequestObject(r, o fmt.Stringer) {
-	log.Printf("request: %+v", r)
-	log.Printf("object: %+v", o)
-	return
-}
-
 func (d Dir) Rename(
 	r *fuse.RenameRequest,
 	newDir fs.Node,
 	intr fs.Intr,
 ) fuse.Error {
-	logRequestObject(r, d)
+	log.Printf("request: %+v\nobject: %+v", r, d)
+	select {
+	case <-intr:
+		return fuse.EINTR
+	default:
+	}
 	//find content_type
 	if r.OldName != r.NewName {
 		d.name = r.NewName
@@ -220,6 +224,11 @@ func (d Dir) Attr() fuse.Attr {
 func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 	log.Printf("Directory Lookup:\n\tName: %s\n\tHID: %s", name, d.leaf.Hex())
 	log.Printf("%v", d)
+	select {
+	case <-intr:
+		return nil, fuse.EINTR
+	default:
+	}
 	new_nodeID := fuse.NodeID(fs.GenerateDynamicInode(uint64(d.inode), name))
 
 	switch d.content_type {
@@ -248,8 +257,12 @@ func (d Dir) Create(
 	response *fuse.CreateResponse,
 	intr fs.Intr,
 ) (fs.Node, fs.Handle, fuse.Error) {
-	logRequestObject(request, d)
-
+	log.Printf("request: %+v\nobject: %+v", request, d)
+	select {
+	case <-intr:
+		return nil, nil, fuse.EINTR
+	default:
+	}
 	//   O_RDONLY int = os.O_RDONLY // open the file read-only.
 	//   O_WRONLY int = os.O_WRONLY // open the file write-only.
 	//   O_RDWR   int = os.O_RDWR   // open the file read-write.
@@ -379,7 +392,11 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 }
 
 func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
-
+	select {
+	case <-intr:
+		return nil, fuse.EINTR
+	default:
+	}
 	c, CommitErr := services.GetCommit(d.leaf.(objects.HKID))
 	if CommitErr != nil {
 		log.Printf("commit %s:", CommitErr)
@@ -440,6 +457,11 @@ func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 }
 
 func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
+	select {
+	case <-intr:
+		return nil, fuse.EINTR
+	default:
+	}
 	l, listErr := services.GetList(d.leaf.(objects.HCID))
 	if listErr != nil {
 		log.Printf("get list %s:", listErr)
@@ -479,7 +501,11 @@ func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node,
 }
 
 func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
-
+	select {
+	case <-intr:
+		return nil, fuse.EINTR
+	default:
+	}
 	t, tagErr := services.GetTag(d.leaf.(objects.HKID), name) //leaf is HID
 	// no blobs because blobs are for file structure
 
@@ -523,6 +549,11 @@ func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, 
 
 func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	//log.Printf("ReadDir requested:\n\tName:%s", d.name)
+	select {
+	case <-intr:
+		return nil, fuse.EINTR
+	default:
+	}
 	var l objects.List
 	var listErr error
 	var dirDirs = []fuse.Dirent{}
