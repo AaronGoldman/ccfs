@@ -11,7 +11,7 @@ import (
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 	"github.com/AaronGoldman/ccfs/services/appsscript"
-	//"github.com/AaronGoldman/ccfs/services/googledrive"
+	"github.com/AaronGoldman/ccfs/services/googledrive"
 	"github.com/AaronGoldman/ccfs/services/kademliadht"
 	"github.com/AaronGoldman/ccfs/services/localfile"
 	"github.com/AaronGoldman/ccfs/services/multicast"
@@ -54,9 +54,9 @@ func start() {
 	if *Flags.apps {
 		appsscript.Start()
 	}
-	//if *Flags.drive {
-	//	googledrive.Start()
-	//}
+	if *Flags.drive {
+		googledrive.Start()
+	}
 
 	addCurators(Command)
 }

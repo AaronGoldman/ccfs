@@ -219,7 +219,8 @@ func googledriveserviceFactory() googledriveservice {
 		TokenCache:  oauth.CacheFile("bin/tokencachefile.json"),
 	}
 
-	code := "4/rSyLcOy_oBllG65sojDydzbxLp06.AgeuzdzuK-IWshQV0ieZDArWsFLjhAI"
+	//code := "4/rSyLcOy_oBllG65sojDydzbxLp06.AgeuzdzuK-IWshQV0ieZDArWsFLjhAI"
+	code := ""
 
 	// Set up a Transport using the config.
 	gds.transport = &oauth.Transport{Config: config}
@@ -233,7 +234,11 @@ func googledriveserviceFactory() googledriveservice {
 			url := config.AuthCodeURL("")
 			log.Println("Visit this URL to get a code, then run again with -code=YOUR_CODE")
 			log.Println(url)
-			panic("")
+			log.Println("After getting the code, place it in the bin folder")
+			log.Println("In a file named googledrive_code.txt")
+			//panic("")
+			Stop()
+			return googledriveservice{}
 		}
 		// Exchange the authorization code for an access token.
 		// ("Here's the code you gave the user, now give me a token!")

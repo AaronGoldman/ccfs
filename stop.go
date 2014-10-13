@@ -5,7 +5,7 @@ import (
 	//"github.com/AaronGoldman/ccfs/objects"
 	//"github.com/AaronGoldman/ccfs/services"
 	"github.com/AaronGoldman/ccfs/services/appsscript"
-	//"github.com/AaronGoldman/ccfs/services/googledrive"
+	"github.com/AaronGoldman/ccfs/services/googledrive"
 	"github.com/AaronGoldman/ccfs/services/kademliadht"
 	"github.com/AaronGoldman/ccfs/services/localfile"
 	"github.com/AaronGoldman/ccfs/services/multicast"
@@ -18,6 +18,6 @@ func stopAll() {
 	timeout.Stop()
 	multicast.Stop()
 	kademliadht.Stop()
-	//googledrive.Stop()
+	googledrive.Stop()
 	appsscript.Stop()
 }
