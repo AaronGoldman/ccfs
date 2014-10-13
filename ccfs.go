@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 )
 
 func init() {
@@ -20,26 +21,37 @@ func main() {
 	return
 }
 
+var continueCLI = true
+
 func command_line_interface() {
 	in := bufio.NewReader(os.Stdin)
-
-	continueCLI := true
-
+	ch := make(chan string, 1)
 	for continueCLI {
-		line, err := in.ReadString('\n')
-		if err != nil {
-			fmt.Printf("[CLI] %s", err)
+
+		go func() {
+			line, err := in.ReadString('\n')
+			if err != nil {
+				fmt.Printf("[CLI] %s", err)
+			} else {
+				ch <- line
+			}
+		}()
+	label:
+		for continueCLI {
+			select {
+			case line := <-ch:
+				switch line {
+				case "quit\n":
+					continueCLI = false
+					stopAll()
+
+				default:
+					fmt.Printf("Type quit to quit\n")
+				}
+				break label
+			case <-time.After(time.Millisecond * 250):
+			}
 		}
-
-		switch line {
-		case "quit\n":
-			continueCLI = false
-			stopAll()
-
-		default:
-			fmt.Printf("Type quit to quit\n")
-		}
-
 	}
 	return
 }

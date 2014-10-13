@@ -20,4 +20,5 @@ func stopAll() {
 	kademliadht.Stop()
 	googledrive.Stop()
 	appsscript.Stop()
+	continueCLI = false
 }
