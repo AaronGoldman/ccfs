@@ -16,6 +16,7 @@ import (
 //Instance is the instance of the appsscriptservice
 var Instance appsscriptservice
 
+//Start registers appsscriptservice instances
 func Start() {
 	Instance = appsscriptservice{}
 	services.Registerblobgeter(Instance)
@@ -24,6 +25,7 @@ func Start() {
 	services.Registerkeygeter(Instance)
 }
 
+//Stop deregisters appsscriptservice instances
 func Stop() {
 	services.DeRegisterblobgeter(Instance)
 	services.DeRegistercommitgeter(Instance)
@@ -33,7 +35,8 @@ func Stop() {
 
 type appsscriptservice struct{}
 
-func (a appsscriptservice) GetId() string {
+//ID gets the ID string
+func (a appsscriptservice) ID() string {
 	return "appsscript"
 }
 

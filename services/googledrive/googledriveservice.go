@@ -17,6 +17,7 @@ import (
 //Instance is the instance of the googledriveservice
 var Instance googledriveservice
 
+//Start registers googledriveservice instances
 func Start() {
 	Instance = googledriveserviceFactory()
 	services.Registerblobgeter(Instance)
@@ -25,6 +26,7 @@ func Start() {
 	services.Registerkeygeter(Instance)
 }
 
+//Stop deregisters googledriveservice instances
 func Stop() {
 	services.DeRegisterblobgeter(Instance)
 	services.DeRegistercommitgeter(Instance)
@@ -32,7 +34,8 @@ func Stop() {
 	services.DeRegisterkeygeter(Instance)
 }
 
-func (gds googledriveservice) GetId() string {
+//ID gets the ID string
+func (gds googledriveservice) ID() string {
 	return "googledrive"
 }
 

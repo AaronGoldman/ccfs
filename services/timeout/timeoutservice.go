@@ -10,6 +10,7 @@ import (
 	"github.com/AaronGoldman/ccfs/services"
 )
 
+//Start registers timeoutservice instances
 func Start() {
 	services.Registerblobgeter(Instance)
 	services.Registercommitgeter(Instance)
@@ -18,6 +19,7 @@ func Start() {
 	services.Registerkeygeter(Instance)
 }
 
+//Stop deregisters timeoutservice instances
 func Stop() {
 	services.DeRegisterblobgeter(Instance)
 	services.DeRegistercommitgeter(Instance)
@@ -28,7 +30,8 @@ func Stop() {
 
 type timeoutservice struct{}
 
-func (timeoutservice) GetId() string {
+//ID gets the ID string
+func (timeoutservice) ID() string {
 	return "timeout"
 }
 

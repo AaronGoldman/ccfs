@@ -17,13 +17,13 @@ func init() {
 func main() {
 	log.SetFlags(log.Lshortfile)
 	start()
-	command_line_interface()
+	commandLineInterface()
 	return
 }
 
 var continueCLI = true
 
-func command_line_interface() {
+func commandLineInterface() {
 	in := bufio.NewReader(os.Stdin)
 	ch := make(chan string, 1)
 	for continueCLI {

@@ -1,7 +1,6 @@
 //Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
 
-// services.go
-//Package services is the common function for all the ccfs services
+//Package services implements the common function for all the ccfs services
 package services
 
 import (
@@ -18,116 +17,125 @@ var commitposters = map[string]commitposter{}
 var tagposters = map[string]tagposter{}
 var keyposters = map[string]keyposter{}
 
-//Registerblobgeter adds the pased in blobgeter to the blobgeters that are muxed
+//Registerblobgeter adds a blobgeter to blobgeters
 func Registerblobgeter(service blobgeter) {
 	if blobgeters == nil {
 		blobgeters = make(map[string]blobgeter)
 	}
-	blobgeters[service.GetId()] = service
+	blobgeters[service.ID()] = service
 }
 
+//DeRegisterblobgeter removes a blobgeter from blobgeters
 func DeRegisterblobgeter(service blobgeter) {
-	delete(blobgeters, service.GetId())
+	delete(blobgeters, service.ID())
 }
 
-//Registercommitgeter adds the pased in commitgeter to the commitgeters that are muxed
+//Registercommitgeter adds a commitgeter to commitgeters
 func Registercommitgeter(service commitgeter) {
 	if commitgeters == nil {
 		commitgeters = make(map[string]commitgeter)
 	}
-	commitgeters[service.GetId()] = service
+	commitgeters[service.ID()] = service
 }
 
+//DeRegistercommitgeter removes a commitgeter from commitgeters
 func DeRegistercommitgeter(service commitgeter) {
-	delete(commitgeters, service.GetId())
+	delete(commitgeters, service.ID())
 }
 
-//Registertaggeter adds the pased in taggeter to the taggeters that are muxed
+//Registertaggeter adds a taggeter to taggeters
 func Registertaggeter(service taggeter) {
 	if taggeters == nil {
 		taggeters = make(map[string]taggeter)
 	}
-	taggeters[service.GetId()] = service
+	taggeters[service.ID()] = service
 }
 
+//DeRegistertaggeter removes a taggeter from taggeters
 func DeRegistertaggeter(service taggeter) {
-	delete(taggeters, service.GetId())
+	delete(taggeters, service.ID())
 }
 
-//Registertagsgeter adds the pased in tagsgeter to the tagsgeters that are muxed
+//Registertagsgeter adds a tagsgeter to tagsgeters
 func Registertagsgeter(service tagsgeter) {
 	if tagsgeters == nil {
 		tagsgeters = make(map[string]tagsgeter)
 	}
-	tagsgeters[service.GetId()] = service
+	tagsgeters[service.ID()] = service
 }
 
+//DeRegistertagsgeter removes a tagsgeter from tagsgeters
 func DeRegistertagsgeter(service tagsgeter) {
-	delete(tagsgeters, service.GetId())
+	delete(tagsgeters, service.ID())
 }
 
-//Registerkeygeter adds the pased in keygeter to the keygeters that are muxed
+//Registerkeygeter adds a keygeter the keygeters
 func Registerkeygeter(service keygeter) {
 	if keygeters == nil {
 		keygeters = make(map[string]keygeter)
 	}
-	keygeters[service.GetId()] = service
+	keygeters[service.ID()] = service
 }
 
+//DeRegisterkeygeter removes a keygeter from keygeters
 func DeRegisterkeygeter(service keygeter) {
-	delete(keygeters, service.GetId())
+	delete(keygeters, service.ID())
 }
 
-//Registerblobposter adds the pased in blobposter to the blobposters that are muxed
+//Registerblobposter adds a blobposter to blobposters
 func Registerblobposter(service blobposter) {
 	if blobposters == nil {
 		blobposters = make(map[string]blobposter)
 	}
-	blobposters[service.GetId()] = service
+	blobposters[service.ID()] = service
 }
 
+//DeRegisterblobposter removes a blobposter to blobposters
 func DeRegisterblobposter(service blobposter) {
-	delete(blobposters, service.GetId())
+	delete(blobposters, service.ID())
 }
 
-//Registercommitposter adds the pased in commitposter to the commitposters that are muxed
+//Registercommitposter adds a commitposter to commitposters
 func Registercommitposter(service commitposter) {
 	if commitposters == nil {
 		commitposters = make(map[string]commitposter)
 	}
-	commitposters[service.GetId()] = service
+	commitposters[service.ID()] = service
 }
 
+//DeRegistercommitposter removes a commitposter from commitposters
 func DeRegistercommitposter(service commitposter) {
-	delete(commitposters, service.GetId())
+	delete(commitposters, service.ID())
 }
 
-//Registertagposter adds the pased in tagposter to the tagposters that are muxed
+//Registertagposter adds a tagposter to tagposters
 func Registertagposter(service tagposter) {
 	if tagposters == nil {
 		tagposters = make(map[string]tagposter)
 	}
-	tagposters[service.GetId()] = service
+	tagposters[service.ID()] = service
 }
 
+//DeRegistertagposter removes a tagposter from tagposters
 func DeRegistertagposter(service tagposter) {
-	delete(tagposters, service.GetId())
+	delete(tagposters, service.ID())
 }
 
-//Registerkeyposter adds the pased in keyposter to the keyposters that are muxed
+//Registerkeyposter adds a keyposter to keyposters
 func Registerkeyposter(service keyposter) {
 	if keyposters == nil {
 		keyposters = make(map[string]keyposter)
 	}
-	keyposters[service.GetId()] = service
+	keyposters[service.ID()] = service
 }
 
+//DeRegisterkeyposter removes a keyposter from keyposters
 func DeRegisterkeyposter(service keyposter) {
-	delete(keyposters, service.GetId())
+	delete(keyposters, service.ID())
 }
 
 type idgeter interface {
-	GetId() string
+	ID() string
 }
 
 type blobgeter interface {

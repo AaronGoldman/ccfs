@@ -13,6 +13,7 @@ import (
 	"github.com/AaronGoldman/ccfs/services"
 )
 
+//Start registers localfileservice instances
 func Start() {
 	services.Registerblobgeter(Instance)
 	services.Registercommitgeter(Instance)
@@ -25,6 +26,7 @@ func Start() {
 	services.Registerkeyposter(Instance)
 }
 
+//Stop dregisters localfileservice instances
 func Stop() {
 	services.DeRegisterblobgeter(Instance)
 	services.DeRegistercommitgeter(Instance)
@@ -40,7 +42,8 @@ func Stop() {
 //localfileservice is an
 type localfileservice struct{}
 
-func (lfs localfileservice) GetId() string {
+//ID gets the ID string
+func (lfs localfileservice) ID() string {
 	return "localfile"
 }
 

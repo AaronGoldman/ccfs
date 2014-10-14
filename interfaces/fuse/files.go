@@ -1,5 +1,4 @@
 //Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
-//files
 
 package fuse
 
@@ -15,10 +14,10 @@ import (
 	"github.com/AaronGoldman/ccfs/services"
 )
 
-type File struct {
+type file struct {
 	contentHash objects.HCID
 	permission  os.FileMode
-	parent      *Dir
+	parent      *dir
 	name        string
 	inode       fuse.NodeID
 	//Mtime		time.
@@ -26,7 +25,7 @@ type File struct {
 	size  uint64
 }
 
-func (f File) String() string {
+func (f file) String() string {
 	return fmt.Sprintf(
 		"[%d]%s %s\nmode:%s flags:%s id:%v \n\tparent:%s",
 		f.size,
@@ -39,7 +38,7 @@ func (f File) String() string {
 	)
 }
 
-func (f File) Attr() fuse.Attr {
+func (f file) Attr() fuse.Attr {
 	log.Printf("File attributes requested: %+v", f)
 	att := fuse.Attr{
 		Inode:  uint64(f.inode),
@@ -76,7 +75,7 @@ func (f File) Attr() fuse.Attr {
 	// }
 }
 
-func (f File) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
+func (f file) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
 	log.Println("File ReadAll requested")
 	select {
 	case <-intr:
@@ -94,7 +93,7 @@ func (f File) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
 }
 
 //nodeopener interface contains open(). Node may be used for file or directory
-func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr fs.Intr) (fs.Handle, fuse.Error) {
+func (f file) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr fs.Intr) (fs.Handle, fuse.Error) {
 	log.Printf("request: %+v\nobject: %+v", request, f)
 	//request.dir = 0
 	//   O_RDONLY int = os.O_RDONLY // open the file read-only.
@@ -117,7 +116,7 @@ func (f File) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr 
 		return nil, fuse.ENOENT
 	}
 
-	handle := OpenFileHandle{
+	handle := openFileHandle{
 		buffer: b,
 		parent: f.parent,
 		name:   f.name,

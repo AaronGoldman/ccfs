@@ -1,4 +1,5 @@
 //Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
+
 package crawler
 
 import (
@@ -244,7 +245,7 @@ func indexNameSegment(typeString, targetHex, referingHex, nameSeg string) {
 	if _, present := nameSegmentIndex[nameSeg]; !present {
 		nameSegmentIndex[nameSeg] = make(map[nameSegmentIndexEntry]int)
 	}
-	nameSegmentIndex[nameSeg][nameSegmentIndexEntry{typeString, targetHex}] += 1
+	nameSegmentIndex[nameSeg][nameSegmentIndexEntry{typeString, targetHex}]++
 
 	switch typeString {
 	case "blob", "list":

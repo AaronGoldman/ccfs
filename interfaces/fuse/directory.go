@@ -1,5 +1,4 @@
 //Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
-//Directory
 
 package fuse
 
@@ -14,21 +13,26 @@ import (
 	"github.com/AaronGoldman/ccfs/services"
 )
 
-type Repository struct {
+//Repository is a collection defined by a commit
+type repository struct {
 	contents   objects.HKID
 	inode      fuse.NodeID
 	name       string
 	parent     *directory
 	permission os.FileMode
 }
-type Domain struct {
+
+//Domain is a collection defined by a tag
+type domain struct {
 	contents   objects.HKID
 	inode      fuse.NodeID
 	name       string
 	parent     *directory
 	permission os.FileMode
 }
-type Folder struct {
+
+//Folder is a collection defined by a list
+type folder struct {
 	contents   objects.HCID
 	inode      fuse.NodeID
 	name       string
@@ -36,10 +40,10 @@ type Folder struct {
 	permission os.FileMode
 }
 
-func (self Folder) Attr() fuse.Attr {
+func (f folder) Attr() fuse.Attr {
 	return fuse.Attr{
-		Inode: uint64(self.inode),
-		Mode:  os.ModeDir | self.permission,
+		Inode: uint64(f.inode),
+		Mode:  os.ModeDir | f.permission,
 	}
 }
 
@@ -50,18 +54,18 @@ type directory interface {
 	fs.NodeRenamer
 }
 
-type Dir struct {
-	leaf         objects.HID
-	permission   os.FileMode
-	content_type string
-	parent       *Dir
-	name         string
-	openHandles  map[string]bool
+type dir struct {
+	leaf        objects.HID
+	permission  os.FileMode
+	contentType string
+	parent      *dir
+	name        string
+	openHandles map[string]bool
 	//nodeMap      map[fuse.NodeID]*Dir
 	inode fuse.NodeID
 }
 
-func (d Dir) Fsync(r *fuse.FsyncRequest, intr fs.Intr) fuse.Error {
+func (d dir) Fsync(r *fuse.FsyncRequest, intr fs.Intr) fuse.Error {
 	select {
 	case <-intr:
 		return fuse.EINTR
@@ -72,26 +76,26 @@ func (d Dir) Fsync(r *fuse.FsyncRequest, intr fs.Intr) fuse.Error {
 }
 
 //constructor
-func (d Dir) newDir(Name string) *Dir {
+func (d dir) newDir(Name string) *dir {
 	log.Printf("newdir called:%s", Name)
-	p := Dir{
-		leaf:         objects.Blob{}.Hash(),
-		permission:   d.permission,
-		content_type: "list",
-		parent:       &d,
-		name:         Name,
-		openHandles:  map[string]bool{},
+	p := dir{
+		leaf:        objects.Blob{}.Hash(),
+		permission:  d.permission,
+		contentType: "list",
+		parent:      &d,
+		name:        Name,
+		openHandles: map[string]bool{},
 		//nodeMap:      map[fuse.NodeID]*Dir{},
-		inode: GenerateInode(d.inode, Name),
+		inode: generateInode(d.inode, Name),
 	}
 	return &p
 }
 
 //func (d Dir) Remove(*fuse.RemoveRequest, Intr) fuse.Error
-func (d Dir) String() string {
+func (d dir) String() string {
 	return fmt.Sprintf(
 		"[%s]%s %s\nmode:%s parent:%s\nid:%v",
-		d.content_type,
+		d.contentType,
 		d.name,
 		d.leaf,
 		d.permission,
@@ -100,7 +104,7 @@ func (d Dir) String() string {
 	)
 }
 
-func (d Dir) Rename(
+func (d dir) Rename(
 	r *fuse.RenameRequest,
 	newDir fs.Node,
 	intr fs.Intr,
@@ -117,7 +121,7 @@ func (d Dir) Rename(
 	}
 	d.name = r.OldName
 
-	switch d.content_type {
+	switch d.contentType {
 
 	case "list":
 		l, listErr := services.GetList(d.leaf.(objects.HCID))
@@ -135,7 +139,7 @@ func (d Dir) Rename(
 		if el != nil {
 			return listErr
 		}
-		d.Publish(d.leaf.(objects.HCID), d.name, d.content_type)
+		d.Publish(d.leaf.(objects.HCID), d.name, d.contentType)
 
 	case "commit":
 		c, CommitErr := services.GetCommit(d.leaf.(objects.HKID))
@@ -199,7 +203,7 @@ func (d Dir) Rename(
 	return nil
 }
 
-func (d Dir) Attr() fuse.Attr {
+func (d dir) Attr() fuse.Attr {
 	log.Printf("Directory attributes requested\n\tName:%s", d.name)
 	return fuse.Attr{
 		Inode: uint64(d.inode),
@@ -221,7 +225,7 @@ func (d Dir) Attr() fuse.Attr {
 	// }
 }
 
-func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
+func (d dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 	log.Printf("Directory Lookup:\n\tName: %s\n\tHID: %s", name, d.leaf.Hex())
 	log.Printf("%v", d)
 	select {
@@ -229,30 +233,30 @@ func (d Dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 		return nil, fuse.EINTR
 	default:
 	}
-	new_nodeID := fuse.NodeID(fs.GenerateDynamicInode(uint64(d.inode), name))
+	newNodeID := fuse.NodeID(fs.GenerateDynamicInode(uint64(d.inode), name))
 
-	switch d.content_type {
+	switch d.contentType {
 	default:
 		return nil, nil
 	case "commit":
-		node, CommitErr := d.LookupCommit(name, intr, new_nodeID)
+		node, CommitErr := d.LookupCommit(name, intr, newNodeID)
 		return node, CommitErr
 	case "list":
-		node, listErr := d.LookupList(name, intr, new_nodeID)
+		node, listErr := d.LookupList(name, intr, newNodeID)
 		return node, listErr
 	case "tag":
-		node, tagErr := d.LookupTag(name, intr, new_nodeID)
+		node, tagErr := d.LookupTag(name, intr, newNodeID)
 		return node, tagErr
 	}
 
 }
 
-func (d Dir) RemoveHandle(name string) {
+func (d dir) RemoveHandle(name string) {
 	delete(d.openHandles, name)
 }
 
 //creates new file only
-func (d Dir) Create(
+func (d dir) Create(
 	request *fuse.CreateRequest,
 	response *fuse.CreateResponse,
 	intr fs.Intr,
@@ -272,7 +276,7 @@ func (d Dir) Create(
 	//   O_SYNC   int = os.O_SYNC   // open for synchronous I/O.
 	//   O_TRUNC  int = os.O_TRUNC  // if possible, truncate file when opened.
 
-	node := File{
+	node := file{
 		contentHash: objects.Blob{}.Hash(),
 		permission:  os.FileMode(0777), //request.Mode,
 		parent:      &d,
@@ -281,7 +285,7 @@ func (d Dir) Create(
 		size:        0,
 		flags:       fuse.OpenReadWrite,
 	}
-	handle := OpenFileHandle{
+	handle := openFileHandle{
 		buffer: []byte{},
 		parent: &d,
 		name:   request.Name,
@@ -315,12 +319,12 @@ func (d Dir) Create(
 	//return node, handle, nil
 }
 
-func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error) {
-	switch d.content_type {
+func (d dir) Publish(h objects.HCID, name string, typeString string) (err error) {
+	switch d.contentType {
 
 	default:
-		log.Printf("unknown type: %s", d.content_type)
-		return fmt.Errorf("unknown type: %s", d.content_type)
+		log.Printf("unknown type: %s", d.contentType)
+		return fmt.Errorf("unknown type: %s", d.contentType)
 	case "commit":
 		c, CommitErr := services.GetCommit(d.leaf.(objects.HKID))
 		if CommitErr != nil {
@@ -391,7 +395,7 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 	}
 }
 
-func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
+func (d dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
 	select {
 	case <-intr:
 		return nil, fuse.EINTR
@@ -409,7 +413,7 @@ func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 		return nil, nil
 	}
 
-	list_entry, present := l[name] //go through list entries and is it maps to the string you passed in present == 1
+	listEntry, present := l[name] //go through list entries and is it maps to the string you passed in present == 1
 	if !present {
 		return nil, fuse.ENOENT
 	}
@@ -424,14 +428,14 @@ func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 		perm = os.FileMode(0555)
 	}
 
-	if list_entry.TypeString == "blob" {
-		b, blobErr := services.GetBlob(list_entry.Hash.(objects.HCID))
+	if listEntry.TypeString == "blob" {
+		b, blobErr := services.GetBlob(listEntry.Hash.(objects.HCID))
 		sizeBlob := 0
 		if blobErr == nil {
 			sizeBlob = len(b)
 		}
-		return File{
-			contentHash: list_entry.Hash.(objects.HCID),
+		return file{
+			contentHash: listEntry.Hash.(objects.HCID),
 			permission:  perm,
 			name:        name,
 			parent:      &d,
@@ -441,22 +445,22 @@ func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 	}
 	ino := fuse.NodeID(1)
 	if d.parent != nil {
-		ino = GenerateInode(d.parent.inode, name)
+		ino = generateInode(d.parent.inode, name)
 	}
 
-	return Dir{
-		leaf:         list_entry.Hash,
-		permission:   perm,
-		content_type: list_entry.TypeString,
-		parent:       &d,
-		name:         name,
-		openHandles:  map[string]bool{},
-		inode:        ino,
+	return dir{
+		leaf:        listEntry.Hash,
+		permission:  perm,
+		contentType: listEntry.TypeString,
+		parent:      &d,
+		name:        name,
+		openHandles: map[string]bool{},
+		inode:       ino,
 	}, nil
 
 }
 
-func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
+func (d dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
 	select {
 	case <-intr:
 		return nil, fuse.EINTR
@@ -467,20 +471,20 @@ func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node,
 		log.Printf("get list %s:", listErr)
 		return nil, nil
 	}
-	list_entry, present := l[name] //go through list entries and is it maps to the string you passed in present == 1
+	listEntry, present := l[name] //go through list entries and is it maps to the string you passed in present == 1
 	if !present {
 		return nil, fuse.ENOENT
 	}
 
-	b, blobErr := services.GetBlob(list_entry.Hash.(objects.HCID))
+	b, blobErr := services.GetBlob(listEntry.Hash.(objects.HCID))
 	sizeBlob := 0
 	if blobErr == nil {
 		sizeBlob = len(b)
 	}
 
-	if list_entry.TypeString == "blob" {
-		return File{
-			contentHash: list_entry.Hash.(objects.HCID),
+	if listEntry.TypeString == "blob" {
+		return file{
+			contentHash: listEntry.Hash.(objects.HCID),
 			permission:  d.permission,
 			parent:      &d,
 			name:        name,
@@ -488,19 +492,19 @@ func (d Dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node,
 			size:        uint64(sizeBlob),
 		}, nil
 	}
-	return Dir{
-		leaf:         list_entry.Hash,
-		permission:   d.permission,
-		content_type: list_entry.TypeString,
-		parent:       &d,
-		openHandles:  map[string]bool{},
-		name:         name,
-		inode:        GenerateInode(d.parent.inode, name),
+	return dir{
+		leaf:        listEntry.Hash,
+		permission:  d.permission,
+		contentType: listEntry.TypeString,
+		parent:      &d,
+		openHandles: map[string]bool{},
+		name:        name,
+		inode:       generateInode(d.parent.inode, name),
 	}, nil
 
 }
 
-func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
+func (d dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
 	select {
 	case <-intr:
 		return nil, fuse.EINTR
@@ -527,7 +531,7 @@ func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, 
 		if blobErr == nil {
 			sizeBlob = len(b)
 		}
-		return File{
+		return file{
 			contentHash: t.HashBytes.(objects.HCID),
 			permission:  perm,
 			name:        name,
@@ -536,18 +540,18 @@ func (d Dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, 
 			size:        uint64(sizeBlob),
 		}, nil
 	}
-	return Dir{
-		leaf:         t.HashBytes,
-		permission:   perm,
-		content_type: t.TypeString,
-		parent:       &d,
-		openHandles:  map[string]bool{},
-		name:         name,
-		inode:        GenerateInode(d.parent.inode, name),
+	return dir{
+		leaf:        t.HashBytes,
+		permission:  perm,
+		contentType: t.TypeString,
+		parent:      &d,
+		openHandles: map[string]bool{},
+		name:        name,
+		inode:       generateInode(d.parent.inode, name),
 	}, nil
 }
 
-func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
+func (d dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	//log.Printf("ReadDir requested:\n\tName:%s", d.name)
 	select {
 	case <-intr:
@@ -557,7 +561,7 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 	var l objects.List
 	var listErr error
 	var dirDirs = []fuse.Dirent{}
-	switch d.content_type {
+	switch d.contentType {
 	case "tag":
 		//if d.content_type == "tag" {
 		tags, tagErr := services.GetTags(d.leaf.(objects.HKID))
@@ -607,26 +611,26 @@ func (d Dir) ReadDir(intr fs.Intr) ([]fuse.Dirent, fuse.Error) {
 
 	for name, entry := range l {
 		if entry.TypeString == "blob" {
-			append_to_list := fuse.Dirent{
+			appendToList := fuse.Dirent{
 				Inode: fs.GenerateDynamicInode(uint64(d.inode), name),
 				Name:  name,
 				Type:  fuse.DT_File,
 			}
-			dirDirs = append(dirDirs, append_to_list)
+			dirDirs = append(dirDirs, appendToList)
 		} else {
-			append_to_list := fuse.Dirent{
+			appendToList := fuse.Dirent{
 				Inode: fs.GenerateDynamicInode(uint64(d.inode), name),
 				Name:  name,
 				Type:  fuse.DT_Dir}
-			dirDirs = append(dirDirs, append_to_list)
+			dirDirs = append(dirDirs, appendToList)
 		}
 	}
 
 	//loop through openHandles
-	for openHandle, _ := range d.openHandles {
+	for openHandle := range d.openHandles {
 		inList := false
-		for _, dir_entry := range dirDirs {
-			if openHandle == dir_entry.Name {
+		for _, dirEntry := range dirDirs {
+			if openHandle == dirEntry.Name {
 				inList = true
 				break
 			}

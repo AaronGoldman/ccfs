@@ -1,4 +1,5 @@
 //Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
+
 package leveldb
 
 import (
@@ -7,7 +8,8 @@ import (
 
 //type leveldbservice struct{}
 
-//func (l leveldbservice) GetId() string {
+//ID gets the ID string
+//func (l leveldbservice) ID() string {
 //	return "leveldb"
 //}
 

@@ -13,6 +13,7 @@ import (
 
 var running bool
 
+//Start mounts the local seed on the local file system
 func Start() {
 	fstestutil.DebugByDefault()
 	go startFSintegration()
@@ -28,6 +29,6 @@ func ccfsUnmount(mountpoint string) {
 	os.Exit(0)
 }
 
-func GenerateInode(NodeID fuse.NodeID, name string) fuse.NodeID {
+func generateInode(NodeID fuse.NodeID, name string) fuse.NodeID {
 	return fuse.NodeID(fs.GenerateDynamicInode(uint64(NodeID), name))
 }

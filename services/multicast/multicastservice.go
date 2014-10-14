@@ -20,6 +20,7 @@ import (
 //Instance is the instance of the multicastservice
 var Instance multicastservice
 
+//Start registers multicastservice instances
 func Start() {
 	Instance = multicastservicefactory()
 	Instance.listenmessage()
@@ -29,6 +30,7 @@ func Start() {
 	services.Registerkeygeter(Instance)
 }
 
+//Stop deregisters multicastservice instances
 func Stop() {
 	services.DeRegisterblobgeter(Instance)
 	services.DeRegistercommitgeter(Instance)
@@ -50,7 +52,8 @@ type multicastservice struct {
 	waitingforkey    map[string]chan objects.Blob
 }
 
-func (m multicastservice) GetId() string {
+//ID gets the ID string
+func (m multicastservice) ID() string {
 	return "multicast"
 }
 

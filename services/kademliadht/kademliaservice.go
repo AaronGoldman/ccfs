@@ -17,6 +17,7 @@ import (
 //Instance is the instance of the kademliaservice
 var Instance kademliaservice
 
+//Start registers kademliadhtservice instances
 func Start() {
 	Instance = kademliaservicefactory()
 	services.Registerblobgeter(Instance)
@@ -30,6 +31,7 @@ func Start() {
 	services.Registerkeyposter(Instance)
 }
 
+//Stop deregisters kademliadhtservice instances
 func Stop() {
 	services.DeRegisterblobgeter(Instance)
 	services.DeRegistercommitgeter(Instance)
@@ -46,7 +48,8 @@ type kademliaservice struct {
 	url string
 }
 
-func (k kademliaservice) GetId() string {
+//ID gets the ID string
+func (k kademliaservice) ID() string {
 	return "kademliadht"
 }
 
