@@ -41,6 +41,7 @@ func startFSintegration() {
 
 	}() //end func
 	//defer profile.Start(profile.CPUProfile).Stop()
+	interfaces.KeyLocalSeed()
 	fs.Serve(c, FS_from_HKID_string(interfaces.GetLocalSeed(), mountpoint))
 }
 
@@ -65,7 +66,7 @@ func (fs_obj FS) Root() (fs.Node, fuse.Error) { //returns a directory
 	log.Printf("Initilizing filesystem:\n\tHKID: %s", fs_obj.hkid)
 	_, err := services.GetKey(fs_obj.hkid)
 	perm := os.FileMode(0555)
-	if err != nil {
+	if err == nil {
 		perm = 0777
 	}
 

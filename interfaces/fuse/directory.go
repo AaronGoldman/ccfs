@@ -322,10 +322,28 @@ func (d Dir) Publish(h objects.HCID, name string, typeString string) (err error)
 
 func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
 
+	ino := fuse.NodeID(1)
+	if d.parent != nil {
+		ino = GenerateInode(d.parent.inode, name)
+	}
 	c, CommitErr := services.GetCommit(d.leaf.(objects.HKID))
+	
 	if CommitErr != nil {
 		log.Printf("commit %s:", CommitErr)
-		return nil, nil
+		_, err := services.GetKey(d.leaf.(objects.HKID))
+		perm := os.FileMode(0555)
+		if err == nil {
+			perm = 0777
+		}
+		return Dir{
+				permission:   perm,
+				content_type: "commit",
+				leaf:         d.leaf.(objects.HKID),
+				parent:       &d,
+				name:         name,
+				openHandles:  map[string]bool{},
+				inode:        ino,
+		}, nil
 	}
 	//get list hash
 	l, listErr := services.GetList(c.ListHash) //l is the list object
@@ -364,10 +382,7 @@ func (d Dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 			size:        uint64(sizeBlob),
 		}, nil
 	}
-	ino := fuse.NodeID(1)
-	if d.parent != nil {
-		ino = GenerateInode(d.parent.inode, name)
-	}
+
 
 	return Dir{
 		leaf:         list_entry.Hash,
