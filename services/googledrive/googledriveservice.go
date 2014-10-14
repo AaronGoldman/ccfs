@@ -19,11 +19,16 @@ var Instance googledriveservice
 
 //Start registers googledriveservice instances
 func Start() {
-	Instance = googledriveserviceFactory()
-	services.Registerblobgeter(Instance)
-	services.Registercommitgeter(Instance)
-	services.Registertaggeter(Instance)
-	services.Registerkeygeter(Instance)
+	var err error
+	Instance, err = googledriveserviceFactory()
+	if err == nil {
+		services.Registerblobgeter(Instance)
+		services.Registercommitgeter(Instance)
+		services.Registertaggeter(Instance)
+		services.Registerkeygeter(Instance)
+	} else {
+		log.Println(err)
+	}
 }
 
 //Stop deregisters googledriveservice instances
@@ -205,7 +210,7 @@ func (gds googledriveservice) GetKey(h objects.HKID) (b objects.Blob, err error)
 	return objects.Blob(fileString), err
 }
 
-func googledriveserviceFactory() googledriveservice {
+func googledriveserviceFactory() (googledriveservice, error) {
 	log.SetFlags(log.Lshortfile)
 	gds := googledriveservice{}
 	// Set up a configuration.
@@ -235,19 +240,20 @@ func googledriveserviceFactory() googledriveservice {
 			// Get an authorization code from the data provider.
 			// ("Please ask the user if I can access this resource.")
 			url := config.AuthCodeURL("")
-			log.Println("Visit this URL to get a code, then run again with -code=YOUR_CODE")
-			log.Println(url)
-			log.Println("After getting the code, place it in the bin folder")
-			log.Println("In a file named googledrive_code.txt")
-			//panic("")
+			log.Println(
+				"Visit this URL to get a code\n",
+				url,
+				"\nAfter getting the code, place it in the bin folder",
+				"in a file named googledrive_code.txt",
+			)
 			Stop()
-			return googledriveservice{}
+			return googledriveservice{}, fmt.Errorf("oAuth code not found")
 		}
 		// Exchange the authorization code for an access token.
 		// ("Here's the code you gave the user, now give me a token!")
 		token, err = gds.transport.Exchange(code)
 		if err != nil {
-			log.Fatal("Exchange:", err)
+			return googledriveservice{}, fmt.Errorf("oAuth code exchange failed %s", err)
 		}
 		// (The Exchange method will automatically cache the token.)
 		log.Printf("Token is cached in %v\n", config.TokenCache)
@@ -268,11 +274,29 @@ func googledriveserviceFactory() googledriveservice {
 	//get the ID's of the object folders'
 	httpClient := gds.transport.Client()
 	gds.driveService, err = drive.New(httpClient)
+	if err != nil {
+		return googledriveservice{}, err
+	}
 	ccfsFolderID, err := gds.getChildWithTitle("root", "ccfs")
+	if err != nil {
+		return googledriveservice{}, fmt.Errorf("Couldn't get Folder CCFS %s", err)
+	}
 	gds.blobsFolderID, err = gds.getChildWithTitle(ccfsFolderID, "blobs")
+	if err != nil {
+		return googledriveservice{}, fmt.Errorf("Couldn't get Folder Blobs %s", err)
+	}
 	gds.commitsFolderID, err = gds.getChildWithTitle(ccfsFolderID, "commits")
+	if err != nil {
+		return googledriveservice{}, fmt.Errorf("Couldn't get Folder Commits %s", err)
+	}
 	gds.tagsFolderID, err = gds.getChildWithTitle(ccfsFolderID, "tags")
+	if err != nil {
+		return googledriveservice{}, fmt.Errorf("Couldn't get Folder Tags %s", err)
+	}
 	gds.keysFolderID, err = gds.getChildWithTitle(ccfsFolderID, "keys")
+	if err != nil {
+		return googledriveservice{}, fmt.Errorf("Couldn't get Folder Keys %s", err)
+	}
 
 	log.Printf(
 		"\n\tblobsFolderId: %v"+
@@ -289,5 +313,5 @@ func googledriveserviceFactory() googledriveservice {
 		gds.transport,
 	)
 
-	return gds
+	return gds, nil
 }
