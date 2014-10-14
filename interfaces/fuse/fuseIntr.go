@@ -1,8 +1,4 @@
 //Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
-// Modified from Go Authors
-// Copyright 2012 The Go Authors.  All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
 
 package fuse
 
@@ -12,10 +8,16 @@ import (
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
+	"bazil.org/fuse/fs/fstestutil"
 )
 
+var running bool
+
+//Start mounts the local seed on the local file system
 func Start() {
+	fstestutil.DebugByDefault()
 	go startFSintegration()
+	running = true
 }
 
 func ccfsUnmount(mountpoint string) {
@@ -27,6 +29,6 @@ func ccfsUnmount(mountpoint string) {
 	os.Exit(0)
 }
 
-func GenerateInode(NodeID fuse.NodeID, name string) fuse.NodeID {
+func generateInode(NodeID fuse.NodeID, name string) fuse.NodeID {
 	return fuse.NodeID(fs.GenerateDynamicInode(uint64(NodeID), name))
 }

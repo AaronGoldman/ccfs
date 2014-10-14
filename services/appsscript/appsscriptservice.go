@@ -1,4 +1,5 @@
 //Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
+
 package appsscript
 
 import (
@@ -9,9 +10,35 @@ import (
 	"net/http"
 
 	"github.com/AaronGoldman/ccfs/objects"
+	"github.com/AaronGoldman/ccfs/services"
 )
 
+//Instance is the instance of the appsscriptservice
+var Instance appsscriptservice
+
+//Start registers appsscriptservice instances
+func Start() {
+	Instance = appsscriptservice{}
+	services.Registerblobgeter(Instance)
+	services.Registercommitgeter(Instance)
+	services.Registertaggeter(Instance)
+	services.Registerkeygeter(Instance)
+}
+
+//Stop deregisters appsscriptservice instances
+func Stop() {
+	services.DeRegisterblobgeter(Instance)
+	services.DeRegistercommitgeter(Instance)
+	services.DeRegistertaggeter(Instance)
+	services.DeRegisterkeygeter(Instance)
+}
+
 type appsscriptservice struct{}
+
+//ID gets the ID string
+func (a appsscriptservice) ID() string {
+	return "appsscript"
+}
 
 func (a appsscriptservice) GetBlob(h objects.HCID) (b objects.Blob, err error) {
 	quarryurl := fmt.Sprintf(
@@ -130,13 +157,4 @@ func (a appsscriptservice) GetKey(h objects.HKID) (objects.Blob, error) {
 		return nil, err
 	}
 	return data, err
-}
-
-//Instance is the instance of the appsscriptservice
-var Instance = appsscriptservice{}
-
-func init() {
-	//Registerblobgeter(appsscriptserviceInstance)
-	//Registercommitgeter(appsscriptserviceInstance)
-	//Registertaggeter(appsscriptserviceInstance)
 }

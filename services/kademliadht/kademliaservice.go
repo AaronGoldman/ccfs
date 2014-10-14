@@ -1,4 +1,5 @@
 //Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
+
 //Package kademliadht is the kademliaservice
 package kademliadht
 
@@ -10,10 +11,46 @@ import (
 	"net/url"
 
 	"github.com/AaronGoldman/ccfs/objects"
+	"github.com/AaronGoldman/ccfs/services"
 )
+
+//Instance is the instance of the kademliaservice
+var Instance kademliaservice
+
+//Start registers kademliadhtservice instances
+func Start() {
+	Instance = kademliaservicefactory()
+	services.Registerblobgeter(Instance)
+	services.Registercommitgeter(Instance)
+	services.Registertaggeter(Instance)
+	//services.Registertagsgeter(Instance)
+	services.Registerkeygeter(Instance)
+	services.Registerblobposter(Instance)
+	services.Registercommitposter(Instance)
+	services.Registertagposter(Instance)
+	services.Registerkeyposter(Instance)
+}
+
+//Stop deregisters kademliadhtservice instances
+func Stop() {
+	services.DeRegisterblobgeter(Instance)
+	services.DeRegistercommitgeter(Instance)
+	services.DeRegistertaggeter(Instance)
+	//services.DeRegistertagsgeter(Instance)
+	services.DeRegisterkeygeter(Instance)
+	services.DeRegisterblobposter(Instance)
+	services.DeRegistercommitposter(Instance)
+	services.DeRegistertagposter(Instance)
+	services.DeRegisterkeyposter(Instance)
+}
 
 type kademliaservice struct {
 	url string
+}
+
+//ID gets the ID string
+func (k kademliaservice) ID() string {
+	return "kademliadht"
 }
 
 func (k kademliaservice) GetBlob(h objects.HCID) (b objects.Blob, err error) {
@@ -78,7 +115,7 @@ func (k kademliaservice) PostBlob(b objects.Blob) (err error) {
 func (k kademliaservice) PostTag(t objects.Tag) (err error) {
 	values := url.Values{}
 	values.Add("type", "tag")
-	values.Add("hkid", t.Hkid().Hex())
+	values.Add("hkid", t.Hkid.Hex())
 	values.Add("namesegment", t.NameSegment)
 	_, err = k.postobject(values, t.Bytes())
 	if err != nil {
@@ -91,7 +128,7 @@ func (k kademliaservice) PostTag(t objects.Tag) (err error) {
 func (k kademliaservice) PostCommit(c objects.Commit) (err error) {
 	values := url.Values{}
 	values.Add("type", "commit")
-	values.Add("hkid", c.Hkid().Hex())
+	values.Add("hkid", c.Hkid.Hex())
 	data, err := k.postobject(values, c.Bytes())
 	if err != nil {
 		log.Println(err)
@@ -146,11 +183,3 @@ func (k kademliaservice) postobject(values url.Values, b []byte) (data []byte, e
 func kademliaservicefactory() kademliaservice {
 	return kademliaservice{url: "http://128.61.21.129:5000/?"}
 }
-
-func init() {
-	Instance = kademliaservicefactory()
-	_ = Instance
-}
-
-//Instance is the instance of the kademliaservice
-var Instance kademliaservice

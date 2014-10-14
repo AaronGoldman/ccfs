@@ -1,4 +1,5 @@
 //Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
+
 package leveldb
 
 import (
@@ -6,6 +7,11 @@ import (
 )
 
 //type leveldbservice struct{}
+
+//ID gets the ID string
+//func (l leveldbservice) ID() string {
+//	return "leveldb"
+//}
 
 //func (l leveldbservice) GetBlob(h HCID) (b blob, err error)                   { return b, err }
 //func (l leveldbservice) GetCommit(h HKID) (c commit, err error)               { return c, err }

@@ -1,4 +1,5 @@
 //Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
+
 package localfile
 
 import (
@@ -12,8 +13,39 @@ import (
 	"github.com/AaronGoldman/ccfs/services"
 )
 
+//Start registers localfileservice instances
+func Start() {
+	services.Registerblobgeter(Instance)
+	services.Registercommitgeter(Instance)
+	services.Registertaggeter(Instance)
+	services.Registertagsgeter(Instance)
+	services.Registerkeygeter(Instance)
+	services.Registerblobposter(Instance)
+	services.Registercommitposter(Instance)
+	services.Registertagposter(Instance)
+	services.Registerkeyposter(Instance)
+}
+
+//Stop dregisters localfileservice instances
+func Stop() {
+	services.DeRegisterblobgeter(Instance)
+	services.DeRegistercommitgeter(Instance)
+	services.DeRegistertaggeter(Instance)
+	services.DeRegistertagsgeter(Instance)
+	services.DeRegisterkeygeter(Instance)
+	services.DeRegisterblobposter(Instance)
+	services.DeRegistercommitposter(Instance)
+	services.DeRegistertagposter(Instance)
+	services.DeRegisterkeyposter(Instance)
+}
+
 //localfileservice is an
 type localfileservice struct{}
+
+//ID gets the ID string
+func (lfs localfileservice) ID() string {
+	return "localfile"
+}
 
 func (lfs localfileservice) PostBlob(b objects.Blob) (err error) {
 	filepath := fmt.Sprintf("bin/blobs/%s", b.Hash().Hex())
@@ -33,6 +65,7 @@ func (lfs localfileservice) PostTag(t objects.Tag) (err error) {
 	err = ioutil.WriteFile(filepath, t.Bytes(), 0664)
 	return
 }
+
 func (lfs localfileservice) PostCommit(c objects.Commit) (err error) {
 	lfs.PostBlob(objects.Blob(c.Bytes()))
 	filepath := fmt.Sprintf("bin/commits/%s/%d", c.Hkid.Hex(), c.Version)
@@ -142,14 +175,3 @@ func (lfs localfileservice) latestVersion(matches []string) string {
 
 //Instance is the instance of the localfileservice
 var Instance = localfileservice{}
-
-func init() {
-	services.Registerblobgeter(Instance)
-	services.Registerblobposter(Instance)
-	services.Registercommitgeter(Instance)
-	services.Registercommitposter(Instance)
-	services.Registertaggeter(Instance)
-	services.Registertagposter(Instance)
-	services.Registerkeygeter(Instance)
-	services.Registerkeyposter(Instance)
-}

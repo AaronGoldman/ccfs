@@ -1,4 +1,5 @@
 //Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
+
 package multicast
 
 import (
@@ -43,7 +44,7 @@ func commitAvailable(hash objects.HKID) (bool, int64) {
 	if err != nil {
 		return false, 0
 	}
-	return true, c.Version()
+	return true, c.Version
 }
 
 func parseMessage(message string) (hkid objects.HKID, hcid objects.HCID, typeString string, nameSegment string, url string) {

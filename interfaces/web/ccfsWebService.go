@@ -1,4 +1,7 @@
 //Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
+
+//Package web implements a web interface
+//It is started by calling web.Start
 package web
 
 import (
@@ -12,12 +15,26 @@ import (
 
 //BlobServerStart starts a server for the content services
 func BlobServerStart() {
-	http.Handle("/b/", http.StripPrefix("/b/",
-		http.FileServer(http.Dir("bin/blobs"))))
-	http.Handle("/t/", http.StripPrefix("/t/",
-		http.FileServer(http.Dir("bin/tags"))))
-	http.Handle("/c/", http.StripPrefix("/c/",
-		http.FileServer(http.Dir("bin/commits"))))
+	http.Handle(
+		"/b/",
+		http.StripPrefix(
+			"/b/",
+			http.FileServer(http.Dir("bin/blobs")),
+		),
+	)
+	http.Handle(
+		"/t/",
+		http.StripPrefix(
+			"/t/",
+			http.FileServer(http.Dir("bin/tags")),
+		),
+	)
+	http.Handle(
+		"/c/",
+		http.StripPrefix("/c/",
+			http.FileServer(http.Dir("bin/commits")),
+		),
+	)
 	http.ListenAndServe(":8080", nil)
 }
 

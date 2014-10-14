@@ -1,4 +1,5 @@
 //Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
+
 package crawler
 
 import (
@@ -240,6 +241,7 @@ func webSearchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//GetCuratorsofBlob gets curators of the blob
 func GetCuratorsofBlob(hcidString string) map[string]string {
 	curators := make(map[string]string)
 	info, present := blobIndex[hcidString]
@@ -276,6 +278,7 @@ func GetCuratorsofBlob(hcidString string) map[string]string {
 	return curators
 }
 
+//GetPathsForHCID gets the paths for the HCID
 func GetPathsForHCID(blobHCID string) map[string]bool {
 
 	tempPaths := map[string]bool{}

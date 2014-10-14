@@ -10,50 +10,62 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/AaronGoldman/ccfs/interfaces/fuse"
-	"github.com/AaronGoldman/ccfs/interfaces/web"
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 )
 
-func parseFlagsAndTakeAction() {
-	var mount = flag.Bool("mount", false, "Mount the fuse file system")
-	var serve = flag.Bool("serve", true, "Start content object server")
-	var createDomain = flag.Bool("createDomain", false, "Creates a new domain at path")
-	var createRepository = flag.Bool("createRepository", false, "Creates a new repository at path")
-	var insertDomain = flag.Bool("insertDomain", false, "Inserts the domain HKID at path")
-	var insertRepository = flag.Bool("insertRepository", false, "Inserts the repository HKID at path")
+func parseFlags() (
+	Flags struct {
+		mount *bool
+		serve *bool
+		dht   *bool
+		drive *bool
+		apps  *bool
+	},
+	Command struct {
+		createDomain     *bool
+		createRepository *bool
+		insertDomain     *bool
+		insertRepository *bool
+		path             *string
+		hkid             *string
+	},
+) {
 
-	var path = flag.String("path", "", "The path to inserted collection")
-	var hkid = flag.String("hkid", "", "HKID of collection to insert")
+	Flags.mount = flag.Bool("mount", false, "Mount the fuse file system")
+	Flags.serve = flag.Bool("serve", true, "Start content object server")
+	Flags.dht = flag.Bool("dht", false, "Starts Kademliadht service")
+	Flags.drive = flag.Bool("drive", false, "Starts Googledrive service")
+	Flags.apps = flag.Bool("apps", false, "Starts Appsscript service")
+	Command.createDomain = flag.Bool("createDomain", false, "Creates a new domain at path argument")
+	Command.createRepository = flag.Bool("createRepository", false, "Creates a new repository at path argument")
+	Command.insertDomain = flag.Bool("insertDomain", false, "Inserts the domain HKID argument at path argument")
+	Command.insertRepository = flag.Bool("insertRepository", false, "Inserts the repository HKID argument at path argument")
 
+	Command.path = flag.String("path", "", "The path to inserted collection")
+	Command.hkid = flag.String("hkid", "", "HKID of collection to insert")
 	flag.Parse()
+	return Flags, Command
+}
 
-	if flag.NFlag() == 0 {
-		//flagged = false
-		*serve = true
-		//*mount = true
-	}
+func addCurators(inCommand struct {
+	createDomain     *bool
+	createRepository *bool
+	insertDomain     *bool
+	insertRepository *bool
+	path             *string
+	hkid             *string
+}) {
 
-	if *serve {
-		web.Start()
-		//go BlobServerStart()
-		//go RepoServerStart()
-	}
-	if *mount {
-		fuse.Start()
-		//go startFSintegration()
-	}
-
-	if *path != "" {
+	if *inCommand.path != "" {
 		//log.Printf("HKID: %s", *hkid)
 		in := bufio.NewReader(os.Stdin)
 		var err error
-		h, collectionPath := fileSystemPath2CollectionPath(path)
+		h, collectionPath := fileSystemPath2CollectionPath(inCommand.path)
 		//log.Printf("systemPath %s", *path)
 		//log.Printf("collectionPath %s", collectionPath)
 
-		FileInfos, err := ioutil.ReadDir(*path)
+		FileInfos, err := ioutil.ReadDir(*inCommand.path)
 		if err != nil {
 			log.Printf("Error reading directory %s", err)
 			os.Exit(2)
@@ -66,11 +78,11 @@ func parseFlagsAndTakeAction() {
 			return // Ends function
 		}
 
-		collectionName := filepath.Base(*path)
+		collectionName := filepath.Base(*inCommand.path)
 		//fmt.Printf("Name of Collection: %s\n", collectionName)
 
 		switch {
-		case *createDomain:
+		case *inCommand.createDomain:
 			//err = InitDomain(h, fmt.Sprintf("%s/%s", collectionPath, collectionName))
 			err = services.InitDomain(h, collectionPath)
 			if err != nil {
@@ -78,17 +90,17 @@ func parseFlagsAndTakeAction() {
 				return
 			}
 
-		case *createRepository:
+		case *inCommand.createRepository:
 			//err = InitRepo(h, fmt.Sprintf("%s/%s", collectionPath, collectionName))
 			err = services.InitRepo(h, collectionPath)
 			if err != nil {
 				log.Println(err)
 				return
 			}
-		case *insertDomain:
+		case *inCommand.insertDomain:
 			fmt.Println("Insert HKID as a hexadecimal number:")
-			hex := *hkid
-			if *hkid == "" {
+			hex := *inCommand.hkid
+			if *inCommand.hkid == "" {
 				hex, _ = in.ReadString('\n')
 				hex = strings.Trim(hex, "\n")
 			}
@@ -104,10 +116,10 @@ func parseFlagsAndTakeAction() {
 				log.Println(err)
 				return
 			}
-		case *insertRepository:
+		case *inCommand.insertRepository:
 			fmt.Println("Insert HKID as a hexadecimal number:")
-			hex := *hkid
-			if *hkid == "" {
+			hex := *inCommand.hkid
+			if *inCommand.hkid == "" {
 				hex, _ = in.ReadString('\n')
 				hex = strings.Trim(hex, "\n")
 			}

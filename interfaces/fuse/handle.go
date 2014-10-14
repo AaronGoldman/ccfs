@@ -1,5 +1,4 @@
 //Copyright 2014 Aaron Goldman. All rights reserved. Use of this source code is governed by a BSD-style license that can be found in the LICENSE file
-//handle
 
 package fuse
 
@@ -13,14 +12,14 @@ import (
 	"github.com/AaronGoldman/ccfs/services"
 )
 
-type OpenFileHandle struct {
+type openFileHandle struct {
 	buffer []byte
-	parent *Dir
+	parent *dir
 	name   string
 	inode  fuse.NodeID //we're not using this field yet
 }
 
-func (o OpenFileHandle) String() string {
+func (o openFileHandle) String() string {
 	return fmt.Sprintf(
 		"[%d] %s\nid: %v parent: %s\nbuffer: %q",
 		len(o.buffer),
@@ -32,8 +31,8 @@ func (o OpenFileHandle) String() string {
 }
 
 //handleReader interface
-func (o OpenFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadResponse, intr fs.Intr) fuse.Error {
-	logRequestObject(request, o)
+func (o openFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadResponse, intr fs.Intr) fuse.Error {
+	log.Printf("request: %+v\nobject: %+v", request, o)
 	start := request.Offset
 	stop := start + int64(request.Size)
 	bufptr := o.buffer
@@ -52,8 +51,8 @@ func (o OpenFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadRespo
 	return nil
 }
 
-func (o *OpenFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteResponse, intr fs.Intr) fuse.Error {
-	logRequestObject(request, o)
+func (o *openFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteResponse, intr fs.Intr) fuse.Error {
+	log.Printf("request: %+v\nobject: %+v", request, o)
 	start := request.Offset
 	writeData := request.Data
 
@@ -83,23 +82,24 @@ func (o *OpenFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteR
 	return nil
 }
 
-func (o OpenFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse.Error {
-	logRequestObject(request, o)
+func (o openFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse.Error {
+	log.Printf("request: %+v\nobject: %+v", request, o)
+	o.parent.RemoveHandle(o.name)
 	request.Respond()
 	return nil //fuse.ENOENT
 }
 
 //func (o OpenfileHandle)
-func (o OpenFileHandle) Flush(request *fuse.FlushRequest, intr fs.Intr) fuse.Error {
-	logRequestObject(request, o)
-	//o.Publish()
+func (o openFileHandle) Flush(request *fuse.FlushRequest, intr fs.Intr) fuse.Error {
+	log.Printf("request: %+v\nobject: %+v", request, o)
+	o.Publish()
 	request.Respond()
 	return nil
 }
 
 //write out file using postblob
 
-func (o OpenFileHandle) Publish() error { //name=file name
+func (o openFileHandle) Publish() error { //name=file name
 	//log.Printf("buffer contains: %s", o.buffer)
 	bfrblob := objects.Blob(o.buffer)
 	log.Printf("Posting blob %s\n-----BEGIN BLOB-------\n%s\n-------END BLOB-------", bfrblob.Hash(), bfrblob)
