@@ -96,6 +96,32 @@ func (d directhttpservice) GetTag(h objects.HKID, namesegment string) (
 	return objects.Tag{}, fmt.Errorf("No Hosts")
 }
 
+func (d directhttpservice) GetTags(h objects.HKID) (
+	tags []objects.Tag, err error) {
+	for host := range hosts {
+		quarryurl := fmt.Sprintf(
+			"https://%s/t/%s/",
+			host,
+			h.Hex(),
+		)
+		resp, err := http.Get(quarryurl)
+		if err != nil {
+			return []objects.Tag{}, err
+		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return []objects.Tag{}, err
+		}
+		//ToDo find and get latests vertion of all labels
+		tag, err := objects.TagFromBytes(body)
+		if err == nil {
+			return []objects.Tag{tag}, err
+		}
+	}
+	return []objects.Tag{}, fmt.Errorf("No Hosts")
+}
+
 //ID gets the ID string
 func (d directhttpservice) ID() string {
 	return "directhttp"
