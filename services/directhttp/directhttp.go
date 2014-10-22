@@ -3,9 +3,11 @@
 package directhttp
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"unicode"
 
 	"github.com/AaronGoldman/ccfs/objects"
 )
@@ -46,21 +48,32 @@ func (d directhttpservice) GetBlob(h objects.HCID) (objects.Blob, error) {
 }
 func (d directhttpservice) GetCommit(h objects.HKID) (objects.Commit, error) {
 	for host := range hosts {
-		quarryurl := fmt.Sprintf(
+		urlVertions := fmt.Sprintf(
 			"https://%s/c/%s/",
 			host,
 			h.Hex(),
 		)
-		resp, err := http.Get(quarryurl)
+		respVertions, err := http.Get(urlVertions)
 		if err != nil {
 			return objects.Commit{}, err
 		}
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
+		defer respVertions.Body.Close()
+		body, err := ioutil.ReadAll(respVertions.Body)
 		if err != nil {
 			return objects.Commit{}, err
 		}
-		//ToDo find and get latests vertion
+		vertionNumber := latestsVertion(body)
+		urlCommit := fmt.Sprintf(
+			"https://%s/c/%s/%s",
+			host,
+			h.Hex(),
+			vertionNumber,
+		)
+		respCommit, err := http.Get(urlCommit)
+		body, err = ioutil.ReadAll(respCommit.Body)
+		if err != nil {
+			return objects.Commit{}, err
+		}
 		commit, err := objects.CommitFromBytes(body)
 		if err == nil {
 			return commit, err
@@ -114,6 +127,8 @@ func (d directhttpservice) GetTags(h objects.HKID) (
 			return []objects.Tag{}, err
 		}
 		//ToDo find and get latests vertion of all labels
+		//vertionNumber := latestsVertion(body)
+
 		tag, err := objects.TagFromBytes(body)
 		if err == nil {
 			return []objects.Tag{tag}, err
@@ -126,3 +141,17 @@ func (d directhttpservice) GetTags(h objects.HKID) (
 func (d directhttpservice) ID() string {
 	return "directhttp"
 }
+
+//func latestsVertion(htmldoc bufio.Reader) (vertionNumber string, err error) {
+func latestsVertion(htmldoc []byte) (vertionNumber []byte) {
+	maxvertionNumber := []byte{}
+	for _, line := range bytes.Fields(htmldoc) {
+		queryTokens := bytes.FieldsFunc(line, isNotDigit)
+		if len(queryTokens) > 0 && bytes.Compare(queryTokens[0], maxvertionNumber) > 0 {
+			maxvertionNumber = queryTokens[0]
+		}
+	}
+	return maxvertionNumber
+}
+
+func isNotDigit(r rune) bool { return !unicode.IsDigit(r) }
