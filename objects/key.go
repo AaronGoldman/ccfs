@@ -78,7 +78,7 @@ func PrivteKeyFromBytes(b []byte) (priv *PrivateKey, err error) {
 }
 
 //PrivteKeyFromD makes a private key from a big int and reterns it
-func PrivteKeyFromD(D big.Int) (*PrivateKey, error) {
+func PrivateKeyFromD(D big.Int) (*PrivateKey, error) {
 	priv, err := PrivteKeyFromBytes(D.Bytes())
 	return priv, err
 	//priv := new(PrivateKey)

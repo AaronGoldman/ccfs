@@ -4,37 +4,53 @@ package main
 import (
 	"bytes"
 	"encoding/hex"
-	"github.com/AaronGoldman/ccfs/objects"
-	"github.com/AaronGoldman/ccfs/services"
 	"io/ioutil"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/AaronGoldman/ccfs/objects"
+	"github.com/AaronGoldman/ccfs/services"
+	"github.com/AaronGoldman/ccfs/services/localfile"
 )
 
-var benchmarkRepo objects.HKID
+var benchmarkRepo objects.HKID // Repo = Repository?
 var benchmarkCommitHkid objects.HKID
 var benchmarkTagHkid objects.HKID
 
 func init() {
+
+	//Open|Create Log File
+	logFileName := "bin/log.txt"
+	logFile, err := os.OpenFile(logFileName, os.O_RDWR, 664)
+	if err != nil {
+		log.Println("Unable to Create/Open log file. No output will be captured.")
+	} else {
+		log.SetOutput(logFile)
+	}
 	log.SetFlags(log.Lshortfile)
+
 	objects.RegisterGeterPoster(
 		services.GetPublicKeyForHkid,
 		services.GetPrivateKeyForHkid,
 		services.PostKey,
 		services.PostBlob,
 	)
+	localfile.Start()
 	//Post(benchmarkRepo, "BlobFound", blob("blob found"))
 	//Post(benchmarkRepo, "listFound/BlobFound", blob("list found"))
 	benchmarkRepo = objects.HkidFromDString("44089867384569081480066871308647"+
 		"4832666868594293316444099156169623352946493325312681245061254048"+
 		"6538169821270508889792789331438131875225590398664679212538621", 10)
+	log.Printf("Benchmark Repository HKID: %s\n", benchmarkRepo)
 	benchmarkCommitHkid = objects.HkidFromDString("36288652923287342545336063204999"+
 		"9357791979761632757400493952327434464825857894440491353330036559"+
 		"1539025688752776406270441884985963379175226110071953813093104", 10)
+	log.Printf("Benchmark Commit HKID: %s\n", benchmarkCommitHkid)
 	benchmarkTagHkid = objects.HkidFromDString("54430439211086161065670118078952"+
 		"6855263811485554809970416168964497131310494084201908881724207840"+
 		"2305843436117034888111308798569392135240661266075941854101839", 10)
+	log.Printf("Benchmark Tag HKID: %s\n", benchmarkTagHkid)
 }
 
 //hkid 549baa6497db3615332aae859680b511117e299879ee311fbac4d1a40f93b8d0
@@ -68,42 +84,11 @@ func BenchmarkLowLevelPath(b *testing.B) {
 		"10824965155500230480521264034469", 10)
 
 	for i := 0; i < b.N; i++ {
-		//Post blob
-		testBlob := objects.Blob([]byte("testing")) //gen test blob
-		err := services.PostBlob(testBlob)          //store test blob
-		if err != nil {
-			log.Println(err)
-		}
 
-		//post tag
-		testTagPointingToTestBlob := objects.NewTag(
-			objects.HID(testBlob.Hash()),
-			"blob",
-			"testBlob",
-			nil,
-			hkidT,
-		) //gen test tag
-		err = services.PostTag(testTagPointingToTestBlob) //post test tag
-		if err != nil {
-			log.Println(err)
-		}
-
-		//post list
-		testListPiontingToTestTag := objects.NewList(testTagPointingToTestBlob.Hkid,
-			"tag",
-			"testTag") //gen test list
-		err = services.PostBlob(testListPiontingToTestTag.Bytes()) //store test list
-		if err != nil {
-			log.Println(err)
-		}
-
-		// post commit
-		testCommitPointingToTestList := objects.NewCommit(testListPiontingToTestTag.Hash(),
-			hkidC) //gen test commit
-		err = services.PostCommit(testCommitPointingToTestList) //post test commit
-		if err != nil {
-			log.Println(err)
-		}
+		blobHcid := postBlob("testing")
+		postTag(blobHcid, hkidT)
+		tagHcid := postList(hkidT)
+		postCommit(tagHcid, hkidC)
 
 		//get commit
 		hkid, _ := hex.DecodeString(
@@ -138,9 +123,12 @@ func BenchmarkLowLevelPath(b *testing.B) {
 			b.FailNow()
 		}
 		//get blob
-		testBlob, _ = services.GetBlob(testTag.HashBytes.(objects.HCID))
+		testBlob, err := services.GetBlob(testTag.HashBytes.(objects.HCID))
 		//log.Printf("authentic blob:%v\n", bytes.Equal(testTag.HashBytes,
 		//	testBlob.Hash()))
+		if err != nil {
+			b.Fatalf("Get Blob Error: %s\n", err)
+		}
 		if !bytes.Equal(testTag.HashBytes.(objects.HCID), testBlob.Hash()) {
 			b.FailNow()
 		}
@@ -159,13 +147,13 @@ func BenchmarkHighLevelPath(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		outdata, err := services.Get(testhkid, testpath)
 		if !bytes.Equal(indata, outdata) || err != nil {
-			log.Println(testhkid, outdata)
+			log.Println(testhkid, outdata) //Why is t.ErrorF not used?
 			b.FailNow()
 		}
 	}
 }
 
-//BenchmarkBlobFound times the retreval of a blob that is found
+//BenchmarkBlobFound times the retrieval of a blob that is found
 func BenchmarkBlobFound(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -176,7 +164,7 @@ func BenchmarkBlobFound(b *testing.B) {
 	}
 }
 
-//BenchmarkBlobNotFound times the retreval of a blob that is not found
+//BenchmarkBlobNotFound times the retrieval of a blob that is not found
 func BenchmarkBlobNotFound(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -222,6 +210,8 @@ func BenchmarkBlobUpdate(b *testing.B) {
 }
 
 func BenchmarkListBlobFound(b *testing.B) {
+	indata := objects.Blob("List Blob Found Data")
+	services.Post(benchmarkRepo, "listFound/BlobFound", indata)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, err := services.Get(benchmarkRepo, "listFound/BlobFound")
@@ -388,5 +378,49 @@ func BenchmarkTagBlobUpdate(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
+	}
+}
+
+func postBlob(data string) objects.HCID {
+	testBlob := objects.Blob([]byte(data)) //gen test blob
+	err := services.PostBlob(testBlob)     //store test blob
+	if err != nil {
+		log.Println(err)
+	}
+	return testBlob.Hash()
+
+}
+
+func postTag(objHash objects.HCID, tagHkid objects.HKID) {
+	testTagPointingToTestBlob := objects.NewTag(
+		objects.HID(objHash),
+		"blob",
+		"testBlob",
+		nil,
+		tagHkid,
+	) //gen test tag
+	err := services.PostTag(testTagPointingToTestBlob) //post test tag
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func postList(target objects.HKID) (testTagHash objects.HCID) {
+	testListPointingToTestTag := objects.NewList(target,
+		"tag",
+		"testTag") //gen test list
+	err := services.PostList(testListPointingToTestTag) //store test list
+	if err != nil {
+		log.Println(err)
+	}
+	return testListPointingToTestTag.Hash()
+}
+
+func postCommit(hcid objects.HCID, hkidC objects.HKID) {
+	testCommitPointingToTestList := objects.NewCommit(hcid,
+		hkidC) //gen test commit
+	err := services.PostCommit(testCommitPointingToTestList) //post test commit
+	if err != nil {
+		log.Println(err)
 	}
 }

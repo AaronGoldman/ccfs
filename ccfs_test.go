@@ -27,6 +27,7 @@ func init() {
 
 func TestLowLevel(t *testing.T) {
 	log.SetFlags(log.Lshortfile)
+	services.PostBlob(objects.Blob{})
 	blobhcid, err := objects.HcidFromHex(
 		"ca4c4244cee2bd8b8a35feddcd0ba36d775d68637b7f0b4d2558728d0752a2a2",
 	)
@@ -42,9 +43,12 @@ func TestLowLevel(t *testing.T) {
 			"0722414168936112160694238047304378604753005642729767620850685191"+
 			"88612732562106886379081213385", 10)
 	c, err := services.GetCommit(testhkid)
-	if err != nil || !bytes.Equal(c.Hkid, testhkid) || !c.Verify() {
-		t.Logf("GetCommit Fail")
-		t.Fail()
+	if err != nil {
+		t.Fatalf("Get Commit Fail: %s", err)
+	} else if !bytes.Equal(c.Hkid, testhkid) {
+		t.Fatalf("Expected: %s Got: %s", testhkid, c.Hkid)
+	} else if !c.Verify() {
+		t.Fatalf("Commit Signature Invalid.")
 	}
 
 	//ede7bec713c93929751f18b1db46d4be3c95286bd5f2d92b9759ff02115dc312
@@ -54,15 +58,11 @@ func TestLowLevel(t *testing.T) {
 			"76227751462258339344895829332", 10)
 	testtag, err := services.GetTag(taghkid, "TestPostBlob")
 	if err != nil {
-		t.Logf("GetTag Fail. error: %s", err)
-		t.Fail()
+		t.Fatalf("GetTag Fail. error: %s", err)
 	} else if !bytes.Equal(testtag.Hkid, taghkid) {
-		t.Logf("GetTag Fail.\n\t expected: %v\n\t got: %v", testtag.Hkid, taghkid)
-		t.Fail()
-
+		t.Fatalf("GetTag Fail.\n\t expected: %v\n\t got: %v", taghkid, testtag.Hkid)
 	} else if !testtag.Verify() {
-		t.Logf("GetTag Verify Fail")
-		t.Fail()
+		t.Fatalf("GetTag Verify Fail")
 	}
 
 	prikey, err := services.GetKey(taghkid)

@@ -55,7 +55,7 @@ func PostList(l objects.List) (err error) {
 	return PostBlob(objects.Blob(l.Bytes()))
 }
 
-//GetCommit retreves the newest commit for a given HKID
+//GetCommit retrieves the newest commit for a given HKID
 func GetCommit(h objects.HKID) (objects.Commit, error) {
 	datach := make(chan objects.Commit, len(commitgeters))
 	errorch := make(chan error, len(commitgeters))
