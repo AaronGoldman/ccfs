@@ -33,12 +33,7 @@ func (d directhttpservice) GetBlob(h objects.HCID) (objects.Blob, error) {
 			host,
 			h.Hex(),
 		)
-		resp, err := http.Get(quarryurl)
-		if err != nil {
-			return objects.Blob{}, err
-		}
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := urlReadAll(quarryurl)
 		if err != nil {
 			return objects.Blob{}, err
 		}
@@ -46,6 +41,7 @@ func (d directhttpservice) GetBlob(h objects.HCID) (objects.Blob, error) {
 	}
 	return objects.Blob{}, fmt.Errorf("No Hosts")
 }
+
 func (d directhttpservice) GetCommit(h objects.HKID) (objects.Commit, error) {
 	for host := range hosts {
 		urlVertions := fmt.Sprintf(
@@ -53,24 +49,18 @@ func (d directhttpservice) GetCommit(h objects.HKID) (objects.Commit, error) {
 			host,
 			h.Hex(),
 		)
-		respVertions, err := http.Get(urlVertions)
-		if err != nil {
-			return objects.Commit{}, err
+		bodyVertions, errVertions := urlReadAll(urlVertions)
+		if errVertions != nil {
+			return objects.Commit{}, errVertions
 		}
-		defer respVertions.Body.Close()
-		body, err := ioutil.ReadAll(respVertions.Body)
-		if err != nil {
-			return objects.Commit{}, err
-		}
-		vertionNumber := latestsVertion(body)
+		vertionNumber := latestsVertion(bodyVertions)
 		urlCommit := fmt.Sprintf(
 			"https://%s/c/%s/%s",
 			host,
 			h.Hex(),
 			vertionNumber,
 		)
-		respCommit, err := http.Get(urlCommit)
-		body, err = ioutil.ReadAll(respCommit.Body)
+		body, err := urlReadAll(urlCommit)
 		if err != nil {
 			return objects.Commit{}, err
 		}
@@ -91,12 +81,7 @@ func (d directhttpservice) GetTag(h objects.HKID, namesegment string) (
 			h.Hex(),
 			namesegment,
 		)
-		resp, err := http.Get(quarryurl)
-		if err != nil {
-			return objects.Tag{}, err
-		}
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := urlReadAll(quarryurl)
 		if err != nil {
 			return objects.Tag{}, err
 		}
@@ -117,12 +102,7 @@ func (d directhttpservice) GetTags(h objects.HKID) (
 			host,
 			h.Hex(),
 		)
-		resp, err := http.Get(quarryurl)
-		if err != nil {
-			return []objects.Tag{}, err
-		}
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := urlReadAll(quarryurl)
 		if err != nil {
 			return []objects.Tag{}, err
 		}
@@ -142,6 +122,19 @@ func (d directhttpservice) ID() string {
 	return "directhttp"
 }
 
+func urlReadAll(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return body, err
+}
+
 //func latestsVertion(htmldoc bufio.Reader) (vertionNumber string, err error) {
 func latestsVertion(htmldoc []byte) (vertionNumber []byte) {
 	maxvertionNumber := []byte{}
@@ -155,3 +148,15 @@ func latestsVertion(htmldoc []byte) (vertionNumber []byte) {
 }
 
 func isNotDigit(r rune) bool { return !unicode.IsDigit(r) }
+
+func allNameSegments(html []byte) (nameSegments [][]byte) {
+	lines := bytes.Split(html, []byte("\n"))
+	for _, line := range lines {
+		anchor := bytes.SplitAfterN(line, []byte("href=\""), 2)
+		if len(anchor) > 1 {
+			reference := bytes.SplitN(anchor[1], []byte("/\""), 2)
+			nameSegments = append(nameSegments, reference[0])
+		}
+	}
+	return
+}
