@@ -224,11 +224,10 @@ func googledriveserviceFactory() (googledriveservice, error) {
 		Scope:       drive.DriveReadonlyScope,
 		AuthURL:     "https://accounts.google.com/o/oauth2/auth",
 		TokenURL:    "https://accounts.google.com/o/oauth2/token",
-		TokenCache:  oauth.CacheFile("bin/tokencachefile.json"),
+		TokenCache:  oauth.CacheFile("bin/cache.json"),
 	}
 
 	//code := "4/rSyLcOy_oBllG65sojDydzbxLp06.AgeuzdzuK-IWshQV0ieZDArWsFLjhAI"
-	code := ""
 
 	// Set up a Transport using the config.
 	gds.transport = &oauth.Transport{Config: config}
@@ -236,6 +235,11 @@ func googledriveserviceFactory() (googledriveservice, error) {
 	// Try to pull the token from the cache; if this fails, we need to get one.
 	token, err := config.TokenCache.Token()
 	if err != nil {
+		code := ""
+		codeBytes, err := ioutil.ReadFile("bin/googledrive_code.txt")
+		if err == nil {
+			code = string(codeBytes)
+		}
 		if code == "" {
 			// Get an authorization code from the data provider.
 			// ("Please ask the user if I can access this resource.")

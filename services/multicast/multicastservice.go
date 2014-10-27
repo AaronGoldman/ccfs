@@ -23,6 +23,10 @@ var Instance multicastservice
 //Start registers multicastservice instances
 func Start() {
 	Instance = multicastservicefactory()
+	if Instance.conn == nil {
+		log.Printf("No network connection to start multicast service")
+		return
+	}
 	Instance.listenmessage()
 	services.Registerblobgeter(Instance)
 	services.Registercommitgeter(Instance)
