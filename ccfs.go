@@ -43,20 +43,22 @@ func commandLineInterface() {
 				switch line {
 				case "quit\n":
 					continueCLI = false
-				case "createDomain":
+				case "createDomain\n":
 					fmt.Printf("Usage: createDomain Path")
-				case "createRepository":
+				case "createRepository\n":
 					fmt.Printf("Usage: createRepository Path")
-				case "insertDomain":
+				case "insertDomain\n":
 					// ID Path HKID (Hex)
 					fmt.Printf("Usage: insertDomain Path HKID(Hex)")
-				case "insertRepository":
+				case "insertRepository\n":
 					// IR Path HKID (Hex)
 					fmt.Printf("Usage: insertRepository Path HKID(Hex)")
-				case "insertKey":
+				case "insertKey\n":
 					// Should print out HKID of the new key
 					fmt.Printf("Usage: insertKey key(HEX)")
-
+				case "status\n":
+					// This prints out the status of the services
+					fmt.Printf("Usage: status prints the status page")
 				default:
 					fmt.Printf(`Type quit to quit
 createDomain Creates a new domain at path

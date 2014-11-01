@@ -5,6 +5,7 @@ package googledrive
 import (
 	"bytes"
 	"log"
+	"os"
 	"testing"
 
 	"github.com/AaronGoldman/ccfs/objects"
@@ -63,4 +64,9 @@ func TestGoogledriveservice_GetKey(t *testing.T) {
 		t.Fail()
 	}
 	//log.Printf("\n\tKey Contents: %s \n\tError: %v", k.Hash(), err)
+}
+
+func init() {
+	os.Chdir("../../") //Changes the working directory to CcfsLink
+	Start()
 }
