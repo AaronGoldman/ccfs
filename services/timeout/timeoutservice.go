@@ -35,26 +35,28 @@ func (timeoutservice) ID() string {
 	return "timeout"
 }
 
+var waitTime = time.Millisecond * 500
+
 func (timeoutservice) GetBlob(objects.HCID) (objects.Blob, error) {
-	time.Sleep(time.Second)
+	time.Sleep(waitTime)
 	return objects.Blob{}, fmt.Errorf("GetBlob Timeout")
 }
 func (timeoutservice) GetCommit(objects.HKID) (objects.Commit, error) {
-	time.Sleep(time.Second)
+	time.Sleep(waitTime)
 	return objects.Commit{}, fmt.Errorf("GetCommit Timeout")
 }
 func (timeoutservice) GetTag(h objects.HKID, namesegment string) (objects.Tag, error) {
-	time.Sleep(time.Second)
+	time.Sleep(waitTime)
 	return objects.Tag{}, fmt.Errorf("GetTag Timeout")
 }
 
 func (timeoutservice) GetTags(h objects.HKID) ([]objects.Tag, error) {
-	time.Sleep(time.Second)
+	time.Sleep(waitTime)
 	return []objects.Tag{}, fmt.Errorf("GetTags Timeout")
 }
 
 func (timeoutservice) GetKey(objects.HKID) (objects.Blob, error) {
-	time.Sleep(time.Second)
+	time.Sleep(waitTime)
 	return objects.Blob{}, fmt.Errorf("GetKey Timeout")
 }
 

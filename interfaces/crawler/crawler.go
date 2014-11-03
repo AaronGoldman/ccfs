@@ -81,11 +81,28 @@ func (targ target) String() string {
 func seedQueue(hkidhex string) (err error) {
 	h, hexerr := objects.HcidFromHex(hkidhex)
 	if hexerr == nil {
-		crawlList(objects.HCID(h.Bytes()))
-		crawlBlob(objects.HCID(h.Bytes()))
-		crawlCommit(objects.HKID(h.Bytes()))
-		crawlhcidCommit(objects.HCID(h.Bytes()))
-		crawlhcidTag(objects.HCID(h.Bytes()))
+		err = crawlList(objects.HCID(h.Bytes()))
+		if err != nil {
+			log.Println(err)
+		}
+		err = crawlBlob(objects.HCID(h.Bytes()))
+		if err != nil {
+			log.Println(err)
+		}
+		err = crawlCommit(objects.HKID(h.Bytes()))
+		if err != nil {
+			log.Println(err)
+		}
+		err = crawlhcidCommit(objects.HCID(h.Bytes()))
+		if err != nil {
+			log.Println(err)
+		}
+		err = crawlhcidTag(objects.HCID(h.Bytes()))
+		if err != nil {
+			log.Println(err)
+		}
+	} else {
+		log.Println(hexerr)
 	}
 	return hexerr
 }

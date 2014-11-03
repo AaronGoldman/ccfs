@@ -27,7 +27,7 @@ func commandLineInterface() {
 	in := bufio.NewReader(os.Stdin)
 	ch := make(chan string, 1)
 	for continueCLI {
-
+		fmt.Printf("CCFS:$ ")
 		go func() {
 			line, err := in.ReadString('\n')
 			if err != nil {
@@ -44,21 +44,21 @@ func commandLineInterface() {
 				case "quit\n":
 					continueCLI = false
 				case "createDomain\n":
-					fmt.Printf("Usage: createDomain Path")
+					fmt.Printf("Usage: createDomain Path\n")
 				case "createRepository\n":
-					fmt.Printf("Usage: createRepository Path")
+					fmt.Printf("Usage: createRepository Path\n")
 				case "insertDomain\n":
 					// ID Path HKID (Hex)
-					fmt.Printf("Usage: insertDomain Path HKID(Hex)")
+					fmt.Printf("Usage: insertDomain Path HKID(Hex)\n")
 				case "insertRepository\n":
 					// IR Path HKID (Hex)
-					fmt.Printf("Usage: insertRepository Path HKID(Hex)")
+					fmt.Printf("Usage: insertRepository Path HKID(Hex)\n")
 				case "insertKey\n":
 					// Should print out HKID of the new key
-					fmt.Printf("Usage: insertKey key(HEX)")
+					fmt.Printf("Usage: insertKey key(HEX)\n")
 				case "status\n":
 					// This prints out the status of the services
-					fmt.Printf("Usage: status prints the status page")
+					fmt.Printf("Usage: status prints the status page\n")
 				default:
 					fmt.Printf(`Type quit to quit
 createDomain Creates a new domain at path

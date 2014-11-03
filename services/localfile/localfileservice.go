@@ -91,7 +91,8 @@ func (lfs localfileservice) GetBlob(h objects.HCID) (b objects.Blob, err error) 
 	//log.Printf("Filepath: %v", filepath)
 	data, err := ioutil.ReadFile(filepath)
 	if err != nil {
-		log.Printf("\n\t%v\n", err)
+		//log.Printf("\n\t%v\n", err)
+		return
 	}
 	//build object
 	b = objects.Blob(data)
@@ -103,9 +104,10 @@ func (lfs localfileservice) GetCommit(h objects.HKID) (c objects.Commit, err err
 	filepath := lfs.latestVersion(matches)
 	//log.Printf("Filepath: %v", filepath)
 	data, err := ioutil.ReadFile(filepath)
-	if err == nil {
-		c, _ = objects.CommitFromBytes(data)
+	if err != nil {
+		return
 	}
+	c, err = objects.CommitFromBytes(data)
 	return c, err
 }
 func (lfs localfileservice) GetTag(h objects.HKID, namesegment string) (t objects.Tag, err error) {
@@ -115,9 +117,10 @@ func (lfs localfileservice) GetTag(h objects.HKID, namesegment string) (t object
 	filepath := lfs.latestVersion(matches)
 	//log.Printf("Filepath: %v", filepath)
 	data, err := ioutil.ReadFile(filepath)
-	if err == nil {
-		t, _ = objects.TagFromBytes(data)
+	if err != nil {
+		return
 	}
+	t, err = objects.TagFromBytes(data)
 	return t, err
 }
 func (lfs localfileservice) GetTags(h objects.HKID) (tags []objects.Tag, err error) {

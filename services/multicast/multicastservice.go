@@ -74,7 +74,6 @@ func (m multicastservice) GetBlob(h objects.HCID) (b objects.Blob, err error) {
 		//log.Printf("Timing out now")
 		return b, fmt.Errorf("GetBlob on Multicast service timed out")
 	}
-
 }
 
 func (m multicastservice) GetCommit(h objects.HKID) (c objects.Commit, err error) {
