@@ -81,11 +81,19 @@ func (d directhttpservice) GetTag(h objects.HKID, namesegment string) (
 			h.Hex(),
 			namesegment,
 		)
-		body, err := urlReadAll(quarryurl)
+		bodyVertions, err := urlReadAll(quarryurl)
 		if err != nil {
 			return objects.Tag{}, err
 		}
-		//ToDo find and get latests vertion
+		vertionNumber := latestsVertion(bodyVertions)
+		tagurl := fmt.Sprintf(
+			"https://%s/t/%s/%s/%s",
+			host,
+			h.Hex(),
+			namesegment,
+			vertionNumber,
+		)
+		body, err := urlReadAll(tagurl)
 		tag, err := objects.TagFromBytes(body)
 		if err == nil {
 			return tag, err
@@ -107,7 +115,15 @@ func (d directhttpservice) GetTags(h objects.HKID) (
 			return []objects.Tag{}, err
 		}
 		//ToDo find and get latests vertion of all labels
-		//vertionNumber := latestsVertion(body)
+		vertionNumber := latestsVertion(bodyVertions)
+		tagurl := fmt.Sprintf(
+			"https://%s/t/%s/%s/%s",
+			host,
+			h.Hex(),
+			namesegment,
+			vertionNumber,
+		)
+		body, err := urlReadAll(tagurl)
 
 		tag, err := objects.TagFromBytes(body)
 		if err == nil {
