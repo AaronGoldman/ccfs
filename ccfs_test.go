@@ -26,15 +26,14 @@ func init() {
 }
 
 func TestLowLevel(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
-	services.PostBlob(objects.Blob{})
+	indata := objects.Blob([]byte("TestPostData"))
+	services.PostBlob(indata)
 	blobhcid, err := objects.HcidFromHex(
 		"ca4c4244cee2bd8b8a35feddcd0ba36d775d68637b7f0b4d2558728d0752a2a2",
 	)
 	b, err := services.GetBlob(blobhcid)
 	if !bytes.Equal(b.Hash(), blobhcid) {
-		t.Logf("GetBlob Fail:%s", b.Hash())
-		t.Fail()
+		t.Fatalf("GetBlob Fail\nExpected: %s\nGot: %s\n", blobhcid, b.Hash()) //Changed
 	}
 
 	//6dedf7e580671bd90bc9d1f735c75a4f3692b697f8979a147e8edd64fab56e85
@@ -42,6 +41,8 @@ func TestLowLevel(t *testing.T) {
 		"6523237356270560228617783789728329416595512649112249373497830592"+
 			"0722414168936112160694238047304378604753005642729767620850685191"+
 			"88612732562106886379081213385", 10)
+	testCommit := objects.NewCommit(b.Hash(), testhkid)
+	services.PostCommit(testCommit)
 	c, err := services.GetCommit(testhkid)
 	if err != nil {
 		t.Fatalf("Get Commit Fail: %s", err)
@@ -56,7 +57,15 @@ func TestLowLevel(t *testing.T) {
 		"4813315537186321970719165779488475377688633084782731170482174374"+
 			"7256947679650787426167575073363006751150073195493002048627629373"+
 			"76227751462258339344895829332", 10)
-	testtag, err := services.GetTag(taghkid, "TestPostBlob")
+	lowlvlTag := objects.NewTag(
+		objects.HID(b.Hash()),
+		"blob",
+		"testBlob",
+		nil,
+		taghkid,
+	) //gen test tag
+	services.PostTag(lowlvlTag)
+	testtag, err := services.GetTag(taghkid, lowlvlTag.NameSegment)
 	if err != nil {
 		t.Fatalf("GetTag Fail. error: %s", err)
 	} else if !bytes.Equal(testtag.Hkid, taghkid) {
@@ -73,13 +82,13 @@ func TestLowLevel(t *testing.T) {
 }
 
 func TestPostBlob(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
+	services.PostBlob(objects.Blob{})
 	testhkid := objects.HkidFromDString("65232373562705602286177837897283294165955126"+
 		"49112249373497830592072241416893611216069423804730437860475300564272"+
 		"976762085068519188612732562106886379081213385", 10)
 	testpath := "TestPostBlob"
 	indata := []byte("TestPostData")
-	services.PostBlob(objects.Blob{})
+
 	services.Post(testhkid, testpath, objects.Blob(indata))
 	outdata, err := services.Get(testhkid, testpath)
 	if !bytes.Equal(indata, outdata) || err != nil {
@@ -93,7 +102,6 @@ func TestPostBlob(t *testing.T) {
 }
 
 func TestPostListListBlob(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	testhkid := objects.HkidFromDString("65232373562705602286177837897283294165955126"+
 		"49112249373497830592072241416893611216069423804730437860475300564272"+
 		"976762085068519188612732562106886379081213385", 10)
@@ -107,7 +115,6 @@ func TestPostListListBlob(t *testing.T) {
 }
 
 func TestPostCommitBlob(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	testhkid := objects.HkidFromDString("65232373562705602286177837897283"+
 		"2941659551264911224937349783059207224141689361121606942380473043"+
 		"7860475300564272976762085068519188612732562106886379081213385", 10)
@@ -125,7 +132,6 @@ func TestPostCommitBlob(t *testing.T) {
 }
 
 func TestPostTagBlob(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	testhkid := objects.HkidFromDString("65232373562705602286177837897283"+
 		"2941659551264911224937349783059207224141689361121606942380473043"+
 		"7860475300564272976762085068519188612732562106886379081213385", 10)
@@ -143,7 +149,6 @@ func TestPostTagBlob(t *testing.T) {
 }
 
 func TestPostTagCommitBlob(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	testhkid := objects.HkidFromDString("46298148238932964800164113348087"+
 		"9383618612455972320097996217675372497646408870646300138355611242"+
 		"4820911870650421151988906751710824965155500230480521264034469", 10)
@@ -168,7 +173,6 @@ func TestPostTagCommitBlob(t *testing.T) {
 }
 
 func TestPostTagTagBlob(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	testhkid := objects.HkidFromDString("46298148238932964800164113348087"+
 		"9383618612455972320097996217675372497646408870646300138355611242"+
 		"4820911870650421151988906751710824965155500230480521264034469", 10)
@@ -201,7 +205,6 @@ func TestPostTagTagBlob(t *testing.T) {
 }
 
 func TestPostListCommitBlob(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	testhkid := objects.HkidFromDString("46298148238932964800164113348087"+
 		"9383618612455972320097996217675372497646408870646300138355611242"+
 		"4820911870650421151988906751710824965155500230480521264034469", 10)
@@ -226,7 +229,6 @@ func TestPostListCommitBlob(t *testing.T) {
 }
 
 func TestPostTagListBlob(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	testhkid := objects.HkidFromDString("46298148238932964800164113348087"+
 		"9383618612455972320097996217675372497646408870646300138355611242"+
 		"4820911870650421151988906751710824965155500230480521264034469", 10)
@@ -247,7 +249,6 @@ func TestPostTagListBlob(t *testing.T) {
 }
 
 func TestPostListTagBlob(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	testhkid := objects.HkidFromDString("46298148238932964800164113348087"+
 		"9383618612455972320097996217675372497646408870646300138355611242"+
 		"4820911870650421151988906751710824965155500230480521264034469", 10)
@@ -267,7 +268,6 @@ func TestPostListTagBlob(t *testing.T) {
 }
 
 func TestGetBlob(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	//hkidFromDString("4629814823893296480016411334808793836186124559723200"+
 	//	"9799621767537249764640887064630013835561124248209118706504211519889067517"+
 	//	"10824965155500230480521264034469", 10) //store the key
@@ -289,7 +289,6 @@ func TestGetBlob(t *testing.T) {
 }
 
 func TestGetList(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	testhkid := objects.HkidFromDString("65232373562705602286177837897283294165955126"+
 		"49112249373497830592072241416893611216069423804730437860475300564272"+
 		"976762085068519188612732562106886379081213385", 10)
@@ -304,7 +303,6 @@ func TestGetList(t *testing.T) {
 }
 
 func TestGetCommit(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	testhkid := objects.HkidFromDString("65232373562705602286177837897283294165955126"+
 		"49112249373497830592072241416893611216069423804730437860475300564272"+
 		"976762085068519188612732562106886379081213385", 10)
@@ -324,7 +322,6 @@ func TestGetCommit(t *testing.T) {
 
 func TestGetTag(t *testing.T) {
 	//think about what it means to get a domain with no path
-	log.SetFlags(log.Lshortfile)
 	testhkid := objects.HkidFromDString("65232373562705602286177837897283294165955126"+
 		"49112249373497830592072241416893611216069423804730437860475300564272"+
 		"976762085068519188612732562106886379081213385", 10)
@@ -337,7 +334,6 @@ func TestGetTag(t *testing.T) {
 }
 
 func TestKeyGen(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	t.SkipNow()
 	priv := objects.KeyGen()
 	log.Printf("TestKeyGen\nX = %v\nY = %v\nD = %v\n", priv.PublicKey.X,
