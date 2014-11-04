@@ -24,7 +24,7 @@ func start() {
 		signal.Notify(ch, os.Interrupt, os.Kill)
 		sig := <-ch
 		log.Printf("Got signal: %s", sig)
-		log.Printf("Stoping...")
+		log.Printf("Stopping...")
 		stopAll()
 	}()
 

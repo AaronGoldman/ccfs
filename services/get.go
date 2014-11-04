@@ -12,7 +12,7 @@ import (
 	"github.com/AaronGoldman/ccfs/objects"
 )
 
-//Get retrieves the content objects using HID of repoitorty and path
+//Get retrieves the content objects using HID of repository and path
 func Get(objecthash objects.HID, path string) (b objects.Blob, err error) {
 	b, err = get(objecthash, path, "commit")
 	return
