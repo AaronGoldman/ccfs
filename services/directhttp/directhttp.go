@@ -27,7 +27,7 @@ func Start(remotes []string) {
 type directhttpservice struct{}
 
 func (d directhttpservice) GetBlob(h objects.HCID) (objects.Blob, error) {
-	for host := range hosts {
+	for _, host := range hosts {
 		quarryurl := fmt.Sprintf(
 			"https://%s/b/%s",
 			host,
@@ -43,7 +43,7 @@ func (d directhttpservice) GetBlob(h objects.HCID) (objects.Blob, error) {
 }
 
 func (d directhttpservice) GetCommit(h objects.HKID) (objects.Commit, error) {
-	for host := range hosts {
+	for _, host := range hosts {
 		urlVertions := fmt.Sprintf(
 			"https://%s/c/%s/",
 			host,
@@ -74,7 +74,7 @@ func (d directhttpservice) GetCommit(h objects.HKID) (objects.Commit, error) {
 
 func (d directhttpservice) GetTag(h objects.HKID, namesegment string) (
 	objects.Tag, error) {
-	for host := range hosts {
+	for _, host := range hosts {
 		quarryurl := fmt.Sprintf(
 			"https://%s/t/%s/%s",
 			host,
@@ -104,7 +104,7 @@ func (d directhttpservice) GetTag(h objects.HKID, namesegment string) (
 
 func (d directhttpservice) GetTags(h objects.HKID) (
 	tags []objects.Tag, err error) {
-	for host := range hosts {
+	for _, host := range hosts {
 		quarryurl := fmt.Sprintf(
 			"https://%s/t/%s/",
 			host,

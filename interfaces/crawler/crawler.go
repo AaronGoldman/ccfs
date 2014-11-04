@@ -28,7 +28,7 @@ func Start() {
 	http.HandleFunc("/crawler/", webCrawlerHandler)
 	http.HandleFunc("/index/", webIndexHandler)
 	http.HandleFunc("/search/", webSearchHandler)
-	seedQueue(interfaces.GetLocalSeed())
+	go seedQueue(interfaces.GetLocalSeed())
 }
 
 // This function handles web requests for the crawler

@@ -124,10 +124,10 @@ func GetCommitForHcid(hash objects.HCID) (commit objects.Commit, err error) {
 		return commit, err
 	}
 	commit, err = objects.CommitFromBytes(commitbytes)
-	if err != nil {
-		return commit, err
-	}
-	return
+	//if err != nil {
+	//	return commit, err
+	//}
+	return commit, err
 }
 
 //GetTagForHcid retreves a spasific tag by its HCID
@@ -137,10 +137,10 @@ func GetTagForHcid(hash objects.HCID) (tag objects.Tag, err error) {
 		return tag, err
 	}
 	tag, err = objects.TagFromBytes(tagbytes)
-	if err != nil {
-		return tag, err
-	}
-	return
+	//if err != nil {
+	//	return tag, err
+	//}
+	return tag, err
 }
 
 //GetPublicKeyForHkid uses the lookup services to get a public key for an hkid

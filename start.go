@@ -37,9 +37,9 @@ func start() {
 	)
 
 	Flags, Command := parseFlags()
-	localfile.Start()
-	timeout.Start()
-	multicast.Start()
+	go localfile.Start()
+	go timeout.Start()
+	go multicast.Start()
 
 	if *Flags.serve {
 		web.Start()

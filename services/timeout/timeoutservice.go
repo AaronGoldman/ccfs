@@ -35,7 +35,7 @@ func (timeoutservice) ID() string {
 	return "timeout"
 }
 
-var waitTime = time.Millisecond * 500
+var waitTime = time.Millisecond * 6000
 
 func (timeoutservice) GetBlob(objects.HCID) (objects.Blob, error) {
 	time.Sleep(waitTime)

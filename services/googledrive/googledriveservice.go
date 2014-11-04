@@ -45,6 +45,7 @@ func Stop() {
 	running = false
 }
 
+//Running returns a bool that indicates the registration status of the service
 func Running() bool {
 	return running
 }
@@ -54,7 +55,7 @@ func (gds googledriveservice) Command(command string) {
 	case "forget user":
 		err := os.Remove("bin/cache.json")
 		if err != nil {
-			log.Printf("Failed to delete file", err)
+			log.Printf("Failed to delete file %s", err)
 		}
 
 	default:
