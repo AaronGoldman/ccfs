@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+//repl = Read, Evaluate, Print, Loop
+
 var continueCLI = true
 
 type command struct {
@@ -23,17 +25,17 @@ var commands = map[string]command{
 	"createRepository": {"createRepository Path", func(s string) {}},
 	"insertDomain":     {"insertDomain Path", func(s string) {}},
 	"insertRepository": {"insertRepository Path", func(s string) {}},
-	"status":           {"status prints the status page", func(s string) {}},
+	"status":           {"status prints the status page", status},
 }
 
-interface commander{
-	ID func() string
-	command func(string)
+type commander interface {
+	ID() string
+	Command(string)
 }
 
 //Registercommand adds a commander to commands
 func Registercommand(service commander, usage string) {
-	commands[service.ID()] = command{usage, service.command}
+	commands[service.ID()] = command{usage, service.Command}
 }
 
 //DeRegistercommand removes a commander from commands
@@ -51,7 +53,7 @@ func repl() {
 			if err != nil {
 				fmt.Printf("[CLI] %s", err)
 			} else {
-				ch <- line
+				ch <- line[:len(line)-1] //sends everything but the last char to the channel
 			}
 		}()
 	label:
@@ -62,45 +64,20 @@ func repl() {
 				tokens := strings.SplitN(line, " ", 2)
 				cmd, found := commands[tokens[0]]
 
-				if found && len(tokens) > 1 {
+				if len(tokens) < 2 {
+					tokens = append(tokens, " ")
+				}
+
+				if found {
 					cmd.cmdFunc(tokens[1])
 				} else {
 					for token, cmd := range commands {
 						fmt.Printf("%s\n\t-%s\n", token, cmd.usage)
 					}
 				}
-
-				//	switch line {
-				//	case "quit\n":
-				//		continueCLI = false
-				//	case "createDomain\n":
-				//		fmt.Printf("Usage: createDomain Path\n")
-				//	case "createRepository\n":
-				//		fmt.Printf("Usage: createRepository Path\n")
-				//	case "insertDomain\n":
-				//		// ID Path HKID (Hex)
-				//		fmt.Printf("Usage: insertDomain Path HKID(Hex)\n")
-				//	case "insertRepository\n":
-				//		// IR Path HKID (Hex)
-				//		fmt.Printf("Usage: insertRepository Path HKID(Hex)\n")
-				//	case "insertKey\n":
-				//		// Should print out HKID of the new key
-				//		fmt.Printf("Usage: insertKey key(HEX)\n")
-				//	case "status\n":
-				//		// This prints out the status of the services
-				//		fmt.Printf("Usage: status prints the status page\n")
-				//	default:
-				//		fmt.Printf(`Type quit to quit
-				//createDomain Creates a new domain at path
-				//createRepository Creates a new repository at path
-				//insertDomain Inserts the domain HKID at path
-				//insertRepository Inserts the repository HKID at path
-				//`)
-				//}
 				break label
 			case <-time.After(time.Millisecond * 250):
 			}
-
 		}
 	}
 	return
