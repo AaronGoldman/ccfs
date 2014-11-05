@@ -45,11 +45,6 @@ func Stop() {
 	running = false
 }
 
-//Running returns a bool that indicates the registration status of the service
-func Running() bool {
-	return running
-}
-
 func (gds googledriveservice) Command(command string) {
 	switch command {
 	case "forget user":
@@ -63,6 +58,11 @@ func (gds googledriveservice) Command(command string) {
 		return
 	}
 
+}
+
+//Running returns a bool that indicates the registration status of the service
+func (gds googledriveservice) Running() bool {
+	return running
 }
 
 //ID gets the ID string

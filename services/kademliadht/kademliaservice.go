@@ -16,6 +16,7 @@ import (
 
 //Instance is the instance of the kademliaservice
 var Instance kademliaservice
+var running bool
 
 //Start registers kademliadhtservice instances
 func Start() {
@@ -29,6 +30,8 @@ func Start() {
 	services.Registercommitposter(Instance)
 	services.Registertagposter(Instance)
 	services.Registerkeyposter(Instance)
+	running = true
+
 }
 
 //Stop deregisters kademliadhtservice instances
@@ -42,10 +45,16 @@ func Stop() {
 	services.DeRegistercommitposter(Instance)
 	services.DeRegistertagposter(Instance)
 	services.DeRegisterkeyposter(Instance)
+	running = false
 }
 
 type kademliaservice struct {
 	url string
+}
+
+//Running returns a bool that indicates the registration status of the service
+func (k kademliaservice) Running() bool {
+	return running
 }
 
 //ID gets the ID string

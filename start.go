@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -59,4 +60,22 @@ func start() {
 	}
 
 	addCurators(Command)
+}
+
+type running bool
+
+func (r running) String() string {
+	if r {
+		return "Running"
+	} else {
+		return "Not Running"
+	}
+}
+
+func status(string) {
+	fmt.Printf("%13s: %s\n", localfile.Instance.ID(), running(localfile.Instance.Running()))
+	fmt.Printf("%13s: %s\n", googledrive.Instance.ID(), running(googledrive.Instance.Running()))
+	fmt.Printf("%13s: %s\n", appsscript.Instance.ID(), running(appsscript.Instance.Running()))
+	fmt.Printf("%13s: %s\n", kademliadht.Instance.ID(), running(kademliadht.Instance.Running()))
+	fmt.Printf("%13s: %s\n", multicast.Instance.ID(), running(multicast.Instance.Running()))
 }

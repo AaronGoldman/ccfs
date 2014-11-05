@@ -24,6 +24,7 @@ func Start() {
 	services.Registercommitposter(Instance)
 	services.Registertagposter(Instance)
 	services.Registerkeyposter(Instance)
+	running = true
 }
 
 //Stop dregisters localfileservice instances
@@ -37,6 +38,7 @@ func Stop() {
 	services.DeRegistercommitposter(Instance)
 	services.DeRegistertagposter(Instance)
 	services.DeRegisterkeyposter(Instance)
+	running = false
 }
 
 //localfileservice is an
@@ -174,6 +176,13 @@ func (lfs localfileservice) latestVersion(matches []string) string {
 		}
 	}
 	return match
+}
+
+var running bool
+
+//Running returns a bool that indicates the registration status of the service
+func (lfs localfileservice) Running() bool {
+	return running
 }
 
 //Instance is the instance of the localfileservice

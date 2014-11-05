@@ -19,11 +19,13 @@ import (
 
 //Instance is the instance of the multicastservice
 var Instance multicastservice
+var running bool
 
 //Start registers multicastservice instances
 func Start() {
 	Instance = multicastservicefactory()
 	if Instance.conn == nil {
+		running = false
 		log.Printf("No network connection to start multicast service")
 		return
 	}
@@ -32,6 +34,7 @@ func Start() {
 	services.Registercommitgeter(Instance)
 	services.Registertaggeter(Instance)
 	services.Registerkeygeter(Instance)
+	running = true
 }
 
 //Stop deregisters multicastservice instances
@@ -40,6 +43,7 @@ func Stop() {
 	services.DeRegistercommitgeter(Instance)
 	services.DeRegistertaggeter(Instance)
 	services.DeRegisterkeygeter(Instance)
+	running = false
 }
 
 type tagfields struct {
@@ -54,6 +58,11 @@ type multicastservice struct {
 	waitingfortag    map[string]chan objects.Tag
 	waitingforcommit map[string]chan objects.Commit
 	waitingforkey    map[string]chan objects.Blob
+}
+
+//Running returns a bool that indicates the registration status of the service
+func (m multicastservice) Running() bool {
+	return running
 }
 
 //ID gets the ID string

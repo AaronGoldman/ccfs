@@ -15,6 +15,7 @@ import (
 
 //Instance is the instance of the appsscriptservice
 var Instance appsscriptservice
+var running bool
 
 //Start registers appsscriptservice instances
 func Start() {
@@ -23,6 +24,7 @@ func Start() {
 	services.Registercommitgeter(Instance)
 	services.Registertaggeter(Instance)
 	services.Registerkeygeter(Instance)
+	running = true
 }
 
 //Stop deregisters appsscriptservice instances
@@ -31,9 +33,16 @@ func Stop() {
 	services.DeRegistercommitgeter(Instance)
 	services.DeRegistertaggeter(Instance)
 	services.DeRegisterkeygeter(Instance)
+	running = false
+
 }
 
 type appsscriptservice struct{}
+
+//Running returns a bool that indicates the registration status of the service
+func (a appsscriptservice) Running() bool {
+	return running
+}
 
 //ID gets the ID string
 func (a appsscriptservice) ID() string {
