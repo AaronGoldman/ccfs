@@ -16,11 +16,12 @@ import (
 
 func parseFlags() (
 	Flags struct {
-		mount *bool
-		serve *bool
-		dht   *bool
-		drive *bool
-		apps  *bool
+		mount  *bool
+		serve  *bool
+		dht    *bool
+		drive  *bool
+		apps   *bool
+		direct *bool
 	},
 	Command struct {
 		createDomain     *bool
@@ -37,6 +38,7 @@ func parseFlags() (
 	Flags.dht = flag.Bool("dht", false, "Starts Kademliadht service")
 	Flags.drive = flag.Bool("drive", false, "Starts Googledrive service")
 	Flags.apps = flag.Bool("apps", false, "Starts Appsscript service")
+	Flags.direct = flag.Bool("direct", false, "Starts direct http service")
 	Command.createDomain = flag.Bool("createDomain", false, "Creates a new domain at path argument")
 	Command.createRepository = flag.Bool("createRepository", false, "Creates a new repository at path argument")
 	Command.insertDomain = flag.Bool("insertDomain", false, "Inserts the domain HKID argument at path argument")

@@ -10,6 +10,7 @@ import (
 	"unicode"
 
 	"github.com/AaronGoldman/ccfs/objects"
+	"github.com/AaronGoldman/ccfs/services"
 )
 
 var running bool
@@ -18,10 +19,49 @@ var hosts []string
 //Instance is the instance of the directhttpservice
 var Instance directhttpservice
 
+func init() {
+	services.Registercommand(
+		Instance,
+		"directhttp command", //This is the usage string
+	)
+	services.Registerrunner(Instance)
+}
+
 //Start registers directhttpservice instances
-func Start(remotes []string) {
+func Start( /*remotes []string*/) {
+	services.Registerblobgeter(Instance)
+	services.Registercommitgeter(Instance)
+	services.Registertaggeter(Instance)
 	running = true
-	hosts = remotes
+	//hosts = remotes
+}
+
+//Stop deregisters directhttp instances
+func Stop() {
+	services.DeRegisterblobgeter(Instance)
+	services.DeRegistercommitgeter(Instance)
+	services.DeRegistertaggeter(Instance)
+	running = false
+}
+
+func (d directhttpservice) Command(command string) {
+	switch command {
+	case "start":
+		Start()
+
+	case "stop":
+		Stop()
+
+	default:
+		fmt.Printf("Google Drive Service Command Line\n")
+		return
+	}
+
+}
+
+//Running returns a bool that indicates the registration status of the service
+func (d directhttpservice) Running() bool {
+	return running
 }
 
 type directhttpservice struct{}
@@ -44,21 +84,21 @@ func (d directhttpservice) GetBlob(h objects.HCID) (objects.Blob, error) {
 
 func (d directhttpservice) GetCommit(h objects.HKID) (objects.Commit, error) {
 	for _, host := range hosts {
-		urlVertions := fmt.Sprintf(
+		urlVersions := fmt.Sprintf(
 			"https://%s/c/%s/",
 			host,
 			h.Hex(),
 		)
-		bodyVertions, errVertions := urlReadAll(urlVertions)
-		if errVertions != nil {
-			return objects.Commit{}, errVertions
+		bodyVersions, errVersions := urlReadAll(urlVersions)
+		if errVersions != nil {
+			return objects.Commit{}, errVersions
 		}
-		vertionNumber := latestsVertion(bodyVertions)
+		versionNumber := latestsVersion(bodyVersions)
 		urlCommit := fmt.Sprintf(
 			"https://%s/c/%s/%s",
 			host,
 			h.Hex(),
-			vertionNumber,
+			versionNumber,
 		)
 		body, err := urlReadAll(urlCommit)
 		if err != nil {
@@ -81,17 +121,17 @@ func (d directhttpservice) GetTag(h objects.HKID, namesegment string) (
 			h.Hex(),
 			namesegment,
 		)
-		bodyVertions, err := urlReadAll(quarryurl)
+		bodyVersions, err := urlReadAll(quarryurl)
 		if err != nil {
 			return objects.Tag{}, err
 		}
-		vertionNumber := latestsVertion(bodyVertions)
+		versionNumber := latestsVersion(bodyVersions)
 		tagurl := fmt.Sprintf(
 			"https://%s/t/%s/%s/%s",
 			host,
 			h.Hex(),
 			namesegment,
-			vertionNumber,
+			versionNumber,
 		)
 		body, err := urlReadAll(tagurl)
 		tag, err := objects.TagFromBytes(body)
@@ -104,33 +144,68 @@ func (d directhttpservice) GetTag(h objects.HKID, namesegment string) (
 
 func (d directhttpservice) GetTags(h objects.HKID) (
 	tags []objects.Tag, err error) {
+	if len(hosts) == 0 {
+		return []objects.Tag{}, fmt.Errorf("No Hosts")
+	}
+
+	var maxTags map[string]objects.Tag
 	for _, host := range hosts {
 		quarryurl := fmt.Sprintf(
-			"https://%s/t/%s/",
+			"http://%s/t/%s/",
 			host,
 			h.Hex(),
 		)
-		body, err := urlReadAll(quarryurl)
+		bodyNameSegments, err := urlReadAll(quarryurl)
 		if err != nil {
-			return []objects.Tag{}, err
+			continue
+			//return []objects.Tag{}, err
 		}
-		//ToDo find and get latests vertion of all labels
-		vertionNumber := latestsVertion(bodyVertions)
-		tagurl := fmt.Sprintf(
-			"https://%s/t/%s/%s/%s",
-			host,
-			h.Hex(),
-			namesegment,
-			vertionNumber,
-		)
-		body, err := urlReadAll(tagurl)
+		//ToDo find and get latests version of all labels
+		namesegments := allNameSegments(bodyNameSegments)
+		for _, namesegment := range namesegments {
+			versionurl := fmt.Sprintf(
+				"https://%s/t/%s/%s",
+				host,
+				h.Hex(),
+				namesegment,
+			)
+			versionBody, err := urlReadAll(versionurl)
+			if err != nil {
+				continue
+			}
+			versionNumber := latestsVersion(versionBody)
 
-		tag, err := objects.TagFromBytes(body)
-		if err == nil {
-			return []objects.Tag{tag}, err
+			tagurl := fmt.Sprintf(
+				"https://%s/t/%s/%s/%s",
+				host,
+				h.Hex(),
+				namesegment,
+				versionNumber,
+			)
+
+			body, err := urlReadAll(tagurl)
+			if err != nil {
+				continue
+			}
+
+			tag, err := objects.TagFromBytes(body)
+			if err != nil {
+				continue
+				//return []objects.Tag{tag}, err
+			}
+			maxTag, present := maxTags[string(namesegment)]
+			if !present || maxTag.Version < tag.Version {
+				maxTags[string(namesegment)] = tag
+			}
 		}
 	}
-	return []objects.Tag{}, fmt.Errorf("No Hosts")
+	for _, maxTag := range maxTags {
+		tags = append(tags, maxTag)
+	}
+	if len(tags) == 0 {
+		return []objects.Tag{}, fmt.Errorf("No Tags found")
+	}
+	return tags, nil
 }
 
 //ID gets the ID string
@@ -152,7 +227,7 @@ func urlReadAll(url string) ([]byte, error) {
 }
 
 //func latestsVertion(htmldoc bufio.Reader) (vertionNumber string, err error) {
-func latestsVertion(htmldoc []byte) (vertionNumber []byte) {
+func latestsVersion(htmldoc []byte) (vertionNumber []byte) {
 	maxvertionNumber := []byte{}
 	for _, line := range bytes.Fields(htmldoc) {
 		queryTokens := bytes.FieldsFunc(line, isNotDigit)
