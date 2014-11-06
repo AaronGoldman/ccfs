@@ -17,6 +17,14 @@ import (
 var Instance appsscriptservice
 var running bool
 
+func init() {
+	services.Registercommand(
+		Instance,
+		"appsscript command", //This is the usage string
+	)
+	services.Registerrunner(Instance)
+}
+
 //Start registers appsscriptservice instances
 func Start() {
 	Instance = appsscriptservice{}
@@ -47,6 +55,20 @@ func (a appsscriptservice) Running() bool {
 //ID gets the ID string
 func (a appsscriptservice) ID() string {
 	return "appsscript"
+}
+
+func (a appsscriptservice) Command(command string) {
+	switch command {
+	case "start":
+		Start()
+
+	case "stop":
+		Stop()
+
+	default:
+		fmt.Printf("Appsscript Service Command Line\n")
+		return
+	}
 }
 
 func (a appsscriptservice) GetBlob(h objects.HCID) (b objects.Blob, err error) {

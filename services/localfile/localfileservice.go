@@ -13,6 +13,14 @@ import (
 	"github.com/AaronGoldman/ccfs/services"
 )
 
+func init() {
+	services.Registercommand(
+		Instance,
+		"localfile command", //This is the usage string
+	)
+	services.Registerrunner(Instance)
+}
+
 //Start registers localfileservice instances
 func Start() {
 	services.Registerblobgeter(Instance)
@@ -47,6 +55,21 @@ type localfileservice struct{}
 //ID gets the ID string
 func (lfs localfileservice) ID() string {
 	return "localfile"
+}
+
+func (lfs localfileservice) Command(command string) {
+	switch command {
+	case "start":
+		Start()
+
+	case "stop":
+		Stop()
+
+	default:
+		fmt.Printf("Local File Service Command Line\n")
+		return
+	}
+
 }
 
 func (lfs localfileservice) PostBlob(b objects.Blob) (err error) {

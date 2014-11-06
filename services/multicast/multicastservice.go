@@ -21,6 +21,14 @@ import (
 var Instance multicastservice
 var running bool
 
+func init() {
+	services.Registercommand(
+		Instance,
+		"multicast command", //This is the usage string
+	)
+	services.Registerrunner(Instance)
+}
+
 //Start registers multicastservice instances
 func Start() {
 	Instance = multicastservicefactory()
@@ -68,6 +76,21 @@ func (m multicastservice) Running() bool {
 //ID gets the ID string
 func (m multicastservice) ID() string {
 	return "multicast"
+}
+
+func (m multicastservice) Command(command string) {
+	switch command {
+	case "start":
+		Start()
+
+	case "stop":
+		Stop()
+
+	default:
+		fmt.Printf("Multicast Service Command Line\n")
+		return
+	}
+
 }
 
 func (m multicastservice) GetBlob(h objects.HCID) (b objects.Blob, err error) {
