@@ -4,6 +4,8 @@ package main
 
 import (
 	"log"
+
+	"github.com/AaronGoldman/ccfs/services"
 )
 
 func init() {
@@ -13,6 +15,6 @@ func init() {
 func main() {
 	log.SetFlags(log.Lshortfile)
 	start()
-	repl()
+	services.Repl()
 	return
 }

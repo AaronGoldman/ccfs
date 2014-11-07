@@ -5,6 +5,7 @@ package kademliadht
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -16,6 +17,15 @@ import (
 
 //Instance is the instance of the kademliaservice
 var Instance kademliaservice
+var running bool
+
+func init() {
+	services.Registercommand(
+		Instance,
+		"kademliadht command", //This is the usage string
+	)
+	services.Registerrunner(Instance)
+}
 
 //Start registers kademliadhtservice instances
 func Start() {
@@ -29,6 +39,8 @@ func Start() {
 	services.Registercommitposter(Instance)
 	services.Registertagposter(Instance)
 	services.Registerkeyposter(Instance)
+	running = true
+
 }
 
 //Stop deregisters kademliadhtservice instances
@@ -42,15 +54,36 @@ func Stop() {
 	services.DeRegistercommitposter(Instance)
 	services.DeRegistertagposter(Instance)
 	services.DeRegisterkeyposter(Instance)
+	running = false
 }
 
 type kademliaservice struct {
 	url string
 }
 
+//Running returns a bool that indicates the registration status of the service
+func (k kademliaservice) Running() bool {
+	return running
+}
+
 //ID gets the ID string
 func (k kademliaservice) ID() string {
 	return "kademliadht"
+}
+
+func (k kademliaservice) Command(command string) {
+	switch command {
+	case "start":
+		Start()
+
+	case "stop":
+		Stop()
+
+	default:
+		fmt.Printf("Kademlia Service Command Line\n")
+		return
+	}
+
 }
 
 func (k kademliaservice) GetBlob(h objects.HCID) (b objects.Blob, err error) {
