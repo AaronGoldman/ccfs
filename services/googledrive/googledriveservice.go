@@ -257,7 +257,6 @@ func (gds googledriveservice) GetKey(h objects.HKID) (b objects.Blob, err error)
 }
 
 func googledriveserviceFactory() (googledriveservice, error) {
-	log.SetFlags(log.Lshortfile)
 	gds := googledriveservice{}
 	// Set up a configuration.
 	config := &oauth.Config{

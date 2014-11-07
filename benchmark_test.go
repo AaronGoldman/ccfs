@@ -22,13 +22,13 @@ func init() {
 
 	//Open|Create Log File
 	logFileName := "bin/log.txt"
-	logFile, err := os.OpenFile(logFileName, os.O_RDWR, 664)
+	logFile, err := os.OpenFile(logFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0664)
 	if err != nil {
 		log.Println("Unable to Create/Open log file. No output will be captured.")
 	} else {
 		log.SetOutput(logFile)
 	}
-	log.SetFlags(log.Lshortfile)
+	log.SetFlags(log.Lshortfile | log.Ltime | log.Ldate)
 
 	objects.RegisterGeterPoster(
 		services.GetPublicKeyForHkid,

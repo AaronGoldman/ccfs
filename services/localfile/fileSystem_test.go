@@ -33,7 +33,6 @@ func TestMountRepo(t *testing.T) {
 }
 func TestCLCreateDomain(t *testing.T) {
 	//t.Skip("skip create domain")
-	log.SetFlags(log.Lshortfile)
 	wd, _ := os.Getwd()
 	path := filepath.Join(wd, mountpoint)
 	os.MkdirAll(fmt.Sprintf("%s/TestPostNewTag", path), 0777)
@@ -50,7 +49,6 @@ func TestCLCreateDomain(t *testing.T) {
 }
 func TestCLCreateRepo(t *testing.T) {
 	//t.Skip("skip create repo")
-	log.SetFlags(log.Lshortfile)
 	wd, _ := os.Getwd()
 	path := filepath.Join(wd, mountpoint)
 	os.MkdirAll(fmt.Sprintf("%s/TestPostNewCommit", path), 0777)
@@ -67,7 +65,6 @@ func TestCLCreateRepo(t *testing.T) {
 }
 func TestCLInsertDomain(t *testing.T) {
 	t.Skip("skip insert domain")
-	log.SetFlags(log.Lshortfile)
 	wd, _ := os.Getwd()
 	path := filepath.Join(wd, mountpoint)
 	os.MkdirAll(fmt.Sprintf("%s/TestPostTag", path), 0777)
@@ -85,7 +82,6 @@ func TestCLInsertDomain(t *testing.T) {
 }
 func TestCLInsertRepo(t *testing.T) {
 	t.Skip("skip insert repo")
-	log.SetFlags(log.Lshortfile)
 	wd, _ := os.Getwd()
 	path := filepath.Join(wd, mountpoint)
 	os.MkdirAll(fmt.Sprintf("%s/TestPostCommit", path), 0777)
@@ -102,7 +98,6 @@ func TestCLInsertRepo(t *testing.T) {
 	}
 }
 func TestWriteFileSystemInterface(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	for _, answer := range answerKey {
 		err := os.MkdirAll(path.Dir(answer.fileName), 0764)
 		if err != nil {
@@ -115,7 +110,6 @@ func TestWriteFileSystemInterface(t *testing.T) {
 	}
 }
 func TestReadFileSystemInterface(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	for _, answer := range answerKey {
 		data, err := ioutil.ReadFile(answer.fileName)
 		if err != nil {

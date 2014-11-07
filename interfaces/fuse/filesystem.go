@@ -18,7 +18,7 @@ var instance fileSystem
 
 //testing push with new origin
 func startFSintegration() {
-	log.SetFlags(log.Lshortfile) //gives filename for every log statement
+	//log.SetFlags(log.Lshortfile) //gives filename for every log statement
 	mountpoint := "mountpoint"
 	err := os.MkdirAll(mountpoint, 0777)
 	if err != nil {

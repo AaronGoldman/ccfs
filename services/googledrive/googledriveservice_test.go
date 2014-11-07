@@ -11,8 +11,13 @@ import (
 	"github.com/AaronGoldman/ccfs/objects"
 )
 
+func init() {
+	log.SetFlags(log.Lshortfile | log.Ltime | log.Ldate)
+	os.Chdir("../../") //Changes the working directory to CcfsLink
+	Start()
+}
+
 func TestGoogledriveservice_GetBlob(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	t.Skip("skipping google drive tests")
 	//googledriveservice_setup()
 	hb, err := objects.HcidFromHex("42cc3a4c4a9d9d3ee7de9322b45acb0e5a5c33550d9ad4791df6ae937a869e12")
@@ -26,7 +31,6 @@ func TestGoogledriveservice_GetBlob(t *testing.T) {
 }
 
 func TestGoogledriveservice_GetCommit(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	t.Skip("skipping google drive tests")
 	//googledriveservice_setup()
 	hc, err := objects.HkidFromHex("c09b2765c6fd4b999d47c82f9cdf7f4b659bf7c29487cc0b357b8fc92ac8ad02")
@@ -39,7 +43,6 @@ func TestGoogledriveservice_GetCommit(t *testing.T) {
 }
 
 func TestGoogledriveservice_GetTag(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	t.Skip("skipping google drive tests")
 	//googledriveservice_setup()
 	ht, err := objects.HkidFromHex("f65b92b9ce15e167b98fc896f0a365c87c39565642a59ba0060db3b33be6d885")
@@ -52,7 +55,6 @@ func TestGoogledriveservice_GetTag(t *testing.T) {
 }
 
 func TestGoogledriveservice_GetKey(t *testing.T) {
-	log.SetFlags(log.Lshortfile)
 	t.Skip("skipping google drive tests")
 	//googledriveservice_setup()
 	hk, err := objects.HkidFromHex("f65b92b9ce15e167b98fc896f0a365c87c39565642a59ba0060db3b33be6d885")
@@ -64,9 +66,4 @@ func TestGoogledriveservice_GetKey(t *testing.T) {
 		t.Fail()
 	}
 	//log.Printf("\n\tKey Contents: %s \n\tError: %v", k.Hash(), err)
-}
-
-func init() {
-	os.Chdir("../../") //Changes the working directory to CcfsLink
-	Start()
 }
