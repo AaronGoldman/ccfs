@@ -40,7 +40,6 @@ func start() {
 	Flags, Command := parseFlags()
 	go localfile.Start()
 	go timeout.Start()
-	go multicast.Start()
 
 	if *Flags.serve {
 		web.Start()
@@ -60,6 +59,9 @@ func start() {
 	}
 	if *Flags.direct {
 		directhttp.Start()
+	}
+	if *Flags.lan {
+		multicast.Start()
 	}
 
 	addCurators(Command)
