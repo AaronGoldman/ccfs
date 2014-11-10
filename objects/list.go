@@ -30,7 +30,7 @@ func (l List) Remove(nameSegment string) List {
 	return l
 }
 
-//HashForNamesegment retreves the TypeString and HID for a NameSegment
+//HashForNamesegment retrieves the TypeString and HID for a NameSegment
 func (l List) HashForNamesegment(namesegment string) (string, HID) {
 	objectHash := l[namesegment].Hash
 	typeString := l[namesegment].TypeString
@@ -39,6 +39,9 @@ func (l List) HashForNamesegment(namesegment string) (string, HID) {
 
 //Sting builds text representation of the list
 func (l List) String() string {
+	if len(l) == 0 {
+		return ""
+	}
 	var keys []string
 	for key := range l {
 		keys = append(keys, key)
@@ -65,14 +68,14 @@ func (l List) Bytes() []byte {
 	return []byte(l.String())
 }
 
-//Hash calulates the HCID of the list
+//Hash calculates the HCID of the list
 func (l List) Hash() HCID {
 	h := sha256.New()
 	h.Write(l.Bytes())
 	return h.Sum(nil)
 }
 
-//NewList creates a new list from an inital HID,TypeString, and NameSegment
+//NewList creates a new list from an initial HID,TypeString, and NameSegment
 func NewList(objectHash HID, typestring string, nameSegment string) List {
 	l := make(List)
 	l[nameSegment] = entry{objectHash, typestring}
@@ -110,4 +113,15 @@ func ListFromBytes(listbytes []byte) (newlist List, err error) {
 		l[entryNameSegment] = entry{entryHID, entryTypeString}
 	}
 	return l, err
+}
+
+//Rename something in a List
+func (l List) Rename(oldNameSeg, newNameSeg string) (List, error) {
+	entry, found := l[oldNameSeg]
+	if !found {
+		return l, fmt.Errorf("Name segment not found: %s", oldNameSeg)
+	}
+	l.Remove(oldNameSeg)
+	l[newNameSeg] = entry
+	return l, nil
 }

@@ -308,6 +308,7 @@ func (d dir) Create(
 		fallthrough //-- file doesn't exist
 	case os.O_CREATE&int(request.Flags) == os.O_CREATE:
 		d.openHandles[handle.name] = true
+		response.Flags = 1 << 2
 		return node, handle, nil
 		// case O_WRONLY, O_APPEND: //OPEN AN EMPTY FILE
 		// 		if err == nil {
@@ -395,7 +396,6 @@ func (d dir) Publish(h objects.HCID, name string, typeString string) (err error)
 	}
 }
 
-
 func (d dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
 	select {
 	case <-intr:
@@ -408,7 +408,7 @@ func (d dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 		ino = generateInode(d.parent.inode, name)
 	}
 	c, CommitErr := services.GetCommit(d.leaf.(objects.HKID))
-	
+
 	if CommitErr != nil {
 		log.Printf("commit %s:", CommitErr)
 		_, err := services.GetKey(d.leaf.(objects.HKID))
@@ -417,13 +417,13 @@ func (d dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 			perm = 0777
 		}
 		return dir{
-				permission:   perm,
-				contentType: "commit",
-				leaf:         d.leaf.(objects.HKID),
-				parent:       &d,
-				name:         name,
-				openHandles:  map[string]bool{},
-				inode:        ino,
+			permission:  perm,
+			contentType: "commit",
+			leaf:        d.leaf.(objects.HKID),
+			parent:      &d,
+			name:        name,
+			openHandles: map[string]bool{},
+			inode:       ino,
 		}, nil
 	}
 	//get list hash

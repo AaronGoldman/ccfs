@@ -270,7 +270,7 @@ func (m multicastservice) receivemessage(
 			} else {
 				log.Printf("key is not present, %v", m.waitingforkey)
 			}
-			p, err := objects.PrivteKeyFromBytes(data)
+			p, err := objects.PrivateKeyFromBytes(data)
 
 			if err != nil && p.Verify() && p.Hkid().Hex() == hkid.Hex() {
 				localfile.Instance.PostKey(p)

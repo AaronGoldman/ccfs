@@ -65,7 +65,7 @@ func get(objecthash objects.HID, path string, typeString string) (b objects.Blob
 				return nil, err
 			}
 			if !t.Verify() {
-				return nil, fmt.Errorf("Tag Verifiy Failed")
+				return nil, fmt.Errorf("Tag Verify Failed")
 			}
 			typeString = t.TypeString
 			objecthash = t.HashBytes
@@ -77,7 +77,7 @@ func get(objecthash objects.HID, path string, typeString string) (b objects.Blob
 				log.Printf("\n\t%v\n", err)
 			}
 			if !c.Verify() {
-				return nil, fmt.Errorf("Commit Verifiy Failed")
+				return nil, fmt.Errorf("Commit Verify Failed")
 			}
 			var l objects.List
 			l, err = GetList(c.ListHash)
@@ -103,7 +103,7 @@ func get(objecthash objects.HID, path string, typeString string) (b objects.Blob
 	}
 }
 
-//GetList retreves a list parces it and reterns it or an error
+//GetList retrieves a list parces it and returns it or an error
 func GetList(objectHash objects.HCID) (l objects.List, err error) {
 	listbytes, err := GetBlob(objectHash)
 
@@ -117,7 +117,7 @@ func GetList(objectHash objects.HCID) (l objects.List, err error) {
 	return
 }
 
-//GetCommitForHcid retreves a spasific commit by its HCID
+//GetCommitForHcid retrieves a specific commit by its HCID
 func GetCommitForHcid(hash objects.HCID) (commit objects.Commit, err error) {
 	commitbytes, err := GetBlob(hash)
 	if err != nil {
@@ -130,7 +130,7 @@ func GetCommitForHcid(hash objects.HCID) (commit objects.Commit, err error) {
 	return
 }
 
-//GetTagForHcid retreves a spasific tag by its HCID
+//GetTagForHcid retrieves a specific tag by its HCID
 func GetTagForHcid(hash objects.HCID) (tag objects.Tag, err error) {
 	tagbytes, err := GetBlob(hash)
 	if err != nil {

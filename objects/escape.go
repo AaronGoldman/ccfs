@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 //ObjectTypeEscape escapes the text of types
@@ -50,4 +51,9 @@ func SignatureEscape(signature []byte) string {
 func SignatureUnescape(s string) ([]byte, error) {
 	signature, err := hex.DecodeString(s)
 	return signature, err
+}
+
+//Returns a New Version Number
+func newVersion() int64 {
+	return time.Now().UnixNano()
 }

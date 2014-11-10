@@ -12,10 +12,9 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
 )
 
-//Tag is a individualy vertioned reference to a content object
+//Tag is a individually versioned reference to a content object
 type Tag struct {
 	HashBytes   HID
 	TypeString  string
@@ -81,7 +80,7 @@ func (t Tag) Update(hashBytes HID, typeString string) Tag {
 	t.HashBytes = hashBytes
 	t.TypeString = typeString
 	//t.nameSegment = t.nameSegment
-	t.Version = time.Now().UnixNano()
+	t.Version = newVersion()
 	//t.hkid = t.hkid
 	prikey, err := geterPoster.getPrivateKeyForHkid(t.Hkid)
 	if err != nil {
@@ -130,7 +129,7 @@ func (t Tag) Merge(tags []Tag, hashBytes HID, typeString string) Tag {
 	return t
 }
 
-//NewTag build a new tag with the inital content
+//NewTag build a new tag with the initial content
 func NewTag(
 	HashBytes HID,
 	TypeString string,
@@ -139,7 +138,7 @@ func NewTag(
 	hkid HKID,
 ) Tag {
 	prikey, _ := geterPoster.getPrivateKeyForHkid(hkid)
-	version := time.Now().UnixNano()
+	version := newVersion()
 	if tparent == nil {
 		tparent = parents{Blob{}.Hash()}
 	}
@@ -194,7 +193,7 @@ func TagFromBytes(bytes []byte) (t Tag, err error) {
 	tagTypeString := tagStrings[1]
 	var tagHID HID
 	switch tagTypeString {
-	case "blob", "list":
+	case "blob", "list", "nab":
 		tagHID, err = HcidFromHex(tagStrings[0])
 		if err != nil {
 			return
@@ -240,5 +239,18 @@ func TagFromBytes(bytes []byte) (t Tag, err error) {
 		tagHkid,
 		tagSignature,
 	}
+	return
+}
+
+//Rename a Tag Object
+func (t Tag) Rename(newNameSegment string) (tombstone, newTag Tag) {
+	tombstone = t.Delete()
+	newTag = NewTag(
+		t.HashBytes,
+		t.TypeString,
+		newNameSegment,
+		parents{tombstone.Hash()},
+		t.Hkid,
+	)
 	return
 }

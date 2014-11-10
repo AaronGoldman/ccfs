@@ -123,7 +123,7 @@ func (f file) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr 
 		inode:  f.inode,
 	}
 	f.parent.openHandles[handle.name] = true
-	//response.Handle = fuse.HandleID(handle.inode)
-	//response.Flags = fuse.OpenResponseFlags(request.Flags)
+	response.Handle = fuse.HandleID(handle.inode)
+	response.Flags = 1 << 2
 	return handle, nil
 }

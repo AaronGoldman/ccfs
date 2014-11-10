@@ -64,7 +64,7 @@ func (hkid HKID) Bytes() []byte {
 	return hkid
 }
 
-//Hex reterns the HKID in the form of a hexidesimal string.
+//Hex reterns the HKID in the form of a hexidecimal string.
 func (hkid HKID) Hex() string {
 	return hex.EncodeToString(hkid)
 }
@@ -78,7 +78,7 @@ func GenHKID() HKID {
 	privkey := KeyGen()
 	err := geterPoster.PostKey(privkey)
 	if err != nil {
-		log.Fatalf("Failed to persist Privet Key")
+		log.Fatalf("Failed to persist Private Key")
 	}
 	err = geterPoster.PostBlob(elliptic.Marshal(privkey.PublicKey.Curve,
 		privkey.PublicKey.X, privkey.PublicKey.Y))

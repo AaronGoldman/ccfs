@@ -28,7 +28,7 @@ func TestWriteFile(t *testing.T) {
 	}
 }
 
-func TestWriteFileOS(t *testing.T) {
+/*func TestWriteFileOS(t *testing.T) {
 	filename := mountpoint + "/TestFileOS.txt"
 
 	file, err := os.Create(filename) //Open(filename)
@@ -54,7 +54,7 @@ func TestWriteFileOS(t *testing.T) {
 		t.Errorf("Could Not Write To File - %s", err)
 	}
 	t.Logf("Bytes written to file: %d", dataWritten)
-}
+}*/
 
 func TestReadFile(t *testing.T) {
 	path := mountpoint + "/TestFile.txt"

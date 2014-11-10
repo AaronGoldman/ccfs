@@ -27,6 +27,7 @@ func init() {
 		log.Println("Unable to Create/Open log file. No output will be captured.")
 	} else {
 		log.SetOutput(logFile)
+		log.Println("Benchmark Started:")
 	}
 	log.SetFlags(log.Lshortfile)
 
@@ -97,7 +98,7 @@ func BenchmarkLowLevelPath(b *testing.B) {
 			log.Panic(err)
 		}
 
-		//log.Printf("authentic commit:%v\n", testcommit.Verifiy())
+		//log.Printf("authentic commit:%v\n", testcommit.Verify())
 		if !testcommit.Verify() {
 			b.FailNow()
 		}
@@ -116,7 +117,7 @@ func BenchmarkLowLevelPath(b *testing.B) {
 		//get tag
 		_, testTagHash := testlist.HashForNamesegment("testTag")
 		testTag, err := services.GetTag(testTagHash.Bytes(), "testBlob")
-		//log.Printf("authentic tag:%v\n", testTag.Verifiy())
+		//log.Printf("authentic tag:%v\n", testTag.Verify())
 		if !testTag.Verify() {
 			b.FailNow()
 		}
@@ -129,6 +130,92 @@ func BenchmarkLowLevelPath(b *testing.B) {
 		}
 		if !bytes.Equal(testTag.HashBytes.(objects.HCID), testBlob.Hash()) {
 			b.FailNow()
+		}
+	}
+}
+
+func BenchmarkLowLevelRemoveBlob(b *testing.B) {
+
+	//Generate HKID from Private Key String
+	commitHkid := objects.HkidFromDString("25237284271696152257500017172738061121437774519248"+
+		"4973944393756241918592441392745192478415977843322020140748800825891925253"+
+		"1173359792875255431921541368062567", 10)
+
+	for i := 0; i < b.N; i++ {
+
+		//Create Blob and add it to Commit List
+		testBlob := objects.Blob([]byte("BlobToBeDeleted"))
+		_ = services.PostBlob(testBlob)
+		testList := objects.NewList(testBlob.Hash(), "blob", "blobToBeDeleted")
+		services.PostList(testList)
+		testCommit := objects.NewCommit(testList.Hash(), commitHkid)
+		services.PostCommit(testCommit)
+
+		//Check to make sure Blob was added to Commit List
+		commitFromHkid, err := services.GetCommit(commitHkid)
+		_, err = services.GetList(commitFromHkid.ListHash)
+		listEntry, found := testList["blobToBeDeleted"]
+		if !found {
+			b.Fatalf("Error: Blob could not be found in list")
+		}
+		_, err = services.GetBlob(listEntry.Hash.(objects.HCID))
+		if err != nil {
+			b.Fatalf("Error: Blob could not be retrieved using HID from list")
+		}
+
+		//Remove Blob from Commit List
+		testListDelete := testList.Remove("blobToBeDeleted")
+		testCommitDelete := testCommit.Update(testListDelete.Hash())
+		services.PostCommit(testCommitDelete)
+
+		//Check to make sure blob Does Not Exist in Commit List
+		dneCommit, _ := services.GetCommit(commitHkid)
+		dneList, _ := services.GetList(dneCommit.ListHash)
+		_, found = dneList["blobToBeDeleted"]
+		if found {
+			b.Fatalf("Error: Blob incorrectly found in list")
+		}
+	}
+}
+
+func BenchmarkLowLevelRemoveTag(b *testing.B) {
+
+	//Generate HKID from Private Key String
+	hkidT := objects.HkidFromDString("19161720602889299965155738268484539070322612877960367"+
+		"6430690841377095800236259476217638708086844263509012365665750826156"+
+		"6766981217762072709507121631102726282", 10)
+	//2c0b96cd9cd53349b7733f6f3c1b0993c350fa29ae9c9e05706f616fbf66a98a
+
+	for i := 0; i < b.N; i++ {
+
+		//Create Blob Object
+		testBlob := objects.Blob([]byte("BlobToBeDeletedFromTag"))
+
+		//Create Tag Object
+		postTag(testBlob.Hash(), hkidT)
+
+		//Retrieve Tag Object
+		testTag, err := services.GetTag(hkidT, "testBlob")
+		if err != nil {
+			b.Fatalf("Error: Could Not retrieve tag: %s", err)
+		}
+
+		//Remove Blob from Tag Object
+		emptyTag := testTag.Delete()
+
+		//Publish empty Tag
+		services.PostTag(emptyTag)
+
+		//Retrieve Empty Tag
+		newEmptyTag, err := services.GetTag(hkidT, "testBlob")
+		if err != nil {
+			b.Fatalf("Error: Could not retrieve Tag: %s", err)
+		}
+
+		//Check Tag to ensure it is empty
+		if newEmptyTag.TypeString != "nab" {
+			b.Fatalf("Error: Incorrect Tag Retrieved%s", newEmptyTag.TypeString)
+
 		}
 	}
 }
@@ -147,8 +234,8 @@ func BenchmarkHighLevelPath(b *testing.B) {
 			b.Fatalf("Failed to retrieve Blob: %s", err)
 		}
 		if !bytes.Equal(indata, outdata) {
-			b.Fatalf("\tExpected: %s\n\tActual: %s\n\tErr:%s\n",
-				indata, outdata, err)
+			b.Fatalf("\tExpected: %s\n\tActual: %s\n\t",
+				indata, outdata)
 		}
 	}
 }
@@ -388,11 +475,13 @@ func postList(target objects.HKID) (testTagHash objects.HCID) {
 	return testListPointingToTestTag.Hash()
 }
 
-func postCommit(hcid objects.HCID, hkidC objects.HKID) {
+func postCommit(hcid objects.HCID, hkidC objects.HKID) (testCommit objects.Commit) {
 	testCommitPointingToTestList := objects.NewCommit(hcid,
 		hkidC) //gen test commit
 	err := services.PostCommit(testCommitPointingToTestList) //post test commit
 	if err != nil {
 		log.Println(err)
 	}
+
+	return testCommitPointingToTestList
 }

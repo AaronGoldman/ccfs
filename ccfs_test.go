@@ -360,7 +360,7 @@ func Testbadfrombytes(t *testing.T) {
 	if err.Error() != "Could not parse tag bytes" {
 		t.Errorf("[] should not parse")
 	}
-	_, err = objects.PrivteKeyFromBytes([]byte{})
+	_, err = objects.PrivateKeyFromBytes([]byte{})
 	if err.Error() != "Could not parse commit bytes" {
 		t.Errorf("[] should not parse")
 	}

@@ -12,7 +12,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
 )
 
 //Commit is the type for defining a repository at a moment in time
@@ -70,10 +69,10 @@ func (c Commit) Verify() bool {
 	return ecdsa.Verify(&pubkey, ObjectHash, r, s)
 }
 
-//Update the Commit to piont at the list who's hash is passed in
+//Update the Commit to point at the list who's hash is passed in
 func (c Commit) Update(listHash HCID) Commit {
 	c.Parents = parents{c.Hash()}
-	c.Version = time.Now().UnixNano()
+	c.Version = newVersion()
 	//c.Hkid = c.Hkid
 	c.ListHash = listHash
 	c.Signature = c.commitSign(c.ListHash, c.Version, c.Parents, c.Hkid)
@@ -86,7 +85,7 @@ func (c Commit) Merge(pCommits []Commit, listHash HCID) Commit {
 	for _, pCommit := range pCommits {
 		c.Parents = append(c.Parents, pCommit.Hash())
 	}
-	c.Version = time.Now().UnixNano()
+	c.Version = newVersion()
 	//c.Hkid = c.Hkid
 	c.ListHash = listHash
 	c.Signature = c.commitSign(c.ListHash, c.Version, c.Parents, c.Hkid)
@@ -125,7 +124,7 @@ func (c Commit) genCommitHash(
 //NewCommit is factory producing a Commit with the given listhash and HKID
 func NewCommit(listHash HCID, hkid HKID) (c Commit) {
 	c.ListHash = listHash
-	c.Version = time.Now().UnixNano()
+	c.Version = newVersion()
 	c.Hkid = hkid
 	c.Parents = []HCID{sha256.New().Sum(nil)}
 	c.Signature = c.commitSign(c.ListHash, c.Version, c.Parents, c.Hkid)

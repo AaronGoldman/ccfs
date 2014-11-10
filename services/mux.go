@@ -81,7 +81,7 @@ func GetCommit(h objects.HKID) (objects.Commit, error) {
 			if c.Verify() {
 				return c, nil
 			}
-			return objects.Commit{}, fmt.Errorf("Commit Verifiy Failed")
+			return objects.Commit{}, fmt.Errorf("Commit Verify Failed")
 		case err := <-errorch:
 			if err.Error() == "[timeout]: GetCommit Timeout" {
 				return objects.Commit{}, err
@@ -91,7 +91,7 @@ func GetCommit(h objects.HKID) (objects.Commit, error) {
 	}
 }
 
-//GetTag retreves the newest tag for a given HKID and name segment
+//GetTag retrieves the newest tag for a given HKID and name segment
 func GetTag(h objects.HKID, namesegment string) (objects.Tag, error) {
 	datach := make(chan objects.Tag, len(taggeters))
 	errorch := make(chan error, len(taggeters))
@@ -118,7 +118,7 @@ func GetTag(h objects.HKID, namesegment string) (objects.Tag, error) {
 			if t.Verify() {
 				return t, nil
 			}
-			return objects.Tag{}, fmt.Errorf("Tag Verifiy Failed")
+			return objects.Tag{}, fmt.Errorf("Tag Verify Failed")
 		case err := <-errorch:
 			if err.Error() == "[timeout]: GetTag Timeout" {
 				return objects.Tag{}, err
@@ -128,7 +128,7 @@ func GetTag(h objects.HKID, namesegment string) (objects.Tag, error) {
 	}
 }
 
-//GetTags retreves the newest tag for each name segment for a given HKID
+//GetTags retrieves the newest tag for each name segment of a given HKID
 func GetTags(h objects.HKID) (tags []objects.Tag, err error) {
 	datach := make(chan objects.Tag, len(tagsgeters))
 	errorch := make(chan error, len(tagsgeters))
@@ -156,7 +156,7 @@ func GetTags(h objects.HKID) (tags []objects.Tag, err error) {
 			if t.Verify() {
 				tags = append(tags, t)
 			} else {
-				fmt.Println("Tag Verifiy Failed")
+				fmt.Println("Tag Verify Failed")
 			}
 		case err := <-errorch:
 			if err.Error() == "[timeout]: GetTags Timeout" {
@@ -193,11 +193,11 @@ func GetKey(h objects.HKID) (*objects.PrivateKey, error) {
 	for {
 		select {
 		case b := <-datach:
-			privkey, err := objects.PrivteKeyFromBytes(b)
+			privkey, err := objects.PrivateKeyFromBytes(b)
 			if bytes.Equal(privkey.Hkid(), h) && privkey.Verify() {
 				return privkey, err
 			}
-			log.Println("Key Verifiy Failed")
+			log.Println("Key Verify Failed")
 		case err := <-errorch:
 			if err.Error() == "[timeout]: GetKey Timeout" {
 				return nil, err
