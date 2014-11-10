@@ -13,6 +13,14 @@ import (
 	"github.com/AaronGoldman/ccfs/services"
 )
 
+func init() {
+	services.Registercommand(
+		Instance,
+		"localfile command", //This is the usage string
+	)
+	services.Registerrunner(Instance)
+}
+
 //Start registers localfileservice instances
 func Start() {
 	services.Registerblobgeter(Instance)
@@ -24,6 +32,7 @@ func Start() {
 	services.Registercommitposter(Instance)
 	services.Registertagposter(Instance)
 	services.Registerkeyposter(Instance)
+	running = true
 }
 
 //Stop dregisters localfileservice instances
@@ -37,6 +46,7 @@ func Stop() {
 	services.DeRegistercommitposter(Instance)
 	services.DeRegistertagposter(Instance)
 	services.DeRegisterkeyposter(Instance)
+	running = false
 }
 
 //localfileservice is an
@@ -45,6 +55,21 @@ type localfileservice struct{}
 //ID gets the ID string
 func (lfs localfileservice) ID() string {
 	return "localfile"
+}
+
+func (lfs localfileservice) Command(command string) {
+	switch command {
+	case "start":
+		Start()
+
+	case "stop":
+		Stop()
+
+	default:
+		fmt.Printf("Local File Service Command Line\n")
+		return
+	}
+
 }
 
 func (lfs localfileservice) PostBlob(b objects.Blob) (err error) {
@@ -174,6 +199,13 @@ func (lfs localfileservice) latestVersion(matches []string) string {
 		}
 	}
 	return match
+}
+
+var running bool
+
+//Running returns a bool that indicates the registration status of the service
+func (lfs localfileservice) Running() bool {
+	return running
 }
 
 //Instance is the instance of the localfileservice

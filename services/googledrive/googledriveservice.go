@@ -20,6 +20,14 @@ import (
 var Instance googledriveservice
 var running bool
 
+func init() {
+	services.Registercommand(
+		Instance,
+		"googledrive command", //This is the usage string
+	)
+	services.Registerrunner(Instance)
+}
+
 //Start registers googledriveservice instances
 func Start() {
 	var err error
@@ -45,23 +53,30 @@ func Stop() {
 	running = false
 }
 
-func Running() bool {
-	return running
-}
-
 func (gds googledriveservice) Command(command string) {
 	switch command {
 	case "forget user":
 		err := os.Remove("bin/cache.json")
 		if err != nil {
-			log.Printf("Failed to delete file", err)
+			log.Printf("Failed to delete file %s", err)
 		}
 
+	case "start":
+		Start()
+
+	case "stop":
+		Stop()
+
 	default:
-		fmt.Printf("Google Drive Service Command Line")
+		fmt.Printf("Google Drive Service Command Line\n")
 		return
 	}
 
+}
+
+//Running returns a bool that indicates the registration status of the service
+func (gds googledriveservice) Running() bool {
+	return running
 }
 
 //ID gets the ID string
@@ -242,7 +257,6 @@ func (gds googledriveservice) GetKey(h objects.HKID) (b objects.Blob, err error)
 }
 
 func googledriveserviceFactory() (googledriveservice, error) {
-	log.SetFlags(log.Lshortfile)
 	gds := googledriveservice{}
 	// Set up a configuration.
 	config := &oauth.Config{

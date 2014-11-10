@@ -19,6 +19,17 @@ import (
 var queuedTargets map[string]bool
 var targetQueue chan target
 
+type command struct{}
+
+var instance command
+
+func init() {
+	services.Registercommand(
+		instance,
+		"Crawler command", //This is the usage string
+	)
+}
+
 // Start is the function that starts up the crawler for the CCFS
 func Start() {
 	fmt.Printf("Crawler Starting\n")
@@ -28,7 +39,33 @@ func Start() {
 	http.HandleFunc("/crawler/", webCrawlerHandler)
 	http.HandleFunc("/index/", webIndexHandler)
 	http.HandleFunc("/search/", webSearchHandler)
-	seedQueue(interfaces.GetLocalSeed())
+	go seedQueue(interfaces.GetLocalSeed())
+}
+
+func (command) Command(command string) {
+	switch command {
+	case "crawl":
+		seedQueue(interfaces.GetLocalSeed())
+
+	case "dump":
+		blobIndex = nil
+		commitIndex = nil
+		tagIndex = nil
+		textIndex = nil
+		nameSegmentIndex = nil
+		queuedTargets = make(map[string]bool)
+		targetQueue = make(chan target, 100)
+
+	default:
+		fmt.Printf("Crawler Command Line\n")
+		return
+	}
+
+}
+
+//ID gets the ID string
+func (command) ID() string {
+	return "crawler"
 }
 
 // This function handles web requests for the crawler

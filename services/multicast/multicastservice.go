@@ -19,11 +19,21 @@ import (
 
 //Instance is the instance of the multicastservice
 var Instance multicastservice
+var running bool
+
+func init() {
+	services.Registercommand(
+		Instance,
+		"multicast command", //This is the usage string
+	)
+	services.Registerrunner(Instance)
+}
 
 //Start registers multicastservice instances
 func Start() {
 	Instance = multicastservicefactory()
 	if Instance.conn == nil {
+		running = false
 		log.Printf("No network connection to start multicast service")
 		return
 	}
@@ -32,6 +42,7 @@ func Start() {
 	services.Registercommitgeter(Instance)
 	services.Registertaggeter(Instance)
 	services.Registerkeygeter(Instance)
+	running = true
 }
 
 //Stop deregisters multicastservice instances
@@ -40,6 +51,7 @@ func Stop() {
 	services.DeRegistercommitgeter(Instance)
 	services.DeRegistertaggeter(Instance)
 	services.DeRegisterkeygeter(Instance)
+	running = false
 }
 
 type tagfields struct {
@@ -56,9 +68,29 @@ type multicastservice struct {
 	waitingforkey    map[string]chan objects.Blob
 }
 
+//Running returns a bool that indicates the registration status of the service
+func (m multicastservice) Running() bool {
+	return running
+}
+
 //ID gets the ID string
 func (m multicastservice) ID() string {
 	return "multicast"
+}
+
+func (m multicastservice) Command(command string) {
+	switch command {
+	case "start":
+		Start()
+
+	case "stop":
+		Stop()
+
+	default:
+		fmt.Printf("Multicast Service Command Line\n")
+		return
+	}
+
 }
 
 func (m multicastservice) GetBlob(h objects.HCID) (b objects.Blob, err error) {

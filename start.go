@@ -11,6 +11,7 @@ import (
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 	"github.com/AaronGoldman/ccfs/services/appsscript"
+	"github.com/AaronGoldman/ccfs/services/directhttp"
 	"github.com/AaronGoldman/ccfs/services/googledrive"
 	"github.com/AaronGoldman/ccfs/services/kademliadht"
 	"github.com/AaronGoldman/ccfs/services/localfile"
@@ -37,9 +38,8 @@ func start() {
 	)
 
 	Flags, Command := parseFlags()
-	localfile.Start()
-	timeout.Start()
-	multicast.Start()
+	go localfile.Start()
+	go timeout.Start()
 
 	if *Flags.serve {
 		web.Start()
@@ -56,6 +56,12 @@ func start() {
 	}
 	if *Flags.drive {
 		googledrive.Start()
+	}
+	if *Flags.direct {
+		directhttp.Start()
+	}
+	if *Flags.lan {
+		multicast.Start()
 	}
 
 	addCurators(Command)
