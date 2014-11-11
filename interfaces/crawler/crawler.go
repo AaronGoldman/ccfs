@@ -45,6 +45,7 @@ func Start() {
 func (command) Command(command string) {
 	switch command {
 	case "crawl":
+		go processQueue()
 		seedQueue(interfaces.GetLocalSeed())
 
 	case "dump":
@@ -72,7 +73,10 @@ func (command) ID() string {
 func webCrawlerHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.SplitN(r.RequestURI[9:], "/", 2)
 	hkidhex := parts[0]
-	hexerr := seedQueue(hkidhex)
+	hexerr := error(nil)
+	if len(hkidhex) == 64 {
+		hexerr = seedQueue(hkidhex)
+	}
 
 	t, err := template.New("WebIndex template").Parse(`Request Statistics:
 	The HID received is: {{.HkidHex}}{{if .Err}}
