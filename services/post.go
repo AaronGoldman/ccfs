@@ -180,10 +180,10 @@ func tagHelper(h objects.HID, nextPathSegment string, restOfPath string,
 			if restOfPath == "" {
 				nextTypeString = postType
 			}
-			log.Printf("tag pionting to a %s named %s", nextTypeString, nextPathSegment)
+			log.Printf("tag pointing to a %s named %s", nextTypeString, nextPathSegment)
 			var hashOfPosted objects.HID
 			if restOfPath == "" && postType != "blob" {
-				hashOfPosted = objects.HKID(postBytes.Bytes()) //insrt reference by HKID
+				hashOfPosted = objects.HKID(postBytes.Bytes()) //insert reference by HKID
 			} else {
 				hashOfPosted, posterr = post(nextHash, nextPath,
 					nextTypeString, postBytes, postType)
@@ -217,7 +217,7 @@ func InsertRepo(h objects.HKID, path string, foreignHkid objects.HKID) error {
 	return err
 }
 
-//InsertDomain inserts a given foreign hkid to the local HKID at the path spesified
+//InsertDomain inserts a given foreign hkid to the local HKID at the path specified
 func InsertDomain(h objects.HKID, path string, foreignHkid objects.HKID) error {
 	//log.Printf("\n\trootHKID:%s\n\tPath:%s\n\tforeignHKID:%s", h, path, foreign_hkid)
 	_, err := post(
@@ -229,14 +229,14 @@ func InsertDomain(h objects.HKID, path string, foreignHkid objects.HKID) error {
 	return err
 }
 
-//InitRepo creates a new repository and inserts it to the HKID at the path spesified
+//InitRepo creates a new repository and inserts it to the HKID at the path specified
 func InitRepo(h objects.HKID, path string) error {
 	foreignHkid := objects.GenHKID()
 	err := InsertRepo(h, path, foreignHkid)
 	return err
 }
 
-//InitDomain creates a new domain and inserts it to the HKID at the path spesified
+//InitDomain creates a new domain and inserts it to the HKID at the path specified
 func InitDomain(h objects.HKID, path string) error {
 	foreignHkid := objects.GenHKID()
 	err := InsertDomain(h, path, foreignHkid)

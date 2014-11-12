@@ -15,6 +15,15 @@ import (
 
 //Instance is the instance of the appsscriptservice
 var Instance appsscriptservice
+var running bool
+
+func init() {
+	services.Registercommand(
+		Instance,
+		"appsscript command", //This is the usage string
+	)
+	services.Registerrunner(Instance)
+}
 
 //Start registers appsscriptservice instances
 func Start() {
@@ -23,6 +32,7 @@ func Start() {
 	services.Registercommitgeter(Instance)
 	services.Registertaggeter(Instance)
 	services.Registerkeygeter(Instance)
+	running = true
 }
 
 //Stop deregisters appsscriptservice instances
@@ -31,13 +41,34 @@ func Stop() {
 	services.DeRegistercommitgeter(Instance)
 	services.DeRegistertaggeter(Instance)
 	services.DeRegisterkeygeter(Instance)
+	running = false
+
 }
 
 type appsscriptservice struct{}
 
+//Running returns a bool that indicates the registration status of the service
+func (a appsscriptservice) Running() bool {
+	return running
+}
+
 //ID gets the ID string
 func (a appsscriptservice) ID() string {
 	return "appsscript"
+}
+
+func (a appsscriptservice) Command(command string) {
+	switch command {
+	case "start":
+		Start()
+
+	case "stop":
+		Stop()
+
+	default:
+		fmt.Printf("Appsscript Service Command Line\n")
+		return
+	}
 }
 
 func (a appsscriptservice) GetBlob(h objects.HCID) (b objects.Blob, err error) {

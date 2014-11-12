@@ -1,6 +1,8 @@
 sudo apt-get install docker.io
-sudo docker build . 
-sudo docker run -i -t --p=[8080:8080] <hash-from-build-cmd>
+sudo docker build .
+sudo docker run -i -t -p=8080:8080 <hash-from-build-cmd>
+
+rm -r $CCFS/bin/{blobs,commits,keys,tags}
 
 go tool pprof --text ../bin/ccfs.exe ../bin/prof.out |less
 

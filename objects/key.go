@@ -64,8 +64,8 @@ func (p PrivateKey) Bytes() []byte {
 	return ecdsa.PrivateKey(p).D.Bytes()
 }
 
-//PrivteKeyFromBytes makes a private key from a slice of bytes and reterns it.
-func PrivteKeyFromBytes(b []byte) (priv *PrivateKey, err error) {
+//PrivteKeyFromBytes makes a private key from a slice of bytes and returns it.
+func PrivateKeyFromBytes(b []byte) (priv *PrivateKey, err error) {
 	if len(b) < 64 {
 		return nil, fmt.Errorf("Could not parse commit bytes")
 	}
@@ -77,9 +77,9 @@ func PrivteKeyFromBytes(b []byte) (priv *PrivateKey, err error) {
 	return priv, nil
 }
 
-//PrivteKeyFromD makes a private key from a big int and reterns it
-func PrivteKeyFromD(D big.Int) (*PrivateKey, error) {
-	priv, err := PrivteKeyFromBytes(D.Bytes())
+//PrivteKeyFromD makes a private key from a big int and returns it
+func PrivateKeyFromD(D big.Int) (*PrivateKey, error) {
+	priv, err := PrivateKeyFromBytes(D.Bytes())
 	return priv, err
 	//priv := new(PrivateKey)
 	//priv.PublicKey.Curve = elliptic.P521()
@@ -88,7 +88,7 @@ func PrivteKeyFromD(D big.Int) (*PrivateKey, error) {
 	//return priv
 }
 
-//KeyGen makes a private new key and reterns it
+//KeyGen makes a private new key and returns it
 func KeyGen() *PrivateKey {
 	priv, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	if err != nil {
@@ -96,4 +96,11 @@ func KeyGen() *PrivateKey {
 	}
 	prikey := PrivateKey(*priv)
 	return &prikey
+}
+
+func NewDString() string {
+	newKey := KeyGen()
+	intd := ecdsa.PrivateKey(*newKey).D
+	keyString := fmt.Sprintf("%v", intd)
+	return keyString
 }

@@ -3,10 +3,12 @@
 package googledrive
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
 	"code.google.com/p/goauth2/oauth"
 	"code.google.com/p/google-api-go-client/drive/v2"
@@ -16,6 +18,15 @@ import (
 
 //Instance is the instance of the googledriveservice
 var Instance googledriveservice
+var running bool
+
+func init() {
+	services.Registercommand(
+		Instance,
+		"googledrive command", //This is the usage string
+	)
+	services.Registerrunner(Instance)
+}
 
 //Start registers googledriveservice instances
 func Start() {
@@ -26,8 +37,10 @@ func Start() {
 		services.Registercommitgeter(Instance)
 		services.Registertaggeter(Instance)
 		services.Registerkeygeter(Instance)
+		running = true
 	} else {
 		log.Println(err)
+		running = false
 	}
 }
 
@@ -37,6 +50,33 @@ func Stop() {
 	services.DeRegistercommitgeter(Instance)
 	services.DeRegistertaggeter(Instance)
 	services.DeRegisterkeygeter(Instance)
+	running = false
+}
+
+func (gds googledriveservice) Command(command string) {
+	switch command {
+	case "forget user":
+		err := os.Remove("bin/cache.json")
+		if err != nil {
+			log.Printf("Failed to delete file %s", err)
+		}
+
+	case "start":
+		Start()
+
+	case "stop":
+		Stop()
+
+	default:
+		fmt.Printf("Google Drive Service Command Line\n")
+		return
+	}
+
+}
+
+//Running returns a bool that indicates the registration status of the service
+func (gds googledriveservice) Running() bool {
+	return running
 }
 
 //ID gets the ID string
@@ -125,6 +165,7 @@ type googledriveservice struct {
 }
 
 func (gds googledriveservice) GetBlob(h objects.HCID) (objects.Blob, error) {
+
 	if gds.driveService == nil {
 		return nil, fmt.Errorf("Drive Service not initialized")
 	}
@@ -135,6 +176,7 @@ func (gds googledriveservice) GetBlob(h objects.HCID) (objects.Blob, error) {
 		log.Printf("An error occurred: %v\n", err)
 		return nil, err
 	}
+	log.Printf("Blob %s:\n%q", h, fileString)
 	return objects.Blob(fileString), err
 }
 func (gds googledriveservice) GetCommit(h objects.HKID) (c objects.Commit, err error) {
@@ -144,7 +186,8 @@ func (gds googledriveservice) GetCommit(h objects.HKID) (c objects.Commit, err e
 	thisCommitFolderID, err := gds.getChildWithTitle(gds.commitsFolderID, h.Hex())
 	r, err := gds.driveService.Children.List(thisCommitFolderID).Do()
 	if err != nil {
-		log.Fatalf("Error: %v\n", err)
+		log.Printf("Error: %v\n", err)
+		return
 	}
 	if len(r.Items) < 1 {
 		return objects.Commit{}, fmt.Errorf("no file %s", h.Hex())
@@ -162,6 +205,7 @@ func (gds googledriveservice) GetCommit(h objects.HKID) (c objects.Commit, err e
 		}
 	}
 	commitBytes, err := gds.DownloadFile(thisCommitfile)
+	log.Printf("Commit %s:\n%q", h, commitBytes)
 	c, err = objects.CommitFromBytes(commitBytes)
 	return c, err
 }
@@ -193,6 +237,7 @@ func (gds googledriveservice) GetTag(h objects.HKID, namesegment string) (t obje
 
 	}
 	tagBytes, err := gds.DownloadFile(thisTagfile)
+	log.Printf("Tag %s:\n%q", h, tagBytes)
 	t, err = objects.TagFromBytes(tagBytes)
 	return t, nil
 }
@@ -207,11 +252,11 @@ func (gds googledriveservice) GetKey(h objects.HKID) (b objects.Blob, err error)
 		log.Printf("An error occurred: %v\n", err)
 		return nil, err
 	}
+	log.Printf("Key %s:\n%q", h, fileString)
 	return objects.Blob(fileString), err
 }
 
 func googledriveserviceFactory() (googledriveservice, error) {
-	log.SetFlags(log.Lshortfile)
 	gds := googledriveservice{}
 	// Set up a configuration.
 	config := &oauth.Config{
@@ -224,11 +269,10 @@ func googledriveserviceFactory() (googledriveservice, error) {
 		Scope:       drive.DriveReadonlyScope,
 		AuthURL:     "https://accounts.google.com/o/oauth2/auth",
 		TokenURL:    "https://accounts.google.com/o/oauth2/token",
-		TokenCache:  oauth.CacheFile("bin/tokencachefile.json"),
+		TokenCache:  oauth.CacheFile("bin/cache.json"),
 	}
 
 	//code := "4/rSyLcOy_oBllG65sojDydzbxLp06.AgeuzdzuK-IWshQV0ieZDArWsFLjhAI"
-	code := ""
 
 	// Set up a Transport using the config.
 	gds.transport = &oauth.Transport{Config: config}
@@ -236,27 +280,27 @@ func googledriveserviceFactory() (googledriveservice, error) {
 	// Try to pull the token from the cache; if this fails, we need to get one.
 	token, err := config.TokenCache.Token()
 	if err != nil {
-		if code == "" {
-			// Get an authorization code from the data provider.
-			// ("Please ask the user if I can access this resource.")
-			url := config.AuthCodeURL("")
-			log.Println(
-				"Visit this URL to get a code\n",
-				url,
-				"\nAfter getting the code, place it in the bin folder",
-				"in a file named googledrive_code.txt",
-			)
-			Stop()
-			return googledriveservice{}, fmt.Errorf("oAuth code not found")
-		}
+		// Get an authorization code from the data provider.
+		// ("Please ask the user if I can access this resource.")
+		url := config.AuthCodeURL("")
+		log.Println(
+			"Visit this URL to get a code\n",
+			url,
+			"\nAfter getting the code, paste it into the command line",
+			"and hit Enter",
+		)
+		in := bufio.NewReader(os.Stdin)
+		code, err := in.ReadString('\n')
 		// Exchange the authorization code for an access token.
 		// ("Here's the code you gave the user, now give me a token!")
 		token, err = gds.transport.Exchange(code)
-		if err != nil {
-			return googledriveservice{}, fmt.Errorf("oAuth code exchange failed %s", err)
-		}
 		// (The Exchange method will automatically cache the token.)
 		log.Printf("Token is cached in %v\n", config.TokenCache)
+		if err != nil {
+			Stop()
+			return googledriveservice{}, fmt.Errorf("oAuth code not found")
+		}
+
 	}
 
 	// Make the actual request using the cached token to authenticate.

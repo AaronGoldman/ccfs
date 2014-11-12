@@ -30,7 +30,7 @@ func GetBlob(h objects.HCID) (objects.Blob, error) {
 				datach <- b
 				return
 			}
-			errorch <- err
+			errorch <- fmt.Errorf("[%s]: %s", blobgeterInstance.ID(), err)
 			return
 		}(rangeblobgeterInstance, datach, errorch, h)
 	}
@@ -42,7 +42,7 @@ func GetBlob(h objects.HCID) (objects.Blob, error) {
 			}
 			return nil, fmt.Errorf("Blob Verifiy Failed")
 		case err := <-errorch:
-			if err.Error() == "GetBlob Timeout" {
+			if err.Error() == "[timeout]: GetBlob Timeout" {
 				return nil, err
 			}
 			log.Println(err)
@@ -55,7 +55,7 @@ func PostList(l objects.List) (err error) {
 	return PostBlob(objects.Blob(l.Bytes()))
 }
 
-//GetCommit retreves the newest commit for a given HKID
+//GetCommit retrieves the newest commit for a given HKID
 func GetCommit(h objects.HKID) (objects.Commit, error) {
 	datach := make(chan objects.Commit, len(commitgeters))
 	errorch := make(chan error, len(commitgeters))
@@ -71,7 +71,7 @@ func GetCommit(h objects.HKID) (objects.Commit, error) {
 				datach <- c
 				return
 			}
-			errorch <- err
+			errorch <- fmt.Errorf("[%s]: %s", commitgeterInstance.ID(), err)
 			return
 		}(rangecommitgeterInstance, datach, errorch, h)
 	}
@@ -81,9 +81,9 @@ func GetCommit(h objects.HKID) (objects.Commit, error) {
 			if c.Verify() {
 				return c, nil
 			}
-			return objects.Commit{}, fmt.Errorf("Commit Verifiy Failed")
+			return objects.Commit{}, fmt.Errorf("Commit Verify Failed")
 		case err := <-errorch:
-			if err.Error() == "GetCommit Timeout" {
+			if err.Error() == "[timeout]: GetCommit Timeout" {
 				return objects.Commit{}, err
 			}
 			log.Println(err)
@@ -91,7 +91,7 @@ func GetCommit(h objects.HKID) (objects.Commit, error) {
 	}
 }
 
-//GetTag retreves the newest tag for a given HKID and name segment
+//GetTag retrieves the newest tag for a given HKID and name segment
 func GetTag(h objects.HKID, namesegment string) (objects.Tag, error) {
 	datach := make(chan objects.Tag, len(taggeters))
 	errorch := make(chan error, len(taggeters))
@@ -108,7 +108,7 @@ func GetTag(h objects.HKID, namesegment string) (objects.Tag, error) {
 				datach <- t
 				return
 			}
-			errorch <- err
+			errorch <- fmt.Errorf("[%s]: %s", taggeterInstance.ID(), err)
 			return
 		}(rangetaggeterInstance, datach, errorch, h, namesegment)
 	}
@@ -118,9 +118,9 @@ func GetTag(h objects.HKID, namesegment string) (objects.Tag, error) {
 			if t.Verify() {
 				return t, nil
 			}
-			return objects.Tag{}, fmt.Errorf("Tag Verifiy Failed")
+			return objects.Tag{}, fmt.Errorf("Tag Verify Failed")
 		case err := <-errorch:
-			if err.Error() == "GetTag Timeout" {
+			if err.Error() == "[timeout]: GetTag Timeout" {
 				return objects.Tag{}, err
 			}
 			log.Println(err)
@@ -128,7 +128,7 @@ func GetTag(h objects.HKID, namesegment string) (objects.Tag, error) {
 	}
 }
 
-//GetTags retreves the newest tag for each name segment for a given HKID
+//GetTags retrieves the newest tag for each name segment of a given HKID
 func GetTags(h objects.HKID) (tags []objects.Tag, err error) {
 	datach := make(chan objects.Tag, len(tagsgeters))
 	errorch := make(chan error, len(tagsgeters))
@@ -146,7 +146,7 @@ func GetTags(h objects.HKID) (tags []objects.Tag, err error) {
 				}
 				return
 			}
-			errorch <- err
+			errorch <- fmt.Errorf("[%s]: %s", tagsgeterInstance.ID(), err)
 			return
 		}(rangetagsgeterInstance, datach, errorch, h)
 	}
@@ -156,10 +156,10 @@ func GetTags(h objects.HKID) (tags []objects.Tag, err error) {
 			if t.Verify() {
 				tags = append(tags, t)
 			} else {
-				fmt.Println("Tag Verifiy Failed")
+				fmt.Println("Tag Verify Failed")
 			}
 		case err := <-errorch:
-			if err.Error() == "GetTags Timeout" {
+			if err.Error() == "[timeout]: GetTags Timeout" {
 				if len(tags) > 0 {
 					return tags, nil
 				}
@@ -186,20 +186,20 @@ func GetKey(h objects.HKID) (*objects.PrivateKey, error) {
 				datach <- k
 				return
 			}
-			errorch <- err
+			errorch <- fmt.Errorf("[%s]: %s", keygeterInstance.ID(), err)
 			return
 		}(rangekeygeterInstance, datach, errorch, h)
 	}
 	for {
 		select {
 		case b := <-datach:
-			privkey, err := objects.PrivteKeyFromBytes(b)
+			privkey, err := objects.PrivateKeyFromBytes(b)
 			if bytes.Equal(privkey.Hkid(), h) && privkey.Verify() {
 				return privkey, err
 			}
-			log.Println("Key Verifiy Failed")
+			log.Println("Key Verify Failed")
 		case err := <-errorch:
-			if err.Error() == "GetKey Timeout" {
+			if err.Error() == "[timeout]: GetKey Timeout" {
 				return nil, err
 			}
 			log.Println(err)

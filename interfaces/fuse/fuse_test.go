@@ -17,7 +17,7 @@ func TestPwd(t *testing.T) {
 	t.Logf("pwd: %s", fileInfos)
 }
 
-func TestWrightFile(t *testing.T) {
+func TestWriteFile(t *testing.T) {
 	filename := mountpoint + "/TestFile.txt"
 	data := []byte("Test File Data")
 	perm := os.FileMode(0777)
@@ -28,7 +28,7 @@ func TestWrightFile(t *testing.T) {
 	}
 }
 
-func TestWrightFileOS(t *testing.T) {
+/*func TestWriteFileOS(t *testing.T) {
 	filename := mountpoint + "/TestFileOS.txt"
 
 	file, err := os.Create(filename) //Open(filename)
@@ -54,7 +54,7 @@ func TestWrightFileOS(t *testing.T) {
 		t.Errorf("Could Not Write To File - %s", err)
 	}
 	t.Logf("Bytes written to file: %d", dataWritten)
-}
+}*/
 
 func TestReadFile(t *testing.T) {
 	path := mountpoint + "/TestFile.txt"

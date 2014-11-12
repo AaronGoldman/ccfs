@@ -19,6 +19,17 @@ import (
 var queuedTargets map[string]bool
 var targetQueue chan target
 
+type command struct{}
+
+var instance command
+
+func init() {
+	services.Registercommand(
+		instance,
+		"Crawler command", //This is the usage string
+	)
+}
+
 // Start is the function that starts up the crawler for the CCFS
 func Start() {
 	fmt.Printf("Crawler Starting\n")
@@ -28,14 +39,44 @@ func Start() {
 	http.HandleFunc("/crawler/", webCrawlerHandler)
 	http.HandleFunc("/index/", webIndexHandler)
 	http.HandleFunc("/search/", webSearchHandler)
-	seedQueue(interfaces.GetLocalSeed())
+	go seedQueue(interfaces.GetLocalSeed())
+}
+
+func (command) Command(command string) {
+	switch command {
+	case "crawl":
+		go processQueue()
+		seedQueue(interfaces.GetLocalSeed())
+
+	case "dump":
+		blobIndex = nil
+		commitIndex = nil
+		tagIndex = nil
+		textIndex = nil
+		nameSegmentIndex = nil
+		queuedTargets = make(map[string]bool)
+		targetQueue = make(chan target, 100)
+
+	default:
+		fmt.Printf("Crawler Command Line\n")
+		return
+	}
+
+}
+
+//ID gets the ID string
+func (command) ID() string {
+	return "crawler"
 }
 
 // This function handles web requests for the crawler
 func webCrawlerHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.SplitN(r.RequestURI[9:], "/", 2)
 	hkidhex := parts[0]
-	hexerr := seedQueue(hkidhex)
+	hexerr := error(nil)
+	if len(hkidhex) == 64 {
+		hexerr = seedQueue(hkidhex)
+	}
 
 	t, err := template.New("WebIndex template").Parse(`Request Statistics:
 	The HID received is: {{.HkidHex}}{{if .Err}}
@@ -81,11 +122,28 @@ func (targ target) String() string {
 func seedQueue(hkidhex string) (err error) {
 	h, hexerr := objects.HcidFromHex(hkidhex)
 	if hexerr == nil {
-		crawlList(objects.HCID(h.Bytes()))
-		crawlBlob(objects.HCID(h.Bytes()))
-		crawlCommit(objects.HKID(h.Bytes()))
-		crawlhcidCommit(objects.HCID(h.Bytes()))
-		crawlhcidTag(objects.HCID(h.Bytes()))
+		err = crawlList(objects.HCID(h.Bytes()))
+		if err != nil {
+			log.Println(err)
+		}
+		err = crawlBlob(objects.HCID(h.Bytes()))
+		if err != nil {
+			log.Println(err)
+		}
+		err = crawlCommit(objects.HKID(h.Bytes()))
+		if err != nil {
+			log.Println(err)
+		}
+		err = crawlhcidCommit(objects.HCID(h.Bytes()))
+		if err != nil {
+			log.Println(err)
+		}
+		err = crawlhcidTag(objects.HCID(h.Bytes()))
+		if err != nil {
+			log.Println(err)
+		}
+	} else {
+		log.Println(hexerr)
 	}
 	return hexerr
 }
