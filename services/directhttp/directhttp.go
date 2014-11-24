@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+	"strings"
 	"unicode"
 
 	"github.com/AaronGoldman/ccfs/objects"
@@ -45,18 +47,59 @@ func Stop() {
 }
 
 func (d directhttpservice) Command(command string) {
-	switch command {
+	tokens := strings.FieldsFunc(command, unicode.IsSpace)
+	if len(tokens) == 0 {
+		return
+	}
+	switch tokens[0] {
 	case "start":
 		Start()
 
 	case "stop":
 		Stop()
 
+	case "add":
+		if len(tokens) > 1 {
+			hosts = append(hosts, tokens[1])
+		}
+		d.List()
+
+	case "delete":
+		if len(tokens) > 1 {
+			index, err := strconv.Atoi(tokens[1])
+			if err != nil {
+				fmt.Printf("%s", err)
+				return
+			}
+			if index < 0 || index >= len(hosts) {
+				fmt.Print("Index out of range")
+				return
+			}
+
+			if index < len(hosts)-1 {
+				hosts = append(hosts[:index], hosts[index+1:]...)
+			} else {
+				hosts = hosts[:index]
+			}
+		}
+
+		d.List()
+
+	case "list":
+		d.List()
+
 	default:
 		fmt.Printf("Google Drive Service Command Line\n")
 		return
 	}
 
+}
+
+//Prints the list of directhttp addresses
+func (d directhttpservice) List() {
+	for index, host := range hosts {
+		fmt.Printf("Host %d: %s\n", index, host)
+	}
 }
 
 //Running returns a bool that indicates the registration status of the service
