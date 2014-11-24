@@ -20,7 +20,7 @@ type Tag struct {
 	TypeString  string
 	NameSegment string
 	Version     int64
-	Parents     parents
+	Parents     Parents
 	Hkid        HKID
 	Signature   []byte
 }
@@ -76,7 +76,7 @@ func (t Tag) Verify() bool {
 
 //Update the named content
 func (t Tag) Update(hashBytes HID, typeString string) Tag {
-	t.Parents = parents{t.Hash()}
+	t.Parents = Parents{t.Hash()}
 	t.HashBytes = hashBytes
 	t.TypeString = typeString
 	//t.nameSegment = t.nameSegment
@@ -107,7 +107,7 @@ func (t Tag) Delete() Tag {
 		Blob{}.Hash(),     //HashBytes HID
 		"nab",             //TypeString string
 		t.NameSegment,     //nameSegment string
-		parents{t.Hash()}, //tparent parents
+		Parents{t.Hash()}, //tparent parents
 		t.Hkid,            //hkid HKID
 	)
 	return t
@@ -115,7 +115,7 @@ func (t Tag) Delete() Tag {
 
 //Merge updates the content and add extra the tags to the parents
 func (t Tag) Merge(tags []Tag, hashBytes HID, typeString string) Tag {
-	tParents := parents{t.Hash()}
+	tParents := Parents{t.Hash()}
 	for _, pTag := range tags {
 		tParents = append(tParents, pTag.Hash())
 	}
@@ -134,13 +134,13 @@ func NewTag(
 	HashBytes HID,
 	TypeString string,
 	nameSegment string,
-	tparent parents,
+	tparent Parents,
 	hkid HKID,
 ) Tag {
 	prikey, _ := geterPoster.getPrivateKeyForHkid(hkid)
 	version := newVersion()
 	if tparent == nil {
-		tparent = parents{Blob{}.Hash()}
+		tparent = Parents{Blob{}.Hash()}
 	}
 	ObjectHash := Tag{}.genTagHash(
 		HashBytes,
@@ -164,7 +164,7 @@ func NewTag(
 }
 
 func (t Tag) genTagHash(taghash HID, TypeString string, nameSegment string,
-	version int64, tparent parents, hkid HKID) []byte {
+	version int64, tparent Parents, hkid HKID) []byte {
 	h := sha256.New()
 	h.Write(
 		[]byte(fmt.Sprintf("%s,\n%s,\n%s,\n%d,\n%s,\n%s",
@@ -213,7 +213,7 @@ func TagFromBytes(bytes []byte) (t Tag, err error) {
 	}
 
 	parentSplit := strings.Split(tagStrings[4], ",")
-	parsedParents := parents{}
+	parsedParents := Parents{}
 	for _, singlParentString := range parentSplit {
 		parsedHCID, err1 := HcidFromHex(singlParentString)
 		if err1 != nil {
@@ -249,7 +249,7 @@ func (t Tag) Rename(newNameSegment string) (tombstone, newTag Tag) {
 		t.HashBytes,
 		t.TypeString,
 		newNameSegment,
-		parents{tombstone.Hash()},
+		Parents{tombstone.Hash()},
 		t.Hkid,
 	)
 	return
