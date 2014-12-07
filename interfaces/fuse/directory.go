@@ -13,6 +13,9 @@ import (
 	"github.com/AaronGoldman/ccfs/services"
 )
 
+//Verbosity
+const verbosity = 0 //Change this for more or less output when running CCFS
+
 //Repository is a collection defined by a commit
 type repository struct {
 	contents   objects.HKID
@@ -93,13 +96,17 @@ func (d dir) newDir(Name string) *dir {
 
 //func (d Dir) Remove(*fuse.RemoveRequest, Intr) fuse.Error
 func (d dir) String() string {
+	parentName := "nil"
+	if d.parent != nil {
+		parentName = d.parent.name
+	}
 	return fmt.Sprintf(
-		"[%s]%s %s\nmode:%s parent:%s\nid:%v",
+		"Dir. Type:\t%s\nDir. Name:\t%q\nDir. Leaf:\t%s\nDir. Mode:\t%s\nDir. Parent:\t%q\nDir. ID:\t%v\n",
 		d.contentType,
 		d.name,
 		d.leaf,
 		d.permission,
-		d.parent,
+		parentName,
 		d.inode,
 	)
 }
@@ -130,11 +137,15 @@ func (d dir) Rename(
 		}
 		newList := l.Add(r.NewName, l[r.OldName].Hash, l[r.OldName].TypeString)
 		newList = l.Remove(r.OldName)
-		log.Printf(
-			"Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------",
-			newList.Hash(),
-			newList,
-		)
+		//=========================================================================
+		if verbosity == 1 {
+			log.Printf(
+				"Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------",
+				newList.Hash(),
+				newList,
+			)
+		}
+		//=========================================================================
 		el := services.PostList(newList)
 		if el != nil {
 			return listErr
@@ -154,20 +165,28 @@ func (d dir) Rename(
 		newList = l.Remove(r.OldName)
 
 		newCommit := c.Update(newList.Hash())
-		log.Printf(
-			"Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------",
-			newList.Hash(),
-			newList,
-		)
+		//=========================================================================
+		if verbosity == 1 {
+			log.Printf(
+				"Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------",
+				newList.Hash(),
+				newList,
+			)
+		}
+		//=========================================================================
 		el := services.PostList(newList)
 		if el != nil {
 			return ListErr
 		}
-		log.Printf(
-			"Posting commit %s\n-----BEGIN COMMIT-----\n%s\n-------END COMMIT-----",
-			newCommit.Hash(),
-			newCommit,
-		)
+		//=========================================================================
+		if verbosity == 1 {
+			log.Printf(
+				"Posting commit %s\n-----BEGIN COMMIT-----\n%s\n-------END COMMIT-----",
+				newCommit.Hash(),
+				newCommit,
+			)
+		}
+		//=========================================================================
 		ec := services.PostCommit(newCommit)
 		if ec != nil {
 			return ListErr
@@ -189,11 +208,15 @@ func (d dir) Rename(
 			log.Printf("Tag %s\\%s Not Found", d.leaf, d.name)
 			return fuse.ENOENT
 		}
-		log.Printf(
-			"Posting tag %s\n-----BEGIN TAG--------\n%s\n-------END TAG--------",
-			newTag.Hash(),
-			newTag,
-		)
+		//=========================================================================
+		if verbosity == 1 {
+			log.Printf(
+				"Posting tag %s\n-----BEGIN TAG--------\n%s\n-------END TAG--------",
+				newTag.Hash(),
+				newTag,
+			)
+		}
+		//=========================================================================
 		et := services.PostTag(newTag)
 		if et != nil {
 			return tagErr
@@ -204,10 +227,12 @@ func (d dir) Rename(
 }
 
 func (d dir) Attr() fuse.Attr {
-	log.Printf("Directory attributes requested\n\tName:%s", d.name)
+	log.Printf("Directory Attribute Request: %q\n", d.name)
 	return fuse.Attr{
 		Inode: uint64(d.inode),
 		Mode:  os.ModeDir | d.permission,
+		Uid:   uint32(os.Getuid()),
+		Gid:   uint32(os.Getgid()),
 	}
 	// {
 	// 	Inode:10526737836144204806
@@ -226,8 +251,7 @@ func (d dir) Attr() fuse.Attr {
 }
 
 func (d dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
-	log.Printf("Directory Lookup:\n\tName: %s\n\tHID: %s", name, d.leaf.Hex())
-	log.Printf("%v", d)
+	log.Printf("Lookup %q in Directory: %q\n%v\n", name, d.name, d)
 	select {
 	case <-intr:
 		return nil, fuse.EINTR
@@ -261,7 +285,7 @@ func (d dir) Create(
 	response *fuse.CreateResponse,
 	intr fs.Intr,
 ) (fs.Node, fs.Handle, fuse.Error) {
-	log.Printf("request: %+v\nobject: %+v", request, d)
+	log.Printf("Request:\n %+v\nObject: %+v", request, d)
 	select {
 	case <-intr:
 		return nil, nil, fuse.EINTR
@@ -281,7 +305,7 @@ func (d dir) Create(
 		permission:  os.FileMode(0777), //request.Mode,
 		parent:      &d,
 		name:        request.Name,
-		inode:       fuse.NodeID(fs.GenerateDynamicInode(uint64(d.inode), request.Name)),
+		inode:       generateInode(d.inode, request.Name),
 		size:        0,
 		flags:       fuse.OpenReadWrite,
 	}
@@ -338,20 +362,28 @@ func (d dir) Publish(h objects.HCID, name string, typeString string) (err error)
 		newList := l.Add(name, h, typeString)
 
 		newCommit := c.Update(newList.Hash())
-		log.Printf(
-			"Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------",
-			newList.Hash(),
-			newList,
-		)
+		//=========================================================================
+		if verbosity == 1 {
+			log.Printf(
+				"Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------",
+				newList.Hash(),
+				newList,
+			)
+		}
+		//=========================================================================
 		el := services.PostList(newList)
 		if el != nil {
 			return listErr
 		}
-		log.Printf(
-			"Posting commit %s\n-----BEGIN COMMIT-----\n%s\n-------END COMMIT-----",
-			newCommit.Hash(),
-			newCommit,
-		)
+		//=========================================================================
+		if verbosity == 1 {
+			log.Printf(
+				"Posting commit %s\n-----BEGIN COMMIT-----\n%s\n-------END COMMIT-----",
+				newCommit.Hash(),
+				newCommit,
+			)
+		}
+		//=========================================================================
 		ec := services.PostCommit(newCommit)
 		if ec != nil {
 			return listErr
@@ -366,11 +398,15 @@ func (d dir) Publish(h objects.HCID, name string, typeString string) (err error)
 			log.Printf("Tag %s\\%s Not Found", d.leaf, name)
 			newTag = objects.NewTag(h, typeString, name, nil, d.leaf.(objects.HKID))
 		}
-		log.Printf(
-			"Posting tag %s\n-----BEGIN TAG--------\n%s\n-------END TAG--------",
-			newTag.Hash(),
-			newTag,
-		)
+		//=========================================================================
+		if verbosity == 1 {
+			log.Printf(
+				"Posting tag %s\n-----BEGIN TAG--------\n%s\n-------END TAG--------",
+				newTag.Hash(),
+				newTag,
+			)
+		}
+		//=========================================================================
 		et := services.PostTag(newTag)
 		if et != nil {
 			return tagErr
@@ -382,11 +418,15 @@ func (d dir) Publish(h objects.HCID, name string, typeString string) (err error)
 			return listErr
 		}
 		newList := l.Add(name, h, typeString)
-		log.Printf(
-			"Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------",
-			newList.Hash(),
-			newList,
-		)
+		//=========================================================================
+		if verbosity == 1 {
+			log.Printf(
+				"Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------",
+				newList.Hash(),
+				newList,
+			)
+		}
+		//=========================================================================
 		el := services.PostList(newList)
 		if el != nil {
 			return listErr
@@ -410,26 +450,29 @@ func (d dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 	c, CommitErr := services.GetCommit(d.leaf.(objects.HKID))
 
 	if CommitErr != nil {
-		log.Printf("commit %s:", CommitErr)
-		_, err := services.GetKey(d.leaf.(objects.HKID))
-		perm := os.FileMode(0555)
-		if err == nil {
-			perm = 0777
-		}
-		return dir{
-			permission:  perm,
-			contentType: "commit",
-			leaf:        d.leaf.(objects.HKID),
-			parent:      &d,
-			name:        name,
-			openHandles: map[string]bool{},
-			inode:       ino,
-		}, nil
+		return nil, fuse.EIO
+		/*
+			log.Printf("commit %s:", CommitErr)
+			_, err := services.GetKey(d.leaf.(objects.HKID))
+			perm := os.FileMode(0555)
+			if err == nil {
+				perm = 0777
+			}
+			return dir{
+				permission:  perm,
+				contentType: "commit",
+				leaf:        d.leaf.(objects.HKID),
+				parent:      &d,
+				name:        name,
+				openHandles: map[string]bool{},
+				inode:       ino,
+			}, nil
+		*/
 	}
 	//get list hash
 	l, listErr := services.GetList(c.ListHash) //l is the list object
 	if listErr != nil {
-		log.Printf("commit list retieval error %s:", listErr)
+		log.Printf("commit list retrieval error %s:", listErr)
 		return nil, nil
 	}
 

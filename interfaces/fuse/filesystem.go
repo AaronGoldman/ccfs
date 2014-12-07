@@ -56,7 +56,7 @@ func fsFromHKIDString(HKIDstring string, mountpoint string) fileSystem {
 	h, err := objects.HkidFromHex(HKIDstring)
 	//check if err is not nil else return h = NULL
 	if err != nil {
-		log.Printf("Invalid initilizing filesystem FS: %s", err)
+		log.Printf("Invalid initializing filesystem FS: %s", err)
 		return fileSystem{}
 	}
 	//return filesystem
@@ -64,7 +64,7 @@ func fsFromHKIDString(HKIDstring string, mountpoint string) fileSystem {
 }
 
 func (fs_obj fileSystem) Root() (fs.Node, fuse.Error) { //returns a directory
-	log.Printf("Initilizing filesystem:\n\tHKID: %s", fs_obj.hkid)
+	log.Printf("Initializing filesystem:\n\tHKID: %s", fs_obj.hkid)
 	_, err := services.GetKey(fs_obj.hkid)
 	perm := os.FileMode(0555)
 	if err == nil {
@@ -87,7 +87,7 @@ func (fs_obj fileSystem) Root() (fs.Node, fuse.Error) { //returns a directory
 		contentType: "commit",
 		leaf:        fs_obj.hkid,
 		parent:      nil,
-		name:        "",
+		name:        "/",
 		openHandles: map[string]bool{},
 		inode:       1,
 	}, nil

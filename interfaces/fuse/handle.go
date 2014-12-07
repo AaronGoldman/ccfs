@@ -21,12 +21,12 @@ type openFileHandle struct {
 
 func (o openFileHandle) String() string {
 	return fmt.Sprintf(
-		"[%d] %s\nid: %v parent: %s\nbuffer: %q",
+		"Buf. Length\t[%d]\nHan. Name:\t%s\nHan. ID:\t%d\nBuffer:\t%q\nHandle Parent Information:\n%v\n",
 		len(o.buffer),
 		o.name,
 		o.inode,
-		o.parent,
 		o.buffer,
+		o.parent,
 	)
 }
 
@@ -52,7 +52,7 @@ func (o openFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadRespo
 }
 
 func (o *openFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteResponse, intr fs.Intr) fuse.Error {
-	log.Printf("request: %+v\nobject: %+v", request, o)
+	log.Printf("Request: %+v\nObject: %+v", request, o)
 	start := request.Offset
 	writeData := request.Data
 
@@ -72,7 +72,7 @@ func (o *openFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteR
 		num := copy(o.buffer[start:lenData], writeData)
 		response.Size = num
 	}
-	log.Printf("buffer: %s", o.buffer)
+	log.Printf("Buffer: %s", o.buffer)
 	log.Printf("write response size: %v", response.Size)
 	publishErr := o.Publish() //get into loop on parent object
 	if publishErr != nil {
@@ -83,7 +83,7 @@ func (o *openFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteR
 }
 
 func (o openFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse.Error {
-	log.Printf("request: %+v\nobject: %+v", request, o)
+	log.Printf("Request: %+v\nObject: %+v\n", request, o)
 	o.parent.RemoveHandle(o.name)
 	request.Respond()
 	return nil //fuse.ENOENT
@@ -91,7 +91,7 @@ func (o openFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse
 
 //func (o OpenfileHandle)
 func (o openFileHandle) Flush(request *fuse.FlushRequest, intr fs.Intr) fuse.Error {
-	log.Printf("request: %+v\nobject: %+v", request, o)
+	log.Printf("Request: %+v\nHandle Information:\n%+v", request, o)
 	o.Publish()
 	request.Respond()
 	return nil

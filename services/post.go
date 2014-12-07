@@ -242,3 +242,28 @@ func InitDomain(h objects.HKID, path string) error {
 	err := InsertDomain(h, path, foreignHkid)
 	return err
 }
+
+/*
+//Delete
+func Delete(h objects.HID, path string) {
+	deleteRename(h, path, "Delete")
+}
+
+//Rename
+func Rename(h objects.HID, path string, name string) {
+	deleteRename(h, path, "Rename")
+}
+
+//Low Level Delete/Rename
+func deleteRename(h objects.HID, hType string, path string, callType string, newName string){
+
+	nameSegments := strings.SplitN(path, "/", 2)
+	nextPathSegment := nameSegments[0]
+	restOfPath := ""
+	if len(nameSegments) > 1 {
+		restOfPath = nameSegments[1]
+	}
+
+
+
+}*/

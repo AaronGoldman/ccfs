@@ -14,7 +14,7 @@ import (
 func GetBlob(h objects.HCID) (objects.Blob, error) {
 	if h == nil {
 		log.Printf("GetBlob(nil)")
-		return nil, fmt.Errorf("nil pased in to GetBlob")
+		return nil, fmt.Errorf("nil passed in to GetBlob")
 	}
 	datach := make(chan objects.Blob, len(blobgeters))
 	errorch := make(chan error, len(blobgeters))
@@ -40,7 +40,7 @@ func GetBlob(h objects.HCID) (objects.Blob, error) {
 			if b != nil && bytes.Equal(b.Hash(), h) {
 				return b, nil
 			}
-			return nil, fmt.Errorf("Blob Verifiy Failed")
+			return nil, fmt.Errorf("Blob Verify Failed")
 		case err := <-errorch:
 			if err.Error() == "[timeout]: GetBlob Timeout" {
 				return nil, err

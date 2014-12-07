@@ -19,7 +19,7 @@ func TestPwd(t *testing.T) {
 
 func TestWriteFile(t *testing.T) {
 	filename := mountpoint + "/TestFile.txt"
-	data := []byte("Test File Data")
+	data := []byte("Test File Data 1")
 	perm := os.FileMode(0777)
 	err := ioutil.WriteFile(filename, data, perm)
 	if err != nil {
@@ -63,7 +63,7 @@ func TestReadFile(t *testing.T) {
 		t.Logf("got err %s", err)
 		t.Fail()
 	}
-	expectedData := []byte("Test File Data")
+	expectedData := []byte("Test File Data 2")
 	if !(bytes.Equal(data, expectedData)) {
 		t.Logf("Expected:%s, Got:%s", expectedData, data)
 		t.Fail()

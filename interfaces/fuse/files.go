@@ -27,9 +27,8 @@ type file struct {
 
 func (f file) String() string {
 	return fmt.Sprintf(
-		"[%d]%s %s\nmode:%s flags:%s id:%v \n\tparent:%s",
+		"File Size:\t[%d]\nFile Hash:\t%s\nFile Mode:\t%s\nFile Flags:\t%s\nFile Id:\t%v\nFile Parent Information:\n%v\n",
 		f.size,
-		f.name,
 		f.contentHash,
 		f.permission,
 		f.flags,
@@ -39,7 +38,7 @@ func (f file) String() string {
 }
 
 func (f file) Attr() fuse.Attr {
-	log.Printf("File attributes requested: %+v", f)
+	log.Printf("File Attributes Requested: %s\n%+v", f.name, f)
 	att := fuse.Attr{
 		Inode:  uint64(f.inode),
 		Size:   f.size,
@@ -56,7 +55,6 @@ func (f file) Attr() fuse.Attr {
 		Flags: uint32(f.flags),
 	}
 
-	log.Printf("file atributes: %+v", att)
 	return att
 	// files.go:31: file atributes:
 	// {
@@ -94,7 +92,7 @@ func (f file) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
 
 //nodeopener interface contains open(). Node may be used for file or directory
 func (f file) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr fs.Intr) (fs.Handle, fuse.Error) {
-	log.Printf("request: %+v\nobject: %+v", request, f)
+	log.Printf("Node Open Request:\nHeader:\t%+v\nFlags:\t%+v\nObject:\n%+v", request.Header, request.Flags, f)
 	//request.dir = 0
 	//   O_RDONLY int = os.O_RDONLY // open the file read-only.
 	//   O_WRONLY int = os.O_WRONLY // open the file write-only.
@@ -109,12 +107,13 @@ func (f file) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr 
 		return nil, fuse.EINTR
 	default:
 	}
-	log.Printf("\nFile Open Request+++++++++++++++++++++++++++++++++++++++++\n")
-	b, blobErr := services.GetBlob(f.contentHash) //
+	log.Printf("File Open Request: %q", f.name)
+	b, blobErr := services.GetBlob(f.contentHash)
 	if blobErr != nil {
-		log.Printf("get blob error in opening handle %s", blobErr)
+		log.Printf("Get Blob error in opening handle: %s", blobErr)
 		return nil, fuse.ENOENT
 	}
+	log.Printf("Request Information:\nReq Header:\t%v\nReq. Dir:\t%v\nReq Flags:\t%v\n", request.Header, request.Dir, request.Flags)
 
 	handle := openFileHandle{
 		buffer: b,
@@ -124,6 +123,7 @@ func (f file) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr 
 	}
 	f.parent.openHandles[handle.name] = true
 	response.Handle = fuse.HandleID(handle.inode)
-	response.Flags = 1 << 2
+	response.Flags = fuse.OpenResponseFlags(request.Flags)
+	log.Printf("Response Information:\nRes. ID:\t%v\nRes. Flags:\t%v\n", response.Handle, response.Flags)
 	return handle, nil
 }
