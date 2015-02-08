@@ -125,5 +125,5 @@ func (f file) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr 
 	response.Handle = fuse.HandleID(handle.inode)
 	response.Flags = fuse.OpenResponseFlags(request.Flags)
 	log.Printf("Response Information:\nRes. ID:\t%v\nRes. Flags:\t%v\n", response.Handle, response.Flags)
-	return handle, nil
+	return &handle, nil
 }

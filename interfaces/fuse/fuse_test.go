@@ -6,7 +6,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
-	"path/filepath"
+	//"path/filepath"
 	"testing"
 )
 
@@ -17,14 +17,57 @@ func TestPwd(t *testing.T) {
 	t.Logf("pwd: %s", fileInfos)
 }
 
+func TestCreateFile(t *testing.T) {
+	filename := mountpoint + "/TestFile.txt"
+	_, err := os.Create(filename)
+	if err != nil {
+		t.Logf("Could not create file:", err)
+	}
+}
+
 func TestWriteFile(t *testing.T) {
 	filename := mountpoint + "/TestFile.txt"
 	data := []byte("Test File Data 1")
 	perm := os.FileMode(0777)
 	err := ioutil.WriteFile(filename, data, perm)
 	if err != nil {
+		t.Errorf("got err %s", err)
+	}
+}
+
+func TestCWriteFile(t *testing.T) {
+	filename := mountpoint + "/TestFile.txt"
+	_, err := os.Create(filename)
+	if err != nil {
+		t.Logf("Could not create file:", err)
+	}
+	data := []byte("Test File Data 1")
+	perm := os.FileMode(0777)
+	err = ioutil.WriteFile(filename, data, perm)
+	if err != nil {
+		t.Errorf("got err %s", err)
+	}
+}
+
+func TestReadFile(t *testing.T) {
+	path := mountpoint + "/TestPostBlob"
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
 		t.Logf("got err %s", err)
 		t.Fail()
+	}
+	expectedData := []byte("TestPostData")
+	if !(bytes.Equal(data, expectedData)) {
+		t.Logf("Expected:%s, Got:%s", expectedData, data)
+		t.Fail()
+	}
+}
+
+func TestDeleteFile(t *testing.T) {
+	filename := mountpoint + "/TestFile.txt"
+	err := os.Remove(filename)
+	if err != nil {
+		t.Errorf("File could not be deleted:", err)
 	}
 }
 
@@ -56,20 +99,7 @@ func TestWriteFile(t *testing.T) {
 	t.Logf("Bytes written to file: %d", dataWritten)
 }*/
 
-func TestReadFile(t *testing.T) {
-	path := mountpoint + "/TestFile.txt"
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		t.Logf("got err %s", err)
-		t.Fail()
-	}
-	expectedData := []byte("Test File Data 2")
-	if !(bytes.Equal(data, expectedData)) {
-		t.Logf("Expected:%s, Got:%s", expectedData, data)
-		t.Fail()
-	}
-}
-
+/*
 func TestFileFunctions(t *testing.T) {
 
 	const testFile = "textfile.txt"
@@ -116,3 +146,4 @@ func TestFileFunctions(t *testing.T) {
 	}
 
 }
+*/

@@ -31,7 +31,7 @@ func (o openFileHandle) String() string {
 }
 
 //handleReader interface
-func (o openFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadResponse, intr fs.Intr) fuse.Error {
+func (o *openFileHandle) Read(request *fuse.ReadRequest, response *fuse.ReadResponse, intr fs.Intr) fuse.Error {
 	log.Printf("request: %+v\nobject: %+v", request, o)
 	start := request.Offset
 	stop := start + int64(request.Size)
