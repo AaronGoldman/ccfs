@@ -13,19 +13,22 @@ import (
 )
 
 type openFileHandle struct {
-	buffer []byte
-	parent *dir
-	name   string
-	inode  fuse.NodeID //we're not using this field yet
+	buffer    []byte
+	parent    *dir
+	name      string
+	inode     fuse.NodeID //we're not using this field yet
+	publish   bool        //For dir struct only
+	handleNum int         //Temp measure
 }
 
 func (o openFileHandle) String() string {
 	return fmt.Sprintf(
-		"Buf. Length\t[%d]\nHan. Name:\t%s\nHan. ID:\t%d\nBuffer:\t%q\nHandle Parent Information:\n%v\n",
+		"Buf. Length\t[%d]\nHan. Name:\t%s\nHan. ID:\t%d\nBuffer:\t%q\nPublish: \t%v\nHandle Parent Information:\n%v\n",
 		len(o.buffer),
 		o.name,
 		o.inode,
 		o.buffer,
+		o.publish,
 		o.parent,
 	)
 }
@@ -74,17 +77,23 @@ func (o *openFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteR
 	}
 	log.Printf("Buffer: %s", o.buffer)
 	log.Printf("write response size: %v", response.Size)
-	publishErr := o.Publish() //get into loop on parent object
-	if publishErr != nil {
-		log.Printf("error publish in write(): %+v", publishErr)
-		return fuse.EIO
-	}
+	/*
+		publishErr := o.Publish() //get into loop on parent object
+		if publishErr != nil {
+			log.Printf("error publish in write(): %+v", publishErr)
+			return fuse.EIO
+		}
+	*/
 	return nil
 }
 
 func (o openFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse.Error {
 	log.Printf("Request: %+v\nObject: %+v\n", request, o)
-	o.parent.RemoveHandle(o.name)
+	if o.parent.openHandlesList[o.name].handleNum == 1 {
+		o.parent.RemoveHandle(o.name)
+	} else {
+		o.parent.openHandlesList[o.name].handleNum--
+	}
 	request.Respond()
 	return nil //fuse.ENOENT
 }
@@ -92,7 +101,10 @@ func (o openFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse
 //func (o OpenfileHandle)
 func (o openFileHandle) Flush(request *fuse.FlushRequest, intr fs.Intr) fuse.Error {
 	log.Printf("Request: %+v\nHandle Information:\n%+v", request, o)
-	o.Publish()
+	if o.parent.openHandlesList[o.name].publish == true {
+		o.Publish()
+		o.parent.openHandlesList[o.name].publish = false //Prevent multiple publishes
+	}
 	request.Respond()
 	return nil
 }

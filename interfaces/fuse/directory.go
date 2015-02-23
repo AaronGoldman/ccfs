@@ -65,7 +65,8 @@ type dir struct {
 	name        string
 	openHandles map[string]bool
 	//nodeMap      map[fuse.NodeID]*Dir
-	inode fuse.NodeID
+	inode           fuse.NodeID
+	openHandlesList map[string]*openFileHandle
 }
 
 func (d dir) Fsync(r *fuse.FsyncRequest, intr fs.Intr) fuse.Error {
@@ -89,7 +90,8 @@ func (d dir) newDir(Name string) *dir {
 		name:        Name,
 		openHandles: map[string]bool{},
 		//nodeMap:      map[fuse.NodeID]*Dir{},
-		inode: generateInode(d.inode, Name),
+		inode:           generateInode(d.inode, Name),
+		openHandlesList: map[string]*openFileHandle{},
 	}
 	return &p
 }
@@ -277,6 +279,7 @@ func (d dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 
 func (d dir) RemoveHandle(name string) {
 	delete(d.openHandles, name)
+	delete(d.openHandlesList, name)
 }
 
 //creates new file only
@@ -307,13 +310,16 @@ func (d dir) Create(
 		name:        request.Name,
 		inode:       generateInode(d.inode, request.Name),
 		size:        0,
-		flags:       fuse.OpenReadWrite,
+		flags:       request.Flags & 7,
 	}
+
 	handle := openFileHandle{
-		buffer: []byte{},
-		parent: &d,
-		name:   request.Name,
-		inode:  node.inode,
+		buffer:    []byte{},
+		parent:    &d,
+		name:      request.Name,
+		inode:     node.inode,
+		publish:   true,
+		handleNum: 1,
 	}
 
 	switch {
@@ -332,8 +338,9 @@ func (d dir) Create(
 		fallthrough //-- file doesn't exist
 	case os.O_CREATE&int(request.Flags) == os.O_CREATE:
 		d.openHandles[handle.name] = true
+		d.openHandlesList[handle.name] = &handle
 		response.Flags = 1 << 2
-		return node, handle, nil
+		return &node, &handle, nil
 		// case O_WRONLY, O_APPEND: //OPEN AN EMPTY FILE
 		// 		if err == nil {
 		// 	 	return nil, fuse.EEXIST
@@ -363,26 +370,26 @@ func (d dir) Publish(h objects.HCID, name string, typeString string) (err error)
 
 		newCommit := c.Update(newList.Hash())
 		//=========================================================================
-		if verbosity == 1 {
-			log.Printf(
-				"Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------",
-				newList.Hash(),
-				newList,
-			)
-		}
+		//if verbosity == 1 {
+		log.Printf(
+			"Posting list %s\n-----BEGIN LIST-------\n%s\n-------END LIST-------",
+			newList.Hash(),
+			newList,
+		)
+		//}
 		//=========================================================================
 		el := services.PostList(newList)
 		if el != nil {
 			return listErr
 		}
 		//=========================================================================
-		if verbosity == 1 {
-			log.Printf(
-				"Posting commit %s\n-----BEGIN COMMIT-----\n%s\n-------END COMMIT-----",
-				newCommit.Hash(),
-				newCommit,
-			)
-		}
+		//if verbosity == 1 {
+		log.Printf(
+			"Posting commit %s\n-----BEGIN COMMIT-----\n%s\n-------END COMMIT-----",
+			newCommit.Hash(),
+			newCommit,
+		)
+		//}
 		//=========================================================================
 		ec := services.PostCommit(newCommit)
 		if ec != nil {

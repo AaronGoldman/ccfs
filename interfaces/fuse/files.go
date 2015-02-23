@@ -91,7 +91,7 @@ func (f file) ReadAll(intr fs.Intr) ([]byte, fuse.Error) {
 }
 
 //nodeopener interface contains open(). Node may be used for file or directory
-func (f file) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr fs.Intr) (fs.Handle, fuse.Error) {
+func (f *file) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr fs.Intr) (fs.Handle, fuse.Error) {
 	log.Printf("Node Open Request:\nHeader:\t%+v\nFlags:\t%+v\nObject:\n%+v", request.Header, request.Flags, f)
 	//request.dir = 0
 	//   O_RDONLY int = os.O_RDONLY // open the file read-only.
@@ -115,13 +115,29 @@ func (f file) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr 
 	}
 	log.Printf("Request Information:\nReq Header:\t%v\nReq. Dir:\t%v\nReq Flags:\t%v\n", request.Header, request.Dir, request.Flags)
 
+	//Change current file flags to match request flags
+	f.flags = request.Flags & 7
+
+	//Create handle
 	handle := openFileHandle{
-		buffer: b,
-		parent: f.parent,
-		name:   f.name,
-		inode:  f.inode,
+		buffer:    b,
+		parent:    f.parent,
+		name:      f.name,
+		inode:     f.inode,
+		publish:   true,
+		handleNum: 1,
 	}
-	f.parent.openHandles[handle.name] = true
+
+	//Check to see if handle already exists
+	if f.parent.openHandles[f.name] == true {
+		log.Printf("File Handle Already Exists\n")
+		handle.handleNum = f.parent.openHandlesList[f.name].handleNum + 1
+		f.parent.openHandlesList[f.name].handleNum++
+	} else {
+		f.parent.openHandles[f.name] = true
+		f.parent.openHandlesList[handle.name] = &handle
+	}
+
 	response.Handle = fuse.HandleID(handle.inode)
 	response.Flags = fuse.OpenResponseFlags(request.Flags)
 	log.Printf("Response Information:\nRes. ID:\t%v\nRes. Flags:\t%v\n", response.Handle, response.Flags)

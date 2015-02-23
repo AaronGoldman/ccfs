@@ -83,13 +83,14 @@ func (fs_obj fileSystem) Root() (fs.Node, fuse.Error) { //returns a directory
 		//path: "/",
 		//trunc:        fs_obj.hkid,
 		//branch:       fs_obj.hkid,
-		permission:  perm,
-		contentType: "commit",
-		leaf:        fs_obj.hkid,
-		parent:      nil,
-		name:        "/",
-		openHandles: map[string]bool{},
-		inode:       1,
+		permission:      perm,
+		contentType:     "commit",
+		leaf:            fs_obj.hkid,
+		parent:          nil,
+		name:            "/",
+		openHandles:     map[string]bool{},
+		inode:           1,
+		openHandlesList: map[string]*openFileHandle{},
 	}, nil
 }
 
