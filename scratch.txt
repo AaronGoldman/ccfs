@@ -3,6 +3,7 @@ sudo docker build .
 sudo docker run -i -t -p=8080:8080 <hash-from-build-cmd>
 
 rm -r $CCFS/bin/{blobs,commits,keys,tags}
+grep -Rn "" $CCFS --include=*.go
 
 go tool pprof --text ../bin/ccfs.exe ../bin/prof.out |less
 

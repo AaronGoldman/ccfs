@@ -18,7 +18,7 @@ import (
 type Commit struct {
 	ListHash  HCID
 	Version   int64
-	Parents   parents
+	Parents   Parents
 	Hkid      HKID
 	Signature []byte //131 byte max
 }
@@ -71,7 +71,7 @@ func (c Commit) Verify() bool {
 
 //Update the Commit to point at the list who's hash is passed in
 func (c Commit) Update(listHash HCID) Commit {
-	c.Parents = parents{c.Hash()}
+	c.Parents = Parents{c.Hash()}
 	c.Version = newVersion()
 	//c.Hkid = c.Hkid
 	c.ListHash = listHash
@@ -81,7 +81,7 @@ func (c Commit) Update(listHash HCID) Commit {
 
 //Merge the Commit with the slice of Commit passed in
 func (c Commit) Merge(pCommits []Commit, listHash HCID) Commit {
-	c.Parents = parents{c.Hash()}
+	c.Parents = Parents{c.Hash()}
 	for _, pCommit := range pCommits {
 		c.Parents = append(c.Parents, pCommit.Hash())
 	}
@@ -92,7 +92,7 @@ func (c Commit) Merge(pCommits []Commit, listHash HCID) Commit {
 	return c
 }
 
-func (c Commit) commitSign(listHash []byte, version int64, cparents parents, hkid []byte) (signature []byte) {
+func (c Commit) commitSign(listHash []byte, version int64, cparents Parents, hkid []byte) (signature []byte) {
 	ObjectHash := c.genCommitHash(listHash, version, cparents, hkid)
 	prikey, err := geterPoster.getPrivateKeyForHkid(hkid)
 	ecdsaprikey := ecdsa.PrivateKey(*prikey)
@@ -107,7 +107,7 @@ func (c Commit) commitSign(listHash []byte, version int64, cparents parents, hki
 func (c Commit) genCommitHash(
 	listHash HCID,
 	version int64,
-	cparents parents,
+	cparents Parents,
 	hkid HKID,
 ) (ObjectHash []byte) {
 	var h = sha256.New()
@@ -136,6 +136,7 @@ func CommitFromBytes(bytes []byte) (c Commit, err error) {
 	//build object
 	commitStrings := strings.Split(string(bytes), ",\n")
 	if len(commitStrings) != 5 {
+		log.Printf("%q\n", bytes)
 		return c, fmt.Errorf("Could not parse commit bytes")
 	}
 	listHash, err := hex.DecodeString(commitStrings[0])
@@ -147,7 +148,7 @@ func CommitFromBytes(bytes []byte) (c Commit, err error) {
 		return
 	}
 	parentSplit := strings.Split(commitStrings[2], ",")
-	parsedParents := parents{}
+	parsedParents := Parents{}
 	for _, singlParentString := range parentSplit {
 		parsedHCID, err1 := HcidFromHex(singlParentString)
 		if err1 != nil {

@@ -123,9 +123,13 @@ func HkidFromDString(str string, base int) HKID {
 	return HkidFromD(*D)
 }
 
-type parents []HCID
+type Parents []HCID
 
-func (p parents) String() string {
+func (p Parents) String() string {
+	if len(p) == 0 {
+		return Blob{}.Hash().String()
+	}
+
 	parentString := ""
 	for _, pHCID := range p {
 		parentString = parentString + "," + pHCID.Hex()

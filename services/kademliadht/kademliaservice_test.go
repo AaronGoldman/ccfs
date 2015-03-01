@@ -3,17 +3,39 @@ package kademliadht
 
 import (
 	"bytes"
+	"log"
 	"testing"
 
 	"github.com/AaronGoldman/ccfs/objects"
+	"github.com/AaronGoldman/ccfs/services"
+	"github.com/AaronGoldman/ccfs/services/localfile"
+	"github.com/AaronGoldman/ccfs/services/timeout"
 )
+
+func init() {
+	log.SetFlags(log.Lshortfile | log.Ltime | log.Ldate)
+	localfile.Start()
+	timeout.Start()
+	Start()
+	objects.RegisterGeterPoster(
+		services.GetPublicKeyForHkid,
+		services.GetPrivateKeyForHkid,
+		services.PostKey,
+		services.PostBlob,
+	)
+}
 
 func TestKademliaserviceBlob(t *testing.T) {
 	indata := objects.Blob("TestPostData")
 	Instance.PostBlob(indata)
 	outdata, err := Instance.GetBlob(indata.Hash())
-	if !bytes.Equal(indata, outdata) || err != nil {
-		t.Errorf("\nExpected:%s\nGot:%s\nErr:%s", indata, outdata, err)
+
+	if err != nil {
+		t.Errorf("\nErr:%s", err)
+	}
+
+	if !bytes.Equal(indata, outdata) {
+		t.Errorf("\nExpected:%s\nGot:%s", indata, outdata)
 	}
 }
 
@@ -26,6 +48,7 @@ func TestKademliaserviceTag(t *testing.T) {
 		b.Hash(),
 		"blob",
 		"TestPostBlob",
+		[]objects.HCID{},
 		domainHkid,
 	)
 	Instance.PostTag(intag)
@@ -33,13 +56,22 @@ func TestKademliaserviceTag(t *testing.T) {
 		domainHkid,
 		"TestPostBlob",
 	)
-	if err != nil || !outtag.Verify() /*|| !bytes.Equal(outtag.Hkid(), domainHkid)*/ {
+	if err != nil {
+		t.Errorf("Get Tag Err: %s", err)
+	}
+
+	if !outtag.Verify() /*|| !bytes.Equal(outtag.Hkid(), domainHkid)*/ {
 		t.Errorf(
-			"\nExpected:%s\nGot:%s\nErr:%v\nVerify:%v",
+			"\nVerify:%v",
+			outtag.Verify(),
+		)
+	}
+
+	if !bytes.Equal(intag.Bytes(), outtag.Bytes()) {
+		t.Errorf(
+			"\nExpected:%s\nGot:%s",
 			intag,
 			outtag,
-			err,
-			outtag.Verify(),
 		)
 	}
 }
@@ -57,8 +89,15 @@ func TestKademliaserviceCommit(t *testing.T) {
 	incommit := objects.NewCommit(l.Hash(), repoHkid)
 	Instance.PostCommit(incommit)
 	outcommit, err := Instance.GetCommit(repoHkid)
-	if err != nil || !outcommit.Verify() {
-		t.Errorf("\nExpected:%v\nGot:%v\nErr:%s\nVerify:%t", incommit, outcommit, err, outcommit.Verify())
+
+	if err != nil {
+		t.Fatalf("\nGet Commit Err:%s\n", err)
+	}
+	if !outcommit.Verify() {
+		t.Fatalf("\nVerify:%t", outcommit.Verify())
+	}
+	if !bytes.Equal(incommit.Bytes(), outcommit.Bytes()) {
+		t.Fatalf("\nExpected:%v\nGot:%v", incommit, outcommit)
 	}
 }
 

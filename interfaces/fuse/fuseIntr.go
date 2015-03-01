@@ -8,14 +8,14 @@ import (
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
-	"bazil.org/fuse/fs/fstestutil"
+	//"bazil.org/fuse/fs/fstestutil"
 )
 
 var running bool
 
 //Start mounts the local seed on the local file system
 func Start() {
-	fstestutil.DebugByDefault()
+	//fstestutil.DebugByDefault()
 	go startFSintegration()
 	running = true
 }

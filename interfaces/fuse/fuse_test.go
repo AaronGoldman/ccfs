@@ -6,29 +6,77 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
-	"path/filepath"
+	//"path/filepath"
 	"testing"
 )
 
 const mountpoint = "../../mountpoint"
+
+func TestList(t *testing.T) {
+	t.Logf("List of Available Tests\n")
+	t.Logf("-------------------------\n\n")
+	t.Logf("TestPwd         - Verify Working Directory\n")
+	t.Logf("TestCreateFile  - Creates an empty file in the root directory\n")
+	t.Logf("TestWriteFile   - Write to a file using ioutil\n")
+	t.Logf("                - The file will be created in root if it does not exist\n")
+	t.Logf("TestCWriteFile  - Same as TestWriteFile except creation of file is\n")
+	t.Logf("                - done seperate from Write")
+	t.Logf("-------------------------\n\n")
+	t.Error("False failure to force list print")
+}
 
 func TestPwd(t *testing.T) {
 	fileInfos, _ := ioutil.ReadDir(mountpoint)
 	t.Logf("pwd: %s", fileInfos)
 }
 
-func TestWriteFile(t *testing.T) {
+func TestCreateFile(t *testing.T) {
+	filename := mountpoint + "/TestCreateFile.txt"
+	_, err := os.Create(filename)
+	if err != nil {
+		t.Logf("Could not create file:", err)
+	}
+}
+
+func TestriteFile(t *testing.T) {
 	filename := mountpoint + "/TestFile.txt"
-	data := []byte("Test File Data")
+	data := []byte("Test File Data 1")
 	perm := os.FileMode(0777)
 	err := ioutil.WriteFile(filename, data, perm)
+	if err != nil {
+		t.Errorf("got err %s", err)
+	}
+}
+
+func TestReadFile(t *testing.T) {
+	path := mountpoint + "/TestFile.txt"
+	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		t.Logf("got err %s", err)
 		t.Fail()
 	}
+	expectedData := []byte("Test File Data 1")
+	if !(bytes.Equal(data, expectedData)) {
+		t.Logf("Expected:%s, Got:%s", expectedData, data)
+		t.Fail()
+	}
 }
 
-/*func TestWriteFileOS(t *testing.T) {
+func TestWriteFile(t *testing.T) {
+	filename := mountpoint + "/TestFile.txt"
+	_, err := os.Create(filename)
+	if err != nil {
+		t.Logf("Could not create file:", err)
+	}
+	data := []byte("Test File Data 1")
+	perm := os.FileMode(0777)
+	err = ioutil.WriteFile(filename, data, perm)
+	if err != nil {
+		t.Errorf("got err %s", err)
+	}
+}
+
+func TestriteFileOS(t *testing.T) {
 	filename := mountpoint + "/TestFileOS.txt"
 
 	file, err := os.Create(filename) //Open(filename)
@@ -54,22 +102,32 @@ func TestWriteFile(t *testing.T) {
 		t.Errorf("Could Not Write To File - %s", err)
 	}
 	t.Logf("Bytes written to file: %d", dataWritten)
-}*/
+}
 
+/*
 func TestReadFile(t *testing.T) {
-	path := mountpoint + "/TestFile.txt"
+	path := mountpoint + "/TestPostBlob"
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		t.Logf("got err %s", err)
 		t.Fail()
 	}
-	expectedData := []byte("Test File Data")
+	expectedData := []byte("TestPostData")
 	if !(bytes.Equal(data, expectedData)) {
 		t.Logf("Expected:%s, Got:%s", expectedData, data)
 		t.Fail()
 	}
 }
+*/
+func TestDeleteFile(t *testing.T) {
+	filename := mountpoint + "/TestFile.txt"
+	err := os.Remove(filename)
+	if err != nil {
+		t.Errorf("File could not be deleted:", err)
+	}
+}
 
+/*
 func TestFileFunctions(t *testing.T) {
 
 	const testFile = "textfile.txt"
@@ -115,4 +173,4 @@ func TestFileFunctions(t *testing.T) {
 		return
 	}
 
-}
+}*/

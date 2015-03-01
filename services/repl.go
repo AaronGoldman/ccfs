@@ -75,7 +75,6 @@ func Repl() {
 		}()
 	label:
 		for ContinueCLI {
-
 			select {
 			case line := <-ch:
 				tokens := strings.SplitN(line, " ", 2)

@@ -10,6 +10,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
+	"unicode"
 
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
@@ -72,12 +74,22 @@ func (k kademliaservice) ID() string {
 }
 
 func (k kademliaservice) Command(command string) {
-	switch command {
+	tokens := strings.FieldsFunc(command, unicode.IsSpace)
+	if len(tokens) == 0 {
+		return
+	}
+	switch tokens[0] {
 	case "start":
 		Start()
 
 	case "stop":
 		Stop()
+
+	case "set":
+		if len(tokens) > 1 {
+			k.url = fmt.Sprintf("http://%s/?\n", tokens[1])
+			fmt.Printf("URL set to: %s", k.url)
+		}
 
 	default:
 		fmt.Printf("Kademlia Service Command Line\n")
@@ -214,5 +226,5 @@ func (k kademliaservice) postobject(values url.Values, b []byte) (data []byte, e
 }
 
 func kademliaservicefactory() kademliaservice {
-	return kademliaservice{url: "http://128.61.21.129:5000/?"}
+	return kademliaservice{url: "http://127.0.0.1:5000/?"}
 }
