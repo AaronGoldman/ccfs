@@ -116,30 +116,42 @@ func (f *file) Open(request *fuse.OpenRequest, response *fuse.OpenResponse, intr
 	log.Printf("Request Information:\nReq Header:\t%v\nReq. Dir:\t%v\nReq Flags:\t%v\n", request.Header, request.Dir, request.Flags)
 
 	//Change current file flags to match request flags
-	f.flags = request.Flags & 7
+	//f.flags = request.Flags & 7
 
 	//Create handle
 	handle := openFileHandle{
 		buffer:    b,
 		parent:    f.parent,
+		file:      f,
 		name:      f.name,
 		inode:     f.inode,
 		publish:   true,
 		handleNum: 1,
 	}
+	//Flag read requests to not publish
+	if request.Flags == 0 {
+		handle.publish = false
+	}
 
 	//Check to see if handle already exists
-	if f.parent.openHandles[f.name] == true {
+	_, found := f.parent.openHandles[f.name]
+	if found == true {
 		log.Printf("File Handle Already Exists\n")
-		handle.handleNum = f.parent.openHandlesList[f.name].handleNum + 1
-		f.parent.openHandlesList[f.name].handleNum++
+		handle.handleNum = f.parent.openHandles[f.name].handleNum + 1
+		f.parent.openHandles[f.name].handleNum++
 	} else {
-		f.parent.openHandles[f.name] = true
-		f.parent.openHandlesList[handle.name] = &handle
+		f.parent.openHandles[handle.name] = &handle
 	}
 
 	response.Handle = fuse.HandleID(handle.inode)
 	response.Flags = fuse.OpenResponseFlags(request.Flags)
 	log.Printf("Response Information:\nRes. ID:\t%v\nRes. Flags:\t%v\n", response.Handle, response.Flags)
 	return &handle, nil
+}
+
+func (f *file) Update(o *openFileHandle, blobHash objects.HCID) {
+
+	log.Printf("Updating File Information")
+	f.size = uint64(len(o.buffer))
+	f.contentHash = blobHash
 }

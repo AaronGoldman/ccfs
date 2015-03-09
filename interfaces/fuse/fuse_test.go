@@ -12,19 +12,20 @@ import (
 
 const mountpoint = "../../mountpoint"
 
+/*
 func TestList(t *testing.T) {
 	t.Logf("List of Available Tests\n")
 	t.Logf("-------------------------\n\n")
 	t.Logf("TestPwd         - Verify Working Directory\n")
 	t.Logf("TestCreateFile  - Creates an empty file in the root directory\n")
-	t.Logf("TestWriteFile   - Write to a file using ioutil\n")
+	t.Logf("TestWriteFile1   - Write to a file using ioutil\n")
 	t.Logf("                - The file will be created in root if it does not exist\n")
-	t.Logf("TestCWriteFile  - Same as TestWriteFile except creation of file is\n")
+	t.Logf("TestWriteFile2  - Same as TestWriteFile except creation of file is\n")
 	t.Logf("                - done seperate from Write")
 	t.Logf("-------------------------\n\n")
 	t.Error("False failure to force list print")
 }
-
+*/
 func TestPwd(t *testing.T) {
 	fileInfos, _ := ioutil.ReadDir(mountpoint)
 	t.Logf("pwd: %s", fileInfos)
@@ -38,9 +39,10 @@ func TestCreateFile(t *testing.T) {
 	}
 }
 
-func TestriteFile(t *testing.T) {
-	filename := mountpoint + "/TestFile.txt"
-	data := []byte("Test File Data 1")
+//Test file create and write using ioutil
+func TestWriteFile1(t *testing.T) {
+	filename := mountpoint + "/TestFile1.txt"
+	data := []byte("TestFile1 Data")
 	perm := os.FileMode(0777)
 	err := ioutil.WriteFile(filename, data, perm)
 	if err != nil {
@@ -48,27 +50,29 @@ func TestriteFile(t *testing.T) {
 	}
 }
 
-func TestReadFile(t *testing.T) {
-	path := mountpoint + "/TestFile.txt"
+//Test file read using ioutil
+func TestReadFile1(t *testing.T) {
+	path := mountpoint + "/TestFile1.txt"
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		t.Logf("got err %s", err)
 		t.Fail()
 	}
-	expectedData := []byte("Test File Data 1")
+	expectedData := []byte("TestFile1 Data")
 	if !(bytes.Equal(data, expectedData)) {
 		t.Logf("Expected:%s, Got:%s", expectedData, data)
 		t.Fail()
 	}
 }
 
-func TestWriteFile(t *testing.T) {
-	filename := mountpoint + "/TestFile.txt"
+//Test file write by creating file using os and writing using ioutil
+func TestWriteFile2(t *testing.T) {
+	filename := mountpoint + "/TestFile2.txt"
 	_, err := os.Create(filename)
 	if err != nil {
 		t.Logf("Could not create file:", err)
 	}
-	data := []byte("Test File Data 1")
+	data := []byte("TestFile2 Data")
 	perm := os.FileMode(0777)
 	err = ioutil.WriteFile(filename, data, perm)
 	if err != nil {
@@ -76,56 +80,63 @@ func TestWriteFile(t *testing.T) {
 	}
 }
 
-func TestriteFileOS(t *testing.T) {
-	filename := mountpoint + "/TestFileOS.txt"
-
-	file, err := os.Create(filename) //Open(filename)
-	if err != nil {
-		t.Errorf("Could Not Create File - %s", err)
-	}
-	//file, err = os.Open(filename)
-	//if err != nil {
-	//	t.Errorf("Could Not Open File - %s", err)
-	//}else{
-	//	fileInfo, fileInfoError:= file.Stat()
-	//	if(fileInfoError != nil){
-	//		t.Errorf("Error retrieving file information - %s", err)
-	//	} else{
-	//		t.Logf("File Name: %s", fileInfo.Name)
-	//		t.Logf("File Size: %v", fileInfo.Size)
-	//		t.Logf("File Mode: %v", fileInfo.Mode)
-	//	}
-	//}
-	data := []byte("Test File Data")
-	dataWritten, err := file.Write(data)
-	if err != nil {
-		t.Errorf("Could Not Write To File - %s", err)
-	}
-	t.Logf("Bytes written to file: %d", dataWritten)
-}
-
-/*
-func TestReadFile(t *testing.T) {
-	path := mountpoint + "/TestPostBlob"
+//Test file read using ioutil
+func TestReadFile2(t *testing.T) {
+	path := mountpoint + "/TestFile2.txt"
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		t.Logf("got err %s", err)
 		t.Fail()
 	}
-	expectedData := []byte("TestPostData")
+	expectedData := []byte("TestFile2 Data")
 	if !(bytes.Equal(data, expectedData)) {
 		t.Logf("Expected:%s, Got:%s", expectedData, data)
 		t.Fail()
 	}
 }
-*/
-func TestDeleteFile(t *testing.T) {
-	filename := mountpoint + "/TestFile.txt"
-	err := os.Remove(filename)
+
+//Test file write using os
+func TestWriteFile3(t *testing.T) {
+	filename := mountpoint + "/TestFile3.txt"
+	file, err := os.Create(filename) //Open(filename)
 	if err != nil {
-		t.Errorf("File could not be deleted:", err)
+		t.Errorf("Could Not Create File - %s", err)
+	}
+	data := []byte("TestFile3 Data")
+	_, err = file.Write(data)
+	if err != nil {
+		t.Errorf("Could Not Write To File - %s", err)
 	}
 }
+
+//Test file read using ioutil
+func TestReadFile3(t *testing.T) {
+	path := mountpoint + "/TestFile3.txt"
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Logf("got err %s", err)
+		t.Fail()
+	}
+	expectedData := []byte("TestFile3 Data")
+	if !(bytes.Equal(data, expectedData)) {
+		t.Logf("Expected:%s, Got:%s", expectedData, data)
+		t.Fail()
+	}
+}
+
+//file, err = os.Open(filename)
+//if err != nil {
+//	t.Errorf("Could Not Open File - %s", err)
+//}else{
+//	fileInfo, fileInfoError:= file.Stat()
+//	if(fileInfoError != nil){
+//		t.Errorf("Error retrieving file information - %s", err)
+//	} else{
+//		t.Logf("File Name: %s", fileInfo.Name)
+//		t.Logf("File Size: %v", fileInfo.Size)
+//		t.Logf("File Mode: %v", fileInfo.Mode)
+//	}
+//}
 
 /*
 func TestFileFunctions(t *testing.T) {
@@ -173,4 +184,12 @@ func TestFileFunctions(t *testing.T) {
 		return
 	}
 
+}
+
+func TestDeleteFile(t *testing.T) {
+	filename := mountpoint + "/TestFile.txt"
+	err := os.Remove(filename)
+	if err != nil {
+		t.Errorf("File could not be deleted:", err)
+	}
 }*/

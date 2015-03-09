@@ -15,6 +15,7 @@ import (
 type openFileHandle struct {
 	buffer    []byte
 	parent    *dir
+	file      *file
 	name      string
 	inode     fuse.NodeID //we're not using this field yet
 	publish   bool        //For dir struct only
@@ -77,22 +78,16 @@ func (o *openFileHandle) Write(request *fuse.WriteRequest, response *fuse.WriteR
 	}
 	log.Printf("Buffer: %s", o.buffer)
 	log.Printf("write response size: %v", response.Size)
-	/*
-		publishErr := o.Publish() //get into loop on parent object
-		if publishErr != nil {
-			log.Printf("error publish in write(): %+v", publishErr)
-			return fuse.EIO
-		}
-	*/
+
 	return nil
 }
 
 func (o openFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse.Error {
 	log.Printf("Request: %+v\nObject: %+v\n", request, o)
-	if o.parent.openHandlesList[o.name].handleNum == 1 {
+	if o.parent.openHandles[o.name].handleNum == 1 {
 		o.parent.RemoveHandle(o.name)
 	} else {
-		o.parent.openHandlesList[o.name].handleNum--
+		o.parent.openHandles[o.name].handleNum--
 	}
 	request.Respond()
 	return nil //fuse.ENOENT
@@ -101,9 +96,9 @@ func (o openFileHandle) Release(request *fuse.ReleaseRequest, intr fs.Intr) fuse
 //func (o OpenfileHandle)
 func (o openFileHandle) Flush(request *fuse.FlushRequest, intr fs.Intr) fuse.Error {
 	log.Printf("Request: %+v\nHandle Information:\n%+v", request, o)
-	if o.parent.openHandlesList[o.name].publish == true {
+	if o.parent.openHandles[o.name].publish == true && o.publish == true {
 		o.Publish()
-		o.parent.openHandlesList[o.name].publish = false //Prevent multiple publishes
+		o.parent.openHandles[o.name].publish = false //Prevent multiple publishes
 	}
 	request.Respond()
 	return nil
@@ -118,6 +113,11 @@ func (o openFileHandle) Publish() error { //name=file name
 	postblobErr := services.PostBlob(bfrblob)
 	if postblobErr != nil {
 		return postblobErr
+	}
+
+	//Protection against nil pointer(note that this should not be able to occur)
+	if o.file != nil {
+		o.file.Update(&o, bfrblob.Hash())
 	}
 	o.parent.Publish(bfrblob.Hash(), o.name, "blob")
 	return postblobErr

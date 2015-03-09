@@ -63,10 +63,9 @@ type dir struct {
 	contentType string
 	parent      *dir
 	name        string
-	openHandles map[string]bool
+	openHandles map[string]*openFileHandle
 	//nodeMap      map[fuse.NodeID]*Dir
-	inode           fuse.NodeID
-	openHandlesList map[string]*openFileHandle
+	inode fuse.NodeID
 }
 
 func (d dir) Fsync(r *fuse.FsyncRequest, intr fs.Intr) fuse.Error {
@@ -88,10 +87,9 @@ func (d dir) newDir(Name string) *dir {
 		contentType: "list",
 		parent:      &d,
 		name:        Name,
-		openHandles: map[string]bool{},
+		openHandles: map[string]*openFileHandle{},
 		//nodeMap:      map[fuse.NodeID]*Dir{},
-		inode:           generateInode(d.inode, Name),
-		openHandlesList: map[string]*openFileHandle{},
+		inode: generateInode(d.inode, Name),
 	}
 	return &p
 }
@@ -279,7 +277,6 @@ func (d dir) Lookup(name string, intr fs.Intr) (fs.Node, fuse.Error) {
 
 func (d dir) RemoveHandle(name string) {
 	delete(d.openHandles, name)
-	delete(d.openHandlesList, name)
 }
 
 //creates new file only
@@ -316,6 +313,7 @@ func (d dir) Create(
 	handle := openFileHandle{
 		buffer:    []byte{},
 		parent:    &d,
+		file:      &node,
 		name:      request.Name,
 		inode:     node.inode,
 		publish:   true,
@@ -337,8 +335,7 @@ func (d dir) Create(
 		}
 		fallthrough //-- file doesn't exist
 	case os.O_CREATE&int(request.Flags) == os.O_CREATE:
-		d.openHandles[handle.name] = true
-		d.openHandlesList[handle.name] = &handle
+		d.openHandles[handle.name] = &handle
 		response.Flags = 1 << 2
 		return &node, &handle, nil
 		// case O_WRONLY, O_APPEND: //OPEN AN EMPTY FILE
@@ -525,13 +522,15 @@ func (d dir) LookupCommit(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Nod
 		contentType: listEntry.TypeString,
 		parent:      &d,
 		name:        name,
-		openHandles: map[string]bool{},
+		openHandles: map[string]*openFileHandle{},
 		inode:       ino,
 	}, nil
 
 }
 
 func (d dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, fuse.Error) {
+	log.Println("List Lookup")
+	log.Printf("Request Name:\t%s\nRequest Node:\t%v\n", name, nodeID)
 	select {
 	case <-intr:
 		return nil, fuse.EINTR
@@ -554,6 +553,7 @@ func (d dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node,
 	}
 
 	if listEntry.TypeString == "blob" {
+		log.Println("Blob lookup")
 		return file{
 			contentHash: listEntry.Hash.(objects.HCID),
 			permission:  d.permission,
@@ -568,8 +568,8 @@ func (d dir) LookupList(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node,
 		permission:  d.permission,
 		contentType: listEntry.TypeString,
 		parent:      &d,
-		openHandles: map[string]bool{},
 		name:        name,
+		openHandles: map[string]*openFileHandle{},
 		inode:       generateInode(d.parent.inode, name),
 	}, nil
 
@@ -616,8 +616,8 @@ func (d dir) LookupTag(name string, intr fs.Intr, nodeID fuse.NodeID) (fs.Node, 
 		permission:  perm,
 		contentType: t.TypeString,
 		parent:      &d,
-		openHandles: map[string]bool{},
 		name:        name,
+		openHandles: map[string]*openFileHandle{},
 		inode:       generateInode(d.parent.inode, name),
 	}, nil
 }
