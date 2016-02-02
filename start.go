@@ -6,13 +6,13 @@ import (
 	"os/signal"
 
 	"github.com/AaronGoldman/ccfs/interfaces/crawler"
-	"github.com/AaronGoldman/ccfs/interfaces/fuse"
+	//"github.com/AaronGoldman/ccfs/interfaces/fuse"
 	"github.com/AaronGoldman/ccfs/interfaces/web"
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 	"github.com/AaronGoldman/ccfs/services/appsscript"
 	"github.com/AaronGoldman/ccfs/services/directhttp"
-	"github.com/AaronGoldman/ccfs/services/googledrive"
+	//"github.com/AaronGoldman/ccfs/services/googledrive"
 	"github.com/AaronGoldman/ccfs/services/kademliadht"
 	"github.com/AaronGoldman/ccfs/services/localfile"
 	"github.com/AaronGoldman/ccfs/services/multicast"
@@ -45,18 +45,18 @@ func start() {
 		web.Start()
 		crawler.Start()
 	}
-	if *Flags.mount {
-		fuse.Start()
-	}
+	//if *Flags.mount {
+	//	fuse.Start()
+	//}
 	if *Flags.dht {
 		kademliadht.Start()
 	}
 	if *Flags.apps {
 		appsscript.Start()
 	}
-	if *Flags.drive {
-		googledrive.Start()
-	}
+	//if *Flags.drive {
+	//	googledrive.Start()
+	//}
 	if *Flags.direct {
 		directhttp.Start()
 	}
