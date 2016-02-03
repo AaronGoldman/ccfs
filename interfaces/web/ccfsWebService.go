@@ -36,6 +36,7 @@ func BlobServerStart() {
 		),
 	)
 	http.ListenAndServe(":8080", nil)
+	fmt.Println("Listening on :8080")
 }
 
 //CollectionServerStart starts a server for full CCFS queries HKID/path
