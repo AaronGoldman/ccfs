@@ -100,6 +100,9 @@ func HkidFromHex(s string) (HKID, error) {
 //HkidFromD builds a HKID using a number in a big int
 func HkidFromD(D big.Int) HKID {
 	privateKey, err := PrivateKeyFromD(D)
+	if err != nil {
+		log.Panic(err)
+	}
 	publicKey := elliptic.Marshal(privateKey.PublicKey.Curve,
 		privateKey.PublicKey.X, privateKey.PublicKey.Y)
 	hkid := privateKey.Hkid()

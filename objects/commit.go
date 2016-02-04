@@ -56,7 +56,7 @@ func (c Commit) Log() {
 
 //Verify returns wether the Commit has a valid Signature
 func (c Commit) Verify() bool {
-	if c == nil { //  nil Commit are not valid
+	if c.Signature == nil { //  nil Commit are not valid
 		return false
 	}
 	ObjectHash := c.genCommitHash(c.ListHash, c.Version, c.Parents, c.Hkid)
@@ -64,9 +64,9 @@ func (c Commit) Verify() bool {
 	if pubkey.Curve == nil || pubkey.X == nil || pubkey.Y == nil {
 		return false
 	}
-	r, s := elliptic.Unmarshal(pubkey.Curve, c.Signature)
+	r, s := Unmarshal(pubkey.Curve, c.Signature)
 	//log.Println(pubkey, " pubkey\n", ObjectHash, " ObjectHash\n", r, " r\n", s, "s")
-	if r.BitLen() == 0 || s.BitLen() == 0 {
+	if r == nil || s == nil || r.BitLen() == 0 || s.BitLen() == 0 {
 		return false
 	}
 	return ecdsa.Verify(&pubkey, ObjectHash, r, s)
