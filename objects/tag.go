@@ -184,7 +184,7 @@ func TagFromBytes(bytes []byte) (t Tag, err error) {
 	//build object
 	tagStrings := strings.Split(string(bytes), ",\n")
 	if len(tagStrings) != 7 {
-		return t, fmt.Errorf("Could not parse tag bytes")
+		return t, fmt.Errorf("Could not parse tag bytes:\t%q", bytes)
 	}
 	//tagHashBytes, err := hex.DecodeString(tagStrings[0])
 	//if err != nil {

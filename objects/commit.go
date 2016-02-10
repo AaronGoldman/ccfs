@@ -140,7 +140,7 @@ func CommitFromBytes(bytes []byte) (c Commit, err error) {
 	commitStrings := strings.Split(string(bytes), ",\n")
 	if len(commitStrings) != 5 {
 		log.Printf("%q\n", bytes)
-		return c, fmt.Errorf("Could not parse commit bytes")
+		return c, fmt.Errorf("Could not parse commit bytes:\t%q", bytes)
 	}
 	listHash, err := hex.DecodeString(commitStrings[0])
 	if err != nil {
