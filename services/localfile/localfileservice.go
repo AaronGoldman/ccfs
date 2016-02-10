@@ -139,10 +139,10 @@ func (lfs localfileservice) GetTag(h objects.HKID, namesegment string) (t object
 	//ToDo Validate input
 	matches, err := filepath.Glob(fmt.Sprintf("bin/tags/%s/%s/*",
 		h.Hex(), namesegment))
-	if err != nil{
+	if err != nil {
 		log.Println(err)
 	}
-	if len(matches) == 0{
+	if len(matches) == 0 {
 		log.Println("No tags found in folder")
 	}
 	filepath := lfs.latestVersion(matches)

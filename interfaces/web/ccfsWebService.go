@@ -6,6 +6,8 @@ package web
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 
@@ -121,8 +123,31 @@ func parseQuery(message string) (typestring string, hash objects.HKID, namesegme
 	return typestring, hash, namesegment
 }
 
+var uploadHtml []byte
+
+func UploadServerStart() {
+	var fileReadErr error
+	uploadHtml, fileReadErr = ioutil.ReadFile("./interfaces/web/upload.htm")
+	if fileReadErr != nil {
+		log.Printf("read the file %q with error %s\n", uploadHtml, fileReadErr)
+	}
+	http.HandleFunc("/upload/", UploadDomainHandler)
+}
+
+func UploadDomainHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	//io.WriteString(w, fmt.Sprintf("%v\n",r))
+	//io.WriteString(w, fmt.Sprintf("length of uploadHtml is %d\n",len(uploadHtml)))
+	w.Write(uploadHtml)
+	//http.Error(w, fmt.Sprint(
+	//	"HTTP Error 500 Internal server error\n\n", err), 500)
+	return
+}
+
 //Start begins the listening for web reqwests on 8080
 func Start() {
 	go BlobServerStart()
 	go CollectionServerStart()
+	go UploadServerStart()
 }
