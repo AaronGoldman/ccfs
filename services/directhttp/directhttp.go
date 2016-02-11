@@ -30,7 +30,7 @@ func init() {
 }
 
 //Start registers directhttpservice instances
-func Start( /*remotes []string*/) {
+func Start( /*remotes []string*/ ) {
 	services.Registerblobgeter(Instance)
 	services.Registercommitgeter(Instance)
 	services.Registertaggeter(Instance)

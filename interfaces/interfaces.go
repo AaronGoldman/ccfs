@@ -5,6 +5,7 @@ package interfaces
 
 import (
 	"log"
+
 	"github.com/AaronGoldman/ccfs/objects"
 	"github.com/AaronGoldman/ccfs/services"
 )
@@ -19,16 +20,14 @@ func GetLocalSeed() string {
 func KeyLocalSeed() {
 	HKIDstring := GetLocalSeed()
 	h, er := objects.HkidFromHex(HKIDstring)
-	if (er!=nil){
+	if er != nil {
 		log.Printf("local seed not valid hex /n")
 	}
 	_, err := services.GetKey(h)
-	if (err!=nil){
-		 objects.HkidFromDString("65232373562705602286177837897283294165955126"+
-		"49112249373497830592072241416893611216069423804730437860475300564272"+
-		"976762085068519188612732562106886379081213385", 10)
-		}
+	if err != nil {
+		objects.HkidFromDString("65232373562705602286177837897283294165955126"+
+			"49112249373497830592072241416893611216069423804730437860475300564272"+
+			"976762085068519188612732562106886379081213385", 10)
+	}
 	return
 }
-
-

@@ -5,9 +5,9 @@ package fuse
 import (
 	"log"
 	"os"
+
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
-	//"bazil.org/fuse/fs/fstestutil" 
 )
 
 var running bool
@@ -17,11 +17,11 @@ var running bool
 func Start() {
 	//fstestutil.DebugByDefault()
 	go checkGroup()
-	go startFSintegration() 
+	go startFSintegration()
 	running = true
 }
 
-func ccfsUnmount(mountpoint string) { 
+func ccfsUnmount(mountpoint string) {
 	err := fuse.Unmount(mountpoint)
 	if err != nil {
 		log.Printf("Could not unmount: %s", err)
@@ -34,18 +34,17 @@ func generateInode(NodeID fuse.NodeID, name string) fuse.NodeID {
 	return fuse.NodeID(fs.GenerateDynamicInode(uint64(NodeID), name))
 }
 
-func checkGroup() { 
+func checkGroup() {
 	groups, _ := os.Getgroups()
 	var fuseGroup bool
 	fuseGroup = false
 	for i := 0; i < len(groups); i++ {
-		if (groups[i]==104) {
+		if groups[i] == 104 {
 			fuseGroup = true
 		}
 	}
-	if fuseGroup==false {
+	if fuseGroup == false {
 		log.Printf("Add yourself to the fuse usergroup by:\n useradd -G fuse [username]")
 	}
-	
-	
+
 }
