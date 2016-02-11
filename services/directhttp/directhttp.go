@@ -64,15 +64,18 @@ func (d directhttpservice) Command(command string) {
 		}
 		d.List()
 
-	case "delete":
+	case "remove":
 		if len(tokens) > 1 {
 			index, err := strconv.Atoi(tokens[1])
-			if err != nil {
-				fmt.Printf("%s", err)
+			if err == strconv.ErrSyntax {
+				fmt.Printf("Please indicate the host by host number.\n")
+				return
+			} else if err != nil {
+				fmt.Printf("%s\n", err)
 				return
 			}
 			if index < 0 || index >= len(hosts) {
-				fmt.Print("Index out of range")
+				fmt.Print("Index out of range\n")
 				return
 			}
 
@@ -89,7 +92,12 @@ func (d directhttpservice) Command(command string) {
 		d.List()
 
 	default:
-		fmt.Printf("Google Drive Service Command Line\n")
+		fmt.Printf("Direct HTTP Service Command Line\n" +
+			"start\n" +
+			"stop\n" +
+			"add [Domain]\n" +
+			"remove [Domain]\n" +
+			"list\n")
 		return
 	}
 
@@ -97,6 +105,9 @@ func (d directhttpservice) Command(command string) {
 
 //Prints the list of directhttp addresses
 func (d directhttpservice) List() {
+	if len(hosts) < 1 {
+		fmt.Println("No hosts to list")
+	}
 	for index, host := range hosts {
 		fmt.Printf("Host %d: %s\n", index, host)
 	}
