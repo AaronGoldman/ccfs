@@ -40,6 +40,7 @@ func Start() {
 	http.HandleFunc("/index/", webIndexHandler)
 	http.HandleFunc("/search/", webSearchHandler)
 	go seedQueue(interfaces.GetLocalSeed())
+	fmt.Println("Seeding crawler with " + interfaces.GetLocalSeed())
 }
 
 func (command) Command(command string) {
@@ -124,23 +125,23 @@ func seedQueue(hkidhex string) (err error) {
 	if hexerr == nil {
 		err = crawlList(objects.HCID(h.Bytes()))
 		if err != nil {
-			log.Println(err)
+			log.Println("seed was not a List")
 		}
 		err = crawlBlob(objects.HCID(h.Bytes()))
 		if err != nil {
-			log.Println(err)
+			log.Println("seed was not a Blob")
 		}
 		err = crawlCommit(objects.HKID(h.Bytes()))
 		if err != nil {
-			log.Println(err)
+			log.Println("seed was not a Commit")
 		}
 		err = crawlhcidCommit(objects.HCID(h.Bytes()))
 		if err != nil {
-			log.Println(err)
+			log.Println("seed was not a Commit's hcid")
 		}
 		err = crawlhcidTag(objects.HCID(h.Bytes()))
 		if err != nil {
-			log.Println(err)
+			log.Println("seed was not a Tag's hcid")
 		}
 	} else {
 		log.Println(hexerr)
@@ -149,7 +150,7 @@ func seedQueue(hkidhex string) (err error) {
 }
 
 // This function scrapes a target for new targets to add to the queue
-func crawlTarget(targ target) {
+func crawlTarget(targ target) error {
 	err := fmt.Errorf("Attempted to crawl malformed typeString in target\n\t%v", targ)
 	switch targ.typeString {
 	case "commit":
@@ -167,8 +168,9 @@ func crawlTarget(targ target) {
 	default:
 	}
 	if err != nil {
-		log.Print(err)
+		return fmt.Errorf("crawlTarget %s", err)
 	}
+	return nil
 }
 
 func crawlBlob(targHash objects.HCID) (err error) {
@@ -214,7 +216,6 @@ func crawlhcidCommit(targHash objects.HCID) (err error) {
 	if commErr != nil {
 		return commErr
 	}
-
 	handleCommit(hcidCommit)
 	return nil
 }

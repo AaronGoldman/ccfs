@@ -160,7 +160,7 @@ func (lfs localfileservice) GetTags(h objects.HKID) (tags []objects.Tag, err err
 	if err != nil {
 		log.Println(err)
 	}
-	log.Println(h)
+	//log.Println(h)
 	namesegment := ""
 	for _, directoryEntry := range directoryEntries {
 		if directoryEntry.IsDir() {
